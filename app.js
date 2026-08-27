@@ -9,7 +9,9 @@ document.querySelectorAll("[data-tool-start]").forEach(b=>b.onclick=()=>{
   revealFlowAfterTool(true);
 });
 function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||CFG.supabaseAnonKey)&&window.supabase)}function initBackend(){if(!backendReady()){$("backendWarning").style.display="block";return}const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey;supabaseClient=window.supabase.createClient(CFG.supabaseUrl,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});supabaseClient.auth.getSession().then(({data})=>applySession(data.session));supabaseClient.auth.onAuthStateChange((_e,s)=>applySession(s))}async function applySession(session){currentUser=session?.user||null;currentProfile=null;if(currentUser){const {data,error}=await supabaseClient.from("profiles").select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,membership_started_at,membership_expires_at,approved_at,created_at").eq("id",currentUser.id).maybeSingle();if(error)console.error(error);currentProfile=data||null}renderAuthState()}
-function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!currentUser){chip.style.display="none";admin.style.display="none";btn.textContent="เข้าสู่ระบบ";btn.onclick=openAuth;return}chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;admin.style.display=(currentProfile?.role==="admin"&&currentProfile?.status==="active")?"inline-block":"none";btn.textContent="ออกจากระบบ";btn.onclick=logout}
+function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!currentUser){chip.style.display="none";admin.style.display="none";btn.textContent="เข้าสู่ระบบ";btn.onclick=openAuth;return}chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;admin.style.display=(currentProfile?.role==="admin")?"inline-block":"none";
+const testBadge=$("adminTestBadge");if(testBadge)testBadge.style.display=currentProfile?.role==="admin"?"inline-flex":"none";
+btn.textContent="ออกจากระบบ";btn.onclick=logout}
 async function logout(){if(supabaseClient)await supabaseClient.auth.signOut();currentUser=null;currentProfile=null;renderAuthState();go("home")}
 function openAuth(tab="login"){$("authModal").classList.add("open");switchAuth(tab)}
 if($("authBtn"))$("authBtn").onclick=openAuth;
@@ -58,7 +60,7 @@ function buildIndicators(){
 }
 function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น ${r.domain}`:"เรื่องที่จะสอน";renderSummary()}["topic","duration","method","context"].forEach(id=>$(id).addEventListener(id==="topic"||id==="context"?"input":"change",renderSummary));function renderSummary(){const r=record();$("summary").innerHTML=`<b>ตรวจสอบก่อนสร้าง</b><br>${ACTIVE_STAGE} · ${$("grade").value||"—"} · ${$("subject").value||"—"}<br>${r.indicator||"—"} · เรื่อง ${$("topic").value||"ยังไม่ระบุ"}`}
 $("indicatorSearch").oninput=()=>{const q=$("indicatorSearch").value.trim().toLowerCase(),box=$("searchResults");if(!q){box.style.display="none";return}const found=rows().filter(r=>[r.indicator,r.indicator_text,r.domain,r.standard].join(" ").toLowerCase().includes(q)).slice(0,30);box.innerHTML=found.map(r=>`<div class="result-item" data-id="${r.dataset_id}"><b>${r.indicator}</b><small>${r.indicator_text}</small></div>`).join("")||'<div class="result-item">ไม่พบข้อมูล</div>';box.style.display="block";box.querySelectorAll("[data-id]").forEach(x=>x.onclick=()=>{const i=rows().findIndex(r=>r.dataset_id===x.dataset.id);$("indicator").value=i;box.style.display="none";$("indicatorSearch").value="";syncRecord()})};
-function tierRank(t){return {guest:0,member:1,vip:2,admin:3}[t]??0}function userTier(){if(currentProfile?.status!=="active")return"guest";if(currentProfile?.role==="admin")return"admin";if(currentProfile?.role==="vip")return"vip";return"member"}function revealFlowAfterTool(scrollIt=false){
+function tierRank(t){return {guest:0,member:1,vip:2,admin:3}[t]??0}function userTier(){if(currentProfile?.role==="admin")return"admin";if(currentProfile?.status!=="active")return"guest";if(currentProfile?.role==="vip")return"vip";return"member"}function revealFlowAfterTool(scrollIt=false){
   const has=!!selectedTool;
   $("flowDetailsStep").style.display=has?"block":"none";
   $("flowOptionsStep").style.display=has?"block":"none";
@@ -554,6 +556,34 @@ window.setMemberStatus=async(id,status,role,requestId)=>{const p=(window._profil
 $("createInvite").onclick=async()=>{if(!requireAdmin()){toast("ต้องเป็น Admin");return}const days=Number($("inviteDays").value||30),maxUses=Number($("inviteMax").value||1),role=$("inviteTier").value,expires=new Date(Date.now()+days*86400000).toISOString(),{data,error}=await supabaseClient.rpc("admin_create_invite",{p_label:`Web invite ${new Date().toLocaleDateString("th-TH")}`,p_target_role:role,p_max_uses:maxUses,p_expires_at:expires});if(error){toast(error.message);return}const row=Array.isArray(data)?data[0]:data,code=row?.code;if(!code){toast("สร้างลิงก์ไม่สำเร็จ");return}const link=`${CFG.siteUrl||location.origin}/?invite=${code}`;$("inviteOutput").innerHTML=`<div class="codebox">${link}</div>`;try{await navigator.clipboard.writeText(link)}catch{}toast("สร้างและคัดลอกลิงก์เชิญแล้ว");loadAdmin()};
 function renderInvites(a){$("inviteRows").innerHTML=a.map(x=>{const link=`${CFG.siteUrl||location.origin}/?invite=${x.code}`;return `<tr><td><b>${x.code}</b>${x.label?`<br><small>${x.label}</small>`:""}</td><td>${x.target_role}</td><td>${x.used_count||0}/${x.max_uses??"∞"}</td><td>${x.expires_at?new Date(x.expires_at).toLocaleDateString("th-TH"):"—"}</td><td><button class="btn btn-ghost mini" onclick="navigator.clipboard.writeText('${link}');toast('คัดลอกแล้ว')">คัดลอก</button></td></tr>`}).join("")}
 function renderUsage(a){$("usageRows").innerHTML=a.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString("th-TH")}</td><td>${x.user_id.slice(0,8)}…</td><td>${x.product_type}</td><td>${x.grade} / ${x.subject}</td><td>${x.indicator_code||"—"}</td></tr>`).join("")}
+
+if($("adminRefresh"))$("adminRefresh").onclick=()=>loadAdmin();
+if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="lesson";go("generator");renderTools();renderOptions();revealFlowAfterTool(true);toast("Admin Test Mode: ใช้งานเครื่องมือทุกระดับได้")};
+if($("adminCreateVipInvite"))$("adminCreateVipInvite").onclick=async()=>{
+  if(!requireAdmin()){toast("ต้องเป็น Admin");return}
+  const expires=new Date(Date.now()+30*86400000).toISOString();
+  const {data,error}=await supabaseClient.rpc("admin_create_invite",{p_label:"VIP Quick Invite",p_target_role:"vip",p_max_uses:1,p_expires_at:expires});
+  if(error){toast(error.message);return}
+  const row=Array.isArray(data)?data[0]:data,code=row?.code;
+  if(!code){toast("สร้างลิงก์ไม่สำเร็จ");return}
+  const link=`${CFG.siteUrl||location.origin}/?invite=${code}`;
+  try{await navigator.clipboard.writeText(link)}catch{}
+  toast("สร้างและคัดลอกลิงก์ VIP แล้ว ✓");
+  loadAdmin()
+};
+if($("adminCreateMemberInvite"))$("adminCreateMemberInvite").onclick=async()=>{
+  if(!requireAdmin()){toast("ต้องเป็น Admin");return}
+  const expires=new Date(Date.now()+30*86400000).toISOString();
+  const {data,error}=await supabaseClient.rpc("admin_create_invite",{p_label:"Member Quick Invite",p_target_role:"member",p_max_uses:1,p_expires_at:expires});
+  if(error){toast(error.message);return}
+  const row=Array.isArray(data)?data[0]:data,code=row?.code;
+  if(!code){toast("สร้างลิงก์ไม่สำเร็จ");return}
+  const link=`${CFG.siteUrl||location.origin}/?invite=${code}`;
+  try{await navigator.clipboard.writeText(link)}catch{}
+  toast("สร้างและคัดลอกลิงก์ Member แล้ว ✓");
+  loadAdmin()
+};
+
 fetch("data.json",{cache:"no-store"})
 .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
 .then(d=>{

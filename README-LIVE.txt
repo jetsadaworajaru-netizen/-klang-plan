@@ -1,10 +1,9 @@
-KLANG PLAN V6.9 SMART CONTINUE BUILDER
-ใหม่:
-- ใบงาน: แนวใบงาน / จำนวน / เฉลย / รูปแบบ
-- แบบทดสอบ: ปรนัย-อัตนัย / จำนวน / ระดับ / เฉลย
-- ใบความรู้: A4 / Infographic / อ่านง่าย / Mind Map
-- Rubric: ประเภทการประเมิน / ระดับคะแนน / เกณฑ์ผ่าน
-- เกม: แนวเกม + Canva / Wordwall / Quizizz / Kahoot / Genially / ChatGPT / HTML / เกมกระดาษ
-- Teaching Pack: Preset + เลือกชิ้นงานในชุด
-- ใช้ข้อมูลแผนเดิมทั้งหมด ไม่ต้องกรอกหลักสูตรซ้ำ
-ฐาน: V6.8 + Prompt Engine + Supabase + Admin + Curriculum 2,155 รายการ
+KLANG PLAN V7.0 ADMIN UX + PROMPT READABILITY
+แก้:
+- Prompt สีเข้ม อ่านชัด
+- ปุ่มคัดลอก Prompt เด่นด้านบน + ด้านล่าง
+- Copy fallback สำหรับมือถือ
+- Admin Full Access ทดสอบ Member/VIP ได้ทั้งหมด
+- Admin Quick Actions: Refresh / VIP Invite / Member Invite / Test All Tools
+- หลังบ้านใช้งานเร็วขึ้นทั้งคอมและมือถือ
+ฐาน: V6.9 Smart Continue Builder + Supabase + Curriculum 2,155 รายการ
