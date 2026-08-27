@@ -49,6 +49,7 @@ button,input,select,textarea{font:inherit}
 .stage-btn.active{background:linear-gradient(135deg,#1ab4ff,#0a72e8);color:white;border-color:transparent;box-shadow:0 8px 22px rgba(25,167,255,.18)}
 .curriculum-info{border:1px solid rgba(246,196,83,.28);background:rgba(246,196,83,.07);border-radius:14px;padding:12px 14px;color:#ffe7a0;line-height:1.55}
 .helper{font-size:12px;color:#9db5d1;line-height:1.55;margin-top:6px}
+.hidden-step{display:none}.searchbox{margin-top:8px}.quick-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.quick{border:1px solid rgba(25,167,255,.28);background:rgba(25,167,255,.08);color:#c8edff;border-radius:999px;padding:7px 10px;cursor:pointer;font-size:12px}.summary{border:1px solid rgba(246,196,83,.28);background:rgba(246,196,83,.06);border-radius:16px;padding:14px;line-height:1.7}.summary b{color:var(--gold)}
 
 @media(max-width:850px){.hero,.grid{grid-template-columns:1fr}.side{display:none}.builder-grid{grid-template-columns:1fr}.span2{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start}.brand h1{font-size:17px}}
 </style>
@@ -116,15 +117,18 @@ button,input,select,textarea{font:inherit}
             </div>
           </div>
           <div class="field span2"><label>หลักสูตรที่ใช้</label><div id="curriculumInfo" class="curriculum-info">ระบบกำลังโหลดข้อมูล...</div></div>
-          <div class="field"><label>ระดับชั้น</label><select id="grade"></select></div>
-          <div class="field"><label>กลุ่มสาระ / ด้านการเรียนรู้</label><select id="subject"></select>
-            <div class="helper">ระบบแสดงเฉพาะกลุ่มสาระที่มีข้อมูลในชั้นที่เลือก</div>
+          <div class="field span2" id="recentBox" style="display:none"><label>⚡ ใช้ค่าล่าสุด</label><div class="quick-row"><button type="button" class="quick" id="recentBtn"></button><button type="button" class="quick" onclick="clearRecent()">ล้างค่าล่าสุด</button></div></div>
+          <div class="field" id="gradeStep"><label>ระดับชั้น</label><select id="grade"></select></div>
+          <div class="field hidden-step" id="subjectStep"><label>กลุ่มสาระ / ด้านการเรียนรู้</label><select id="subject"></select>
+            <div class="helper">แสดงเฉพาะกลุ่มสาระที่มีข้อมูลจริงในระดับชั้นนี้</div>
           </div>
-          <div class="field span2"><label>มาตรฐาน / ตัวชี้วัด / ความสามารถ</label><select id="indicator"></select>
-            <div id="indicatorMeta" class="note"></div>
+          <div class="field span2 hidden-step" id="indicatorStep"><label>ค้นหาและเลือกมาตรฐาน / ตัวชี้วัด</label>
+            <input id="indicatorSearch" class="searchbox" placeholder="🔎 พิมพ์คำ เช่น เศษส่วน, อ่านจับใจความ, สีและอารมณ์">
+            <select id="indicator" size="5" style="margin-top:8px"></select>
+            <div id="searchCount" class="helper"></div><div id="indicatorMeta" class="note"></div>
           </div>
           <div class="field"><label>หน่วยการเรียนรู้</label><input id="unit" placeholder="ระบบเติมจากฐานข้อมูล"></div>
-          <div class="field span2"><label>เรื่องที่จะสอน</label><input id="topic" placeholder="เช่น การบวกจำนวนสองหลัก"></div>
+          <div class="field span2"><label>เรื่องที่จะสอน</label><input id="topic" list="topicSuggestions" placeholder="เช่น การบวกจำนวนสองหลัก"><datalist id="topicSuggestions"></datalist><div class="helper">ระบบเสนอคำจากตัวชี้วัดให้ หรือพิมพ์หัวข้อของคุณเองได้</div></div>
           <div class="field"><label>เวลา</label><select id="duration"><option>1 คาบ (50–60 นาที)</option><option>2 คาบ</option><option>3 คาบ</option><option>1 ชั่วโมง</option><option>2 ชั่วโมง</option></select></div>
           <div class="field"><label>รูปแบบการจัดการเรียนรู้</label><select id="method">
             <option>Active Learning</option><option>GPAS 5 Steps</option><option>5E</option><option>Game-Based Learning</option>
@@ -132,7 +136,8 @@ button,input,select,textarea{font:inherit}
             <option>STEM / STEAM</option><option>Coding / Computational Thinking</option>
           </select></div>
           <div class="field span2"><label>บริบท/ข้อมูลเพิ่มเติม (ไม่บังคับ)</label><textarea id="extra" placeholder="เช่น นักเรียน 30 คน ต้องการกิจกรรมกลุ่ม ใช้สื่อที่หาได้ง่ายในห้องเรียน"></textarea></div>
-          <div class="span2"><button class="btn btn-primary" onclick="generatePrompt()">✨ สร้าง Prompt</button></div>
+          <div class="span2"><div id="review" class="summary"><b>ตรวจสอบก่อนสร้าง</b><div id="reviewText">เลือกข้อมูลด้านบนให้ครบ ระบบจะสรุปให้ตรงนี้</div></div></div>
+          <div class="span2"><button class="btn btn-primary" onclick="generatePrompt()">✨ สร้าง Prompt แผนการสอน</button><button class="btn btn-ghost" style="width:100%;margin-top:9px" onclick="resetBuilder()">↺ เริ่มใหม่</button></div>
         </div>
 
         <div class="prompt" id="promptBox">
@@ -208,53 +213,66 @@ function gradeMatches(r,g){
 function buildGrades(){
   $('curriculumInfo').textContent = curriculumForStage();
   const available = STAGE_GRADES[ACTIVE_STAGE].filter(g=>DATA.some(r=>r.stage===ACTIVE_STAGE && gradeMatches(r,g)));
-  fillSelect($('grade'), available, 'ไม่มีระดับชั้น');
-  $('grade').onchange=buildSubjects;
-  $('subject').onchange=buildIndicators;
-  $('indicator').onchange=syncRecord;
-  buildSubjects();
+  fillSelect($('grade'), ['เลือกระดับชั้น',...available], 'ไม่มีระดับชั้น'); $('grade').options[0].value='';
+  $('subjectStep').classList.add('hidden-step'); $('indicatorStep').classList.add('hidden-step');
+  $('grade').onchange=()=>{ buildSubjects(); saveRecent(); updateReview(); };
+  $('subject').onchange=()=>{ buildIndicators(); saveRecent(); updateReview(); };
+  $('indicator').onchange=()=>{ syncRecord(); saveRecent(); updateReview(); };
+  $('indicatorSearch').oninput=buildIndicators;
+  showRecent(); updateReview();
 }
 function buildSubjects(){
   const g=$('grade').value;
+  if(!g){$('subjectStep').classList.add('hidden-step');$('indicatorStep').classList.add('hidden-step');return}
   let values=unique(DATA.filter(r=>r.stage===ACTIVE_STAGE&&gradeMatches(r,g)).map(r=>r.subject));
-  values.sort((a,b)=>{
-    const ia=SUBJECT_ORDER.indexOf(a), ib=SUBJECT_ORDER.indexOf(b);
-    return (ia<0?999:ia)-(ib<0?999:ib) || a.localeCompare(b,'th');
-  });
-  fillSelect($('subject'), values, 'ไม่มีกลุ่มสาระ');
-  buildIndicators();
+  values.sort((a,b)=>{const ia=SUBJECT_ORDER.indexOf(a),ib=SUBJECT_ORDER.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib)||a.localeCompare(b,'th')});
+  fillSelect($('subject'), ['เลือกกลุ่มสาระ',...values], 'ไม่มีกลุ่มสาระ'); $('subject').options[0].value='';
+  $('subjectStep').classList.remove('hidden-step'); $('indicatorStep').classList.add('hidden-step');
 }
 function currentRows(){
   const g=$('grade').value,s=$('subject').value;
   return DATA.filter(r=>r.stage===ACTIVE_STAGE&&gradeMatches(r,g)&&r.subject===s);
 }
+let FILTERED_ROWS=[];
 function buildIndicators(){
-  const rows=currentRows();
+  if(!$('subject').value){$('indicatorStep').classList.add('hidden-step');return}
+  $('indicatorStep').classList.remove('hidden-step');
+  const q=($('indicatorSearch').value||'').trim().toLowerCase();
+  FILTERED_ROWS=currentRows().filter(r=>!q || [r.indicator,r.indicator_text,r.standard,r.domain].join(' ').toLowerCase().includes(q));
   $('indicator').innerHTML='';
-  rows.forEach((r,i)=>{
-    let o=document.createElement('option');
-    o.value=i;
-    const kind = r.classification ? ` [${r.classification}]` : '';
-    o.textContent=`${r.indicator}${kind} — ${r.indicator_text}`;
-    $('indicator').appendChild(o)
-  });
-  if(!rows.length){let o=document.createElement('option');o.value='';o.textContent='ไม่มีข้อมูลตัวชี้วัด';$('indicator').appendChild(o)}
-  syncRecord();
+  FILTERED_ROWS.forEach((r,i)=>{let o=document.createElement('option');o.value=i;const kind=r.classification?` [${r.classification}]`:'';o.textContent=`${r.indicator}${kind} — ${r.indicator_text}`;$('indicator').appendChild(o)});
+  if(!FILTERED_ROWS.length){let o=document.createElement('option');o.value='';o.textContent='ไม่พบตัวชี้วัดที่ตรงกับคำค้น';$('indicator').appendChild(o)}
+  $('searchCount').textContent=`พบ ${FILTERED_ROWS.length.toLocaleString('th-TH')} รายการ`;
+  if(FILTERED_ROWS.length){$('indicator').selectedIndex=0;syncRecord()} else {$('indicatorMeta').textContent='';updateReview()}
 }
-function selectedRecord(){
-  const rows=currentRows();
-  return rows[Number($('indicator').value||0)] || {};
-}
+function selectedRecord(){ return FILTERED_ROWS[Number($('indicator').value||0)] || {}; }
 function syncRecord(){
-  const r=selectedRecord();
-  $('unit').value=r.domain||'';
-  $('topic').value='';
-  let bits=[];
-  if(r.status) bits.push(`สถานะ: ${r.status}`);
-  if(r.classification) bits.push(`ประเภท: ${r.classification}`);
-  if(r.grade==="ม.4–6") bits.push('ใช้ร่วมกันใน ม.4–ม.6');
-  $('indicatorMeta').textContent = bits.join(' • ');
+  const r=selectedRecord(); $('unit').value=r.domain||'';
+  let bits=[]; if(r.status)bits.push(`สถานะ: ${r.status}`);if(r.classification)bits.push(`ประเภท: ${r.classification}`);if(r.grade==='ม.4–6')bits.push('ใช้ร่วมกันใน ม.4–ม.6');
+  $('indicatorMeta').textContent=bits.join(' • ');
+  const words=(r.indicator_text||'').split(/[ ,，。]+/).filter(x=>x.length>=4).slice(0,8);
+  $('topicSuggestions').innerHTML=unique([r.domain,...words]).filter(Boolean).map(x=>`<option value="${String(x).replace(/"/g,'&quot;')}">`).join('');
+  updateReview();
 }
+function saveRecent(){
+  if(!$('grade').value||!$('subject').value)return;
+  localStorage.setItem('klangPlanRecent',JSON.stringify({stage:ACTIVE_STAGE,grade:$('grade').value,subject:$('subject').value}));showRecent();
+}
+function showRecent(){
+  try{const r=JSON.parse(localStorage.getItem('klangPlanRecent')||'null');if(!r){$('recentBox').style.display='none';return}$('recentBox').style.display='block';$('recentBtn').textContent=`${r.stage.replace('ศึกษา','')} • ${r.grade} • ${r.subject}`;$('recentBtn').onclick=()=>applyRecent(r)}catch(e){}
+}
+function applyRecent(r){
+  ACTIVE_STAGE=r.stage;document.querySelectorAll('.stage-btn').forEach(x=>x.classList.toggle('active',x.dataset.stage===ACTIVE_STAGE));buildGrades();$('grade').value=r.grade;buildSubjects();$('subject').value=r.subject;buildIndicators();updateReview();
+}
+function clearRecent(){localStorage.removeItem('klangPlanRecent');showRecent()}
+function updateReview(){
+  const r=selectedRecord(), parts=[]; if($('grade').value)parts.push($('grade').value);if($('subject').value)parts.push($('subject').value);if(r.indicator)parts.push(r.indicator);if($('topic').value)parts.push(`เรื่อง ${$('topic').value}`);parts.push($('duration').value||'');
+  $('reviewText').textContent=parts.filter(Boolean).join(' • ') || 'เลือกข้อมูลด้านบนให้ครบ ระบบจะสรุปให้ตรงนี้';
+}
+function resetBuilder(){
+  $('topic').value='';$('extra').value='';$('indicatorSearch').value='';$('promptBox').style.display='none';buildGrades();window.scrollTo({top:0,behavior:'smooth'});
+}
+['topic','duration','method','unit'].forEach(id=>setTimeout(()=>$(id).addEventListener('input',updateReview),0));
 function demoLogin(){
   $('landing').style.display='none'; $('dashboard').style.display='block';
   $('memberName').textContent='คุณครู (โหมดทดลอง)';
