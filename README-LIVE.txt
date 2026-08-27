@@ -1,6 +1,8 @@
-KLANG PLAN V6.5 MOBILE FIX
-- แก้ปุ่มช่วงชั้นที่หลุดกลับเป็นธีมมืด
-- ป้องกัน select ขึ้น “ไม่มีตัวเลือก” ระหว่าง data.json กำลังโหลด
-- cascade ชั้น/กลุ่มสาระ/ตัวชี้วัด robust ขึ้น
-- select/input 16px ลด iPhone auto zoom
-- คง Product-first 4-step flow, Member/Admin/Supabase และข้อมูล 2,155 รายการ
+KLANG PLAN V6.6 CRITICAL HOTFIX
+แก้ JavaScript หยุดทำงานทั้งหมดจากการอ้าง #joinNow ที่ไม่มีอยู่ในหน้าใหม่
+ผลที่แก้:
+- data.json โหลดได้
+- ปุ่ม ปฐมวัย / ประถม / มัธยม กดได้
+- ระดับชั้น / กลุ่มสาระ / ตัวชี้วัดทำงาน
+- ปุ่มเลือกประเภทงานและสร้าง Prompt ทำงานต่อได้
+คงระบบ Responsive, Member/Admin/Supabase และฐานข้อมูล 2,155 รายการเดิม
