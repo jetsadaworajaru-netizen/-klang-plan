@@ -175,3 +175,55 @@ html{overflow-x:hidden}body{overflow-x:hidden}.wrap{width:min(1180px,calc(100% -
 
 /* Very small phones */
 @media (max-width:380px){.wrap{width:calc(100% - 18px)}.start-tool-grid,.simple-tools{grid-template-columns:1fr}.simple-how{grid-template-columns:1fr}.brand b{font-size:.8rem}.nav-actions .btn{padding:8px 9px}.simple-hero-logo img{width:132px}}
+
+
+/* ===== V6.5 MOBILE CASCADE FIX ===== */
+.simple-generator .stage-tabs{
+  background:#f2f8fd !important;
+  border:1px solid #dbe9f4 !important;
+  padding:6px !important;
+  border-radius:18px !important;
+  gap:7px !important;
+}
+.simple-generator .stage-tab{
+  min-height:54px !important;
+  background:#ffffff !important;
+  color:#4b6f95 !important;
+  border:1px solid #d7e6f2 !important;
+  border-radius:13px !important;
+  padding:11px 8px !important;
+  box-shadow:0 4px 10px rgba(42,84,125,.05) !important;
+  opacity:1 !important;
+}
+.simple-generator .stage-tab.active{
+  background:linear-gradient(135deg,#36aaff,#695ce9) !important;
+  color:#ffffff !important;
+  border-color:transparent !important;
+  box-shadow:0 8px 18px rgba(65,107,213,.22) !important;
+}
+.simple-generator select:disabled{
+  background:#f5f8fb !important;
+  color:#8ea0b2 !important;
+  border-color:#dfe7ee !important;
+  opacity:1 !important;
+}
+.simple-generator .field select{
+  min-height:54px;
+  font-size:16px; /* iOS: prevents zoom */
+  padding:10px 44px 10px 14px;
+}
+.simple-generator .field input,
+.simple-generator .field textarea{font-size:16px}
+.simple-generator .indicator-box{min-height:70px;line-height:1.55}
+@media(max-width:600px){
+  .simple-generator{padding:12px 12px 70px !important}
+  .generator-top{position:sticky;top:0;z-index:8;background:rgba(247,251,255,.94);backdrop-filter:blur(9px);padding:8px 0;margin-bottom:10px}
+  .flow-card{margin-bottom:12px !important;padding:16px !important}
+  .flow-head{margin-bottom:14px !important}
+  .flow-number{width:38px;height:38px;flex-basis:38px}
+  .simple-generator .stage-tabs{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+  .simple-generator .stage-tab{font-size:.86rem !important;white-space:nowrap !important}
+  .easy-form{gap:11px !important}
+  .field label{font-size:.97rem;margin-bottom:7px}
+  .search-results{max-height:220px;overflow:auto}
+}

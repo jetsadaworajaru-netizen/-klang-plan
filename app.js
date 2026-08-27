@@ -15,8 +15,45 @@ function openAuth(tab="login"){$("authModal").classList.add("open");switchAuth(t
 $("loginBtn").onclick=async()=>{if(!backendReady()){msg("loginMsg","ยังไม่ได้เชื่อม Supabase","warn");return}const email=$("loginEmail").value.trim(),password=$("loginPassword").value;if(!email||!password){msg("loginMsg","กรุณากรอกอีเมลและรหัสผ่าน","warn");return}const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){msg("loginMsg",error.message,"warn");return}await applySession(data.session);const p=currentProfile;if(p?.status==="pending")msg("loginMsg","เข้าสู่ระบบแล้ว แต่บัญชียังรอแอดมินอนุมัติ","warn");else if(["suspended","expired"].includes(p?.status))msg("loginMsg","บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อแอดมิน","warn");else if(p?.status==="active"){$("authModal").classList.remove("open");toast("เข้าสู่ระบบสำเร็จ")}else msg("loginMsg","กำลังตรวจสอบสถานะสมาชิก กรุณาลองใหม่อีกครั้ง","warn")};
 $("registerBtn").onclick=async()=>{if(!backendReady()){msg("registerMsg","ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์","warn");return}const email=$("regEmail").value.trim(),password=$("regPassword").value;if(!email||!password||!$("regName").value.trim()){msg("registerMsg","กรุณากรอกชื่อ อีเมล และรหัสผ่าน","warn");return}if(password.length<6){msg("registerMsg","รหัสผ่านควรมีอย่างน้อย 6 ตัวอักษร","warn");return}const meta={full_name:$("regName").value.trim(),school_name:$("regSchool").value.trim(),phone:$("regPhone").value.trim(),facebook_name:$("regFacebook").value.trim(),invite_code:$("regInvite").value.trim()};const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:meta,emailRedirectTo:CFG.siteUrl||location.origin}});if(error){msg("registerMsg",error.message,"warn");return}if(data.session){await applySession(data.session);msg("registerMsg","สมัครสำเร็จ ✓ บัญชีอยู่ในสถานะรอแอดมินอนุมัติ","ok")}else msg("registerMsg","ส่งคำขอแล้ว ✓ หากมีอีเมลยืนยัน กรุณากดยืนยันอีเมล จากนั้นรอแอดมินอนุมัติ","ok")};function msg(id,t,type){$(id).innerHTML=`<div class="alert ${type}">${t}</div>`}
 const invite=new URLSearchParams(location.search).get("invite");if(invite){$("regInvite").value=invite;setTimeout(()=>openAuth("register"),500)}
-function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=()=>{ACTIVE_STAGE=b.dataset.stage;syncStageTabs();buildGrades();savePrefs()});
-function buildGrades(){const arr=grades[ACTIVE_STAGE].filter(g=>DATA.some(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)));fill($("grade"),arr);$("grade").onchange=()=>{buildSubjects();savePrefs()};buildSubjects()}function fill(el,arr){el.innerHTML="";arr.forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;el.appendChild(o)})}function buildSubjects(){const g=$("grade").value;let arr=[...new Set(DATA.filter(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)).map(r=>r.subject))];arr.sort((a,b)=>(SUBJECT_ORDER.indexOf(a)<0?99:SUBJECT_ORDER.indexOf(a))-(SUBJECT_ORDER.indexOf(b)<0?99:SUBJECT_ORDER.indexOf(b)));fill($("subject"),arr);$("subject").onchange=()=>{buildIndicators();savePrefs()};buildIndicators()}function rows(){const g=$("grade").value,s=$("subject").value;return DATA.filter(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)&&r.subject===s)}function buildIndicators(){const rs=rows();$("indicator").innerHTML="";rs.forEach((r,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${r.indicator}${r.classification?` [${r.classification}]`:""} — ${r.indicator_text}`;$("indicator").appendChild(o)});$("indicator").onchange=syncRecord;syncRecord()}function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น ${r.domain}`:"เรื่องที่จะสอน";renderSummary()}["topic","duration","method","context"].forEach(id=>$(id).addEventListener(id==="topic"||id==="context"?"input":"change",renderSummary));function renderSummary(){const r=record();$("summary").innerHTML=`<b>ตรวจสอบก่อนสร้าง</b><br>${ACTIVE_STAGE} · ${$("grade").value||"—"} · ${$("subject").value||"—"}<br>${r.indicator||"—"} · เรื่อง ${$("topic").value||"ยังไม่ระบุ"}`}
+function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=()=>{if(!DATA.length){toast("กำลังโหลดฐานข้อมูล กรุณารอสักครู่");return}ACTIVE_STAGE=b.dataset.stage;syncStageTabs();buildGrades();savePrefs()});
+function setSelectState(el,items,placeholder){
+  el.innerHTML="";
+  if(!items||!items.length){
+    const o=document.createElement("option");o.value="";o.textContent=placeholder||"ไม่มีข้อมูล";
+    el.appendChild(o);el.disabled=true;return
+  }
+  items.forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;el.appendChild(o)});
+  el.disabled=false
+}
+function buildGrades(){
+  let arr=(grades[ACTIVE_STAGE]||[]).filter(g=>DATA.some(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)));
+  if(!arr.length&&DATA.length) arr=[...new Set(DATA.filter(r=>r.stage===ACTIVE_STAGE).map(r=>r.grade).filter(Boolean))];
+  setSelectState($("grade"),arr,"ไม่พบระดับชั้น");
+  $("grade").onchange=()=>{buildSubjects();savePrefs()};
+  buildSubjects()
+}
+function fill(el,arr){setSelectState(el,arr,"ไม่มีตัวเลือก")}
+function buildSubjects(){
+  const g=$("grade").value;
+  if(!g){setSelectState($("subject"),[],"กรุณาเลือกระดับชั้น");setSelectState($("indicator"),[],"กรุณาเลือกกลุ่มสาระ");$("indicatorBox").textContent="เลือกระดับชั้นเพื่อดูข้อมูล";return}
+  let arr=[...new Set(DATA.filter(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)).map(r=>r.subject).filter(Boolean))];
+  arr.sort((a,b)=>(SUBJECT_ORDER.indexOf(a)<0?99:SUBJECT_ORDER.indexOf(a))-(SUBJECT_ORDER.indexOf(b)<0?99:SUBJECT_ORDER.indexOf(b)));
+  setSelectState($("subject"),arr,"ไม่พบกลุ่มสาระ");
+  $("subject").onchange=()=>{buildIndicators();savePrefs()};
+  buildIndicators()
+}
+function rows(){
+  const g=$("grade").value,s=$("subject").value;
+  if(!g||!s)return[];
+  return DATA.filter(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)&&r.subject===s)
+}
+function buildIndicators(){
+  const rs=rows(),el=$("indicator");el.innerHTML="";
+  if(!rs.length){setSelectState(el,[],"ไม่พบตัวชี้วัด");$("indicatorBox").textContent="ไม่พบข้อมูลที่สัมพันธ์กับตัวเลือกนี้";renderSummary();return}
+  rs.forEach((r,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${r.indicator}${r.classification?` [${r.classification}]`:""} — ${r.indicator_text}`;el.appendChild(o)});
+  el.disabled=false;el.onchange=syncRecord;syncRecord()
+}
+function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น ${r.domain}`:"เรื่องที่จะสอน";renderSummary()}["topic","duration","method","context"].forEach(id=>$(id).addEventListener(id==="topic"||id==="context"?"input":"change",renderSummary));function renderSummary(){const r=record();$("summary").innerHTML=`<b>ตรวจสอบก่อนสร้าง</b><br>${ACTIVE_STAGE} · ${$("grade").value||"—"} · ${$("subject").value||"—"}<br>${r.indicator||"—"} · เรื่อง ${$("topic").value||"ยังไม่ระบุ"}`}
 $("indicatorSearch").oninput=()=>{const q=$("indicatorSearch").value.trim().toLowerCase(),box=$("searchResults");if(!q){box.style.display="none";return}const found=rows().filter(r=>[r.indicator,r.indicator_text,r.domain,r.standard].join(" ").toLowerCase().includes(q)).slice(0,30);box.innerHTML=found.map(r=>`<div class="result-item" data-id="${r.dataset_id}"><b>${r.indicator}</b><small>${r.indicator_text}</small></div>`).join("")||'<div class="result-item">ไม่พบข้อมูล</div>';box.style.display="block";box.querySelectorAll("[data-id]").forEach(x=>x.onclick=()=>{const i=rows().findIndex(r=>r.dataset_id===x.dataset.id);$("indicator").value=i;box.style.display="none";$("indicatorSearch").value="";syncRecord()})};
 function tierRank(t){return {guest:0,member:1,vip:2,admin:3}[t]??0}function userTier(){if(currentProfile?.status!=="active")return"guest";if(currentProfile?.role==="admin")return"admin";if(currentProfile?.role==="vip")return"vip";return"member"}function revealFlowAfterTool(scrollIt=false){
   const has=!!selectedTool;
@@ -62,4 +99,19 @@ window.setMemberStatus=async(id,status,role,requestId)=>{const p=(window._profil
 $("createInvite").onclick=async()=>{if(!requireAdmin()){toast("ต้องเป็น Admin");return}const days=Number($("inviteDays").value||30),maxUses=Number($("inviteMax").value||1),role=$("inviteTier").value,expires=new Date(Date.now()+days*86400000).toISOString(),{data,error}=await supabaseClient.rpc("admin_create_invite",{p_label:`Web invite ${new Date().toLocaleDateString("th-TH")}`,p_target_role:role,p_max_uses:maxUses,p_expires_at:expires});if(error){toast(error.message);return}const row=Array.isArray(data)?data[0]:data,code=row?.code;if(!code){toast("สร้างลิงก์ไม่สำเร็จ");return}const link=`${CFG.siteUrl||location.origin}/?invite=${code}`;$("inviteOutput").innerHTML=`<div class="codebox">${link}</div>`;try{await navigator.clipboard.writeText(link)}catch{}toast("สร้างและคัดลอกลิงก์เชิญแล้ว");loadAdmin()};
 function renderInvites(a){$("inviteRows").innerHTML=a.map(x=>{const link=`${CFG.siteUrl||location.origin}/?invite=${x.code}`;return `<tr><td><b>${x.code}</b>${x.label?`<br><small>${x.label}</small>`:""}</td><td>${x.target_role}</td><td>${x.used_count||0}/${x.max_uses??"∞"}</td><td>${x.expires_at?new Date(x.expires_at).toLocaleDateString("th-TH"):"—"}</td><td><button class="btn btn-ghost mini" onclick="navigator.clipboard.writeText('${link}');toast('คัดลอกแล้ว')">คัดลอก</button></td></tr>`}).join("")}
 function renderUsage(a){$("usageRows").innerHTML=a.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString("th-TH")}</td><td>${x.user_id.slice(0,8)}…</td><td>${x.product_type}</td><td>${x.grade} / ${x.subject}</td><td>${x.indicator_code||"—"}</td></tr>`).join("")}
-fetch("data.json",{cache:"no-store"}).then(r=>r.json()).then(d=>{DATA=d;restorePrefs();syncStageTabs();buildGrades();const p=JSON.parse(localStorage.getItem("klangPrefs")||"{}");if(p.grade&&[...$("grade").options].some(o=>o.value===p.grade)){$("grade").value=p.grade;buildSubjects()}if(p.subject&&[...$("subject").options].some(o=>o.value===p.subject)){$("subject").value=p.subject;buildIndicators()}renderTools();renderSummary();initBackend()}).catch(e=>{console.error(e);$("indicatorBox").textContent="โหลดฐานข้อมูลไม่สำเร็จ"});
+fetch("data.json",{cache:"no-store"})
+.then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+.then(d=>{
+  DATA=Array.isArray(d)?d:[];
+  if(!DATA.length)throw new Error("ฐานข้อมูลว่าง");
+  restorePrefs();syncStageTabs();buildGrades();
+  const p=JSON.parse(localStorage.getItem("klangPrefs")||"{}");
+  if(p.grade&&[...$("grade").options].some(o=>o.value===p.grade)){$("grade").value=p.grade;buildSubjects()}
+  if(p.subject&&[...$("subject").options].some(o=>o.value===p.subject)){$("subject").value=p.subject;buildIndicators()}
+  renderTools();renderSummary();initBackend()
+})
+.catch(e=>{
+  console.error(e);
+  ["grade","subject","indicator"].forEach(id=>setSelectState($(id),[],"โหลดข้อมูลไม่สำเร็จ"));
+  $("indicatorBox").innerHTML="<b>โหลดฐานข้อมูลไม่สำเร็จ</b><br>กรุณารีเฟรชหน้าเว็บอีกครั้ง"
+});
