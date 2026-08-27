@@ -43,6 +43,13 @@ button,input,select,textarea{font:inherit}
 .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.kpi{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px}.kpi b{display:block;font-size:23px;color:var(--gold)}.kpi span{font-size:12px;color:var(--muted)}
 .footer{padding:28px 0 10px;color:#7f9ab9;text-align:center;font-size:12px}
+
+.stage-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stage-btn{border:1px solid rgba(255,255,255,.14);background:#071A33;color:#c9d8eb;border-radius:14px;padding:13px 10px;font-weight:800;cursor:pointer}
+.stage-btn.active{background:linear-gradient(135deg,#1ab4ff,#0a72e8);color:white;border-color:transparent;box-shadow:0 8px 22px rgba(25,167,255,.18)}
+.curriculum-info{border:1px solid rgba(246,196,83,.28);background:rgba(246,196,83,.07);border-radius:14px;padding:12px 14px;color:#ffe7a0;line-height:1.55}
+.helper{font-size:12px;color:#9db5d1;line-height:1.55;margin-top:6px}
+
 @media(max-width:850px){.hero,.grid{grid-template-columns:1fr}.side{display:none}.builder-grid{grid-template-columns:1fr}.span2{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start}.brand h1{font-size:17px}}
 </style>
 </head>
@@ -57,9 +64,9 @@ button,input,select,textarea{font:inherit}
     <div class="panel">
       <div class="chip" style="display:inline-block">✨ Prompt Generator สำหรับครู</div>
       <h2>สร้าง Prompt แผนการสอน<br><span class="gold">จบในไม่กี่ขั้นตอน</span></h2>
-      <p class="sub">เลือกหลักสูตร ชั้น กลุ่มสาระ มาตรฐาน/ตัวชี้วัด เรื่อง และรูปแบบการสอน ระบบจะประกอบ Prompt ให้พร้อมคัดลอกไปใช้ใน ChatGPT</p>
+      <p class="sub">เลือกช่วงชั้น ชั้น กลุ่มสาระ และตัวชี้วัด ระบบจะจัดหลักสูตรที่เกี่ยวข้องให้อัตโนมัติ แล้วประกอบ Prompt พร้อมใช้ใน ChatGPT</p>
       <div class="steps">
-        <span class="chip">1. เลือกชั้น</span><span class="chip">2. เลือกวิชา</span><span class="chip">3. เลือกตัวชี้วัด</span><span class="chip">4. เลือกรูปแบบ</span><span class="chip">5. สร้าง Prompt</span>
+        <span class="chip">1. เลือกช่วงชั้น</span><span class="chip">2. เลือกชั้น</span><span class="chip">3. เลือกกลุ่มสาระ</span><span class="chip">4. เลือกตัวชี้วัด</span><span class="chip">5. สร้าง Prompt</span>
       </div>
     </div>
     <div class="panel login">
@@ -100,10 +107,20 @@ button,input,select,textarea{font:inherit}
         <h3>✨ สร้าง Prompt แผนการสอนหน้าเดียว</h3>
         <div class="progress"><div class="dot on">1</div><div class="dot on">2</div><div class="dot on">3</div><div class="dot">4</div><div class="dot">5</div></div>
         <div class="builder-grid">
-          <div class="field span2"><label>หลักสูตร</label><select id="curriculum"></select></div>
+          <div class="field span2">
+            <label>ช่วงชั้น</label>
+            <div class="stage-tabs">
+              <button type="button" class="stage-btn active" data-stage="ปฐมวัย">ปฐมวัย</button>
+              <button type="button" class="stage-btn" data-stage="ประถมศึกษา">ประถม</button>
+              <button type="button" class="stage-btn" data-stage="มัธยมศึกษา">มัธยม</button>
+            </div>
+          </div>
+          <div class="field span2"><label>หลักสูตรที่ใช้</label><div id="curriculumInfo" class="curriculum-info">ระบบกำลังโหลดข้อมูล...</div></div>
           <div class="field"><label>ระดับชั้น</label><select id="grade"></select></div>
-          <div class="field"><label>กลุ่มสาระการเรียนรู้</label><select id="subject"></select></div>
-          <div class="field"><label>มาตรฐาน / ตัวชี้วัด</label><select id="indicator"></select>
+          <div class="field"><label>กลุ่มสาระ / ด้านการเรียนรู้</label><select id="subject"></select>
+            <div class="helper">ระบบแสดงเฉพาะกลุ่มสาระที่มีข้อมูลในชั้นที่เลือก</div>
+          </div>
+          <div class="field span2"><label>มาตรฐาน / ตัวชี้วัด / ความสามารถ</label><select id="indicator"></select>
             <div id="indicatorMeta" class="note"></div>
           </div>
           <div class="field"><label>หน่วยการเรียนรู้</label><input id="unit" placeholder="ระบบเติมจากฐานข้อมูล"></div>
@@ -132,65 +149,111 @@ button,input,select,textarea{font:inherit}
     </div>
   </section>
 
-  <div class="footer">คลังแผนการสอนหน้าเดียว • ฐานข้อมูล อ.1–ม.6 จำนวน 2,155 รายการ • VERIFIED / Production Ready</div>
+  <div class="footer">คลังแผนการสอนหน้าเดียว • แบ่งชัดเจน ปฐมวัย / ประถม / มัธยม • ฐานข้อมูล 2,155 รายการ</div>
 </div>
 
 <script>
 let DATA = [];
+let ACTIVE_STAGE = "ปฐมวัย";
 const $ = id => document.getElementById(id);
 
+const STAGE_GRADES = {
+  "ปฐมวัย":["อ.1","อ.2","อ.3"],
+  "ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],
+  "มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]
+};
+const SUBJECT_ORDER = [
+  "ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี",
+  "สังคมศึกษา ศาสนาและวัฒนธรรม","สุขศึกษาและพลศึกษา",
+  "ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ (ภาษาอังกฤษ)","ปฐมวัย"
+];
+
 async function loadData(){
-  try{ DATA = await fetch('data.json').then(r=>r.json()); }
-  catch(e){
-    DATA = [
-      {grade:"ป.1",subject:"ภาษาไทย",standard:"ท 1.1",indicator:"ท 1.1 ป.1/1",indicator_text:"ตัวอย่างข้อความตัวชี้วัด",unit:"การอ่าน",topic:"การอ่านคำพื้นฐาน"},
-      {grade:"ป.4",subject:"คณิตศาสตร์",standard:"ค 1.1",indicator:"ค 1.1 ป.4/1",indicator_text:"ตัวอย่างข้อความตัวชี้วัด",unit:"จำนวนและพีชคณิต",topic:"จำนวนนับ"}
-    ];
+  try{
+    const res = await fetch('data.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('โหลด data.json ไม่สำเร็จ');
+    DATA = await res.json();
+  } catch(e){
+    console.error(e);
+    DATA = [];
   }
-  $('kpiRows').textContent = DATA.length;
-  buildCurricula();
+  $('kpiRows').textContent = DATA.length.toLocaleString('th-TH');
+  setupStageButtons();
+  buildGrades();
 }
 function unique(arr){ return [...new Set(arr)].filter(Boolean); }
 function fillSelect(el, values, label){
   el.innerHTML = '';
   values.forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});
-  if(!values.length){let o=document.createElement('option');o.textContent=label||'ไม่มีข้อมูล';el.appendChild(o)}
+  if(!values.length){let o=document.createElement('option');o.value='';o.textContent=label||'ไม่มีข้อมูล';el.appendChild(o)}
 }
-function buildCurricula(){
-  fillSelect($('curriculum'), unique(DATA.map(x=>x.curriculum)));
-  $('curriculum').onchange=buildGrades;
+function setupStageButtons(){
+  document.querySelectorAll('.stage-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      ACTIVE_STAGE=btn.dataset.stage;
+      document.querySelectorAll('.stage-btn').forEach(x=>x.classList.toggle('active',x===btn));
+      buildGrades();
+    };
+  });
+  document.querySelector('.stage-btn[data-stage="'+ACTIVE_STAGE+'"]').classList.add('active');
+}
+function curriculumForStage(){
+  return ACTIVE_STAGE==="ปฐมวัย"
+    ? "หลักสูตรการศึกษาปฐมวัย พ.ศ. 2568"
+    : "หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551 (รวมฉบับปรับปรุง พ.ศ. 2560)";
+}
+function gradeMatches(r,g){
+  return r.grade===g || (Array.isArray(r.available_grades) && r.available_grades.includes(g));
+}
+function buildGrades(){
+  $('curriculumInfo').textContent = curriculumForStage();
+  const available = STAGE_GRADES[ACTIVE_STAGE].filter(g=>DATA.some(r=>r.stage===ACTIVE_STAGE && gradeMatches(r,g)));
+  fillSelect($('grade'), available, 'ไม่มีระดับชั้น');
   $('grade').onchange=buildSubjects;
   $('subject').onchange=buildIndicators;
   $('indicator').onchange=syncRecord;
-  buildGrades();
-}
-function buildGrades(){
-  const c=$('curriculum').value;
-  fillSelect($('grade'), unique(DATA.filter(x=>x.curriculum===c).map(x=>x.grade)));
   buildSubjects();
 }
 function buildSubjects(){
-  const c=$('curriculum').value,g=$('grade').value;
-  fillSelect($('subject'), unique(DATA.filter(x=>x.curriculum===c&&x.grade===g).map(x=>x.subject)));
+  const g=$('grade').value;
+  let values=unique(DATA.filter(r=>r.stage===ACTIVE_STAGE&&gradeMatches(r,g)).map(r=>r.subject));
+  values.sort((a,b)=>{
+    const ia=SUBJECT_ORDER.indexOf(a), ib=SUBJECT_ORDER.indexOf(b);
+    return (ia<0?999:ia)-(ib<0?999:ib) || a.localeCompare(b,'th');
+  });
+  fillSelect($('subject'), values, 'ไม่มีกลุ่มสาระ');
   buildIndicators();
 }
+function currentRows(){
+  const g=$('grade').value,s=$('subject').value;
+  return DATA.filter(r=>r.stage===ACTIVE_STAGE&&gradeMatches(r,g)&&r.subject===s);
+}
 function buildIndicators(){
-  const c=$('curriculum').value,g=$('grade').value,s=$('subject').value;
-  const rows=DATA.filter(x=>x.curriculum===c&&x.grade===g&&x.subject===s);
+  const rows=currentRows();
   $('indicator').innerHTML='';
-  rows.forEach((r,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${r.indicator} — ${r.indicator_text}`;$('indicator').appendChild(o)});
+  rows.forEach((r,i)=>{
+    let o=document.createElement('option');
+    o.value=i;
+    const kind = r.classification ? ` [${r.classification}]` : '';
+    o.textContent=`${r.indicator}${kind} — ${r.indicator_text}`;
+    $('indicator').appendChild(o)
+  });
+  if(!rows.length){let o=document.createElement('option');o.value='';o.textContent='ไม่มีข้อมูลตัวชี้วัด';$('indicator').appendChild(o)}
   syncRecord();
 }
 function selectedRecord(){
-  const c=$('curriculum').value,g=$('grade').value,s=$('subject').value;
-  const rows=DATA.filter(x=>x.curriculum===c&&x.grade===g&&x.subject===s);
+  const rows=currentRows();
   return rows[Number($('indicator').value||0)] || {};
 }
 function syncRecord(){
   const r=selectedRecord();
-  $('unit').value=r.unit||'';
-  $('topic').value=r.topic||'';
-  $('indicatorMeta').textContent = r.status ? `สถานะข้อมูล: ${r.status} • แหล่ง: ${r.source||'-'}` : '';
+  $('unit').value=r.domain||'';
+  $('topic').value='';
+  let bits=[];
+  if(r.status) bits.push(`สถานะ: ${r.status}`);
+  if(r.classification) bits.push(`ประเภท: ${r.classification}`);
+  if(r.grade==="ม.4–6") bits.push('ใช้ร่วมกันใน ม.4–ม.6');
+  $('indicatorMeta').textContent = bits.join(' • ');
 }
 function demoLogin(){
   $('landing').style.display='none'; $('dashboard').style.display='block';
@@ -208,8 +271,8 @@ function generatePrompt(){
   const r=selectedRecord();
   const prompt=`สร้างแผนการจัดการเรียนรู้หน้าเดียวสำหรับครูไทย โดยใช้ข้อมูลต่อไปนี้
 
-หลักสูตร: ${$('curriculum').value}
-ระดับชั้น: ${$('grade').value}
+หลักสูตร: ${curriculumForStage()}
+ช่วงชั้น: ${ACTIVE_STAGE}\nระดับชั้น: ${$('grade').value}
 กลุ่มสาระการเรียนรู้: ${$('subject').value}
 มาตรฐานการเรียนรู้: ${r.standard||'-'}
 รหัสตัวชี้วัด/ผลลัพธ์การเรียนรู้: ${r.indicator||'-'}
