@@ -1,8 +1,10 @@
-KLANG PLAN V6.6 CRITICAL HOTFIX
-แก้ JavaScript หยุดทำงานทั้งหมดจากการอ้าง #joinNow ที่ไม่มีอยู่ในหน้าใหม่
-ผลที่แก้:
-- data.json โหลดได้
-- ปุ่ม ปฐมวัย / ประถม / มัธยม กดได้
-- ระดับชั้น / กลุ่มสาระ / ตัวชี้วัดทำงาน
-- ปุ่มเลือกประเภทงานและสร้าง Prompt ทำงานต่อได้
-คงระบบ Responsive, Member/Admin/Supabase และฐานข้อมูล 2,155 รายการเดิม
+KLANG PLAN V6.9 SMART CONTINUE BUILDER
+ใหม่:
+- ใบงาน: แนวใบงาน / จำนวน / เฉลย / รูปแบบ
+- แบบทดสอบ: ปรนัย-อัตนัย / จำนวน / ระดับ / เฉลย
+- ใบความรู้: A4 / Infographic / อ่านง่าย / Mind Map
+- Rubric: ประเภทการประเมิน / ระดับคะแนน / เกณฑ์ผ่าน
+- เกม: แนวเกม + Canva / Wordwall / Quizizz / Kahoot / Genially / ChatGPT / HTML / เกมกระดาษ
+- Teaching Pack: Preset + เลือกชิ้นงานในชุด
+- ใช้ข้อมูลแผนเดิมทั้งหมด ไม่ต้องกรอกหลักสูตรซ้ำ
+ฐาน: V6.8 + Prompt Engine + Supabase + Admin + Curriculum 2,155 รายการ

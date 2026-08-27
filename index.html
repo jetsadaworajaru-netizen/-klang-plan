@@ -93,6 +93,33 @@
     <div id="summary" class="summary clean-summary"></div>
     <button id="generateBtn" class="btn final-generate">✨ สร้าง Prompt ตอนนี้</button>
     <div id="promptBox" class="promptbox"><div class="prompt-actions"><button id="copyPrompt" class="btn btn-blue">📋 คัดลอก Prompt</button><button id="savePrompt" class="btn btn-ghost">♡ บันทึกประวัติ</button></div><pre id="promptText"></pre></div>
+    <div id="continuePanel" class="continue-panel" style="display:none">
+      <div class="continue-head">
+        <span class="continue-spark">✨</span>
+        <div>
+          <h3 id="continueTitle">สร้างอะไรต่อจากแผนนี้?</h3>
+          <p>ใช้ชั้น วิชา ตัวชี้วัด เรื่อง และบริบทเดิมให้ทันที ไม่ต้องกรอกใหม่</p>
+        </div>
+      </div>
+      <div id="continueTools" class="continue-tools"></div>
+
+      <div id="smartContinueConfig" class="smart-continue-config" style="display:none">
+        <div class="smart-config-head">
+          <div>
+            <span id="smartConfigIcon">📝</span>
+            <div>
+              <b id="smartConfigTitle">ตั้งค่าการสร้าง</b>
+              <small>เลือกเฉพาะสิ่งที่ต้องการ แล้วค่อยสร้าง Prompt</small>
+            </div>
+          </div>
+          <button id="closeSmartConfig" class="smart-close" type="button">✕</button>
+        </div>
+        <div id="smartConfigBody" class="smart-config-body"></div>
+        <button id="smartCreateBtn" class="btn smart-create-btn" type="button">✨ สร้าง Prompt</button>
+      </div>
+
+      <div class="continue-note">ทุกตัวเลือกใช้ข้อมูลหลักสูตรและตัวชี้วัดเดิมอัตโนมัติ</div>
+    </div>
   </section>
 </div>
 </section>
