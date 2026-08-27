@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#071A33" />
+<title>คลังแผนการสอนหน้าเดียว | VIP</title>
+<style>
+:root{
+  --navy:#071A33; --navy2:#0B2B55; --blue:#19A7FF; --gold:#F6C453;
+  --gold2:#D89B20; --white:#F8FBFF; --muted:#AFC4DC; --card:#0D2548;
+  --line:rgba(255,255,255,.12); --ok:#26d07c;
+}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Thai",Tahoma,sans-serif;background:
+radial-gradient(circle at 20% 10%,rgba(25,167,255,.18),transparent 35%),
+linear-gradient(150deg,#061428 0%,#0a2140 45%,#07152b 100%);color:var(--white);min-height:100vh}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:1180px;margin:auto;padding:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0 20px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,var(--blue),#0650b8);display:grid;place-items:center;font-size:28px;box-shadow:0 0 28px rgba(25,167,255,.34);border:1px solid rgba(255,255,255,.25)}
+.brand h1{font-size:20px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.vip{padding:8px 12px;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#14213b;font-weight:900;box-shadow:0 6px 22px rgba(246,196,83,.25)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:stretch}
+.panel{background:linear-gradient(180deg,rgba(13,37,72,.95),rgba(7,26,51,.92));border:1px solid var(--line);border-radius:26px;padding:24px;box-shadow:0 24px 65px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
+.hero h2{font-size:clamp(28px,5vw,50px);line-height:1.1;margin:4px 0 14px}
+.gold{color:var(--gold)} .sub{color:var(--muted);line-height:1.7}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}.chip{border:1px solid rgba(25,167,255,.35);background:rgba(25,167,255,.09);padding:8px 10px;border-radius:12px;color:#c8edff;font-size:13px}
+.login h3,.builder h3{margin:0 0 14px}.field{margin:12px 0}.field label{display:block;margin-bottom:7px;color:#c9d8eb;font-size:14px}
+.field input,.field select,.field textarea{width:100%;border:1px solid rgba(255,255,255,.14);background:#071A33;color:#fff;border-radius:14px;padding:13px 14px;outline:none}
+.field textarea{min-height:90px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(25,167,255,.12)}
+.btn{border:none;border-radius:14px;padding:13px 16px;font-weight:800;cursor:pointer}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--gold),#ffda73);color:#16203a;box-shadow:0 8px 25px rgba(246,196,83,.18)}
+.btn-blue{background:linear-gradient(135deg,#1ab4ff,#0a72e8);color:white}.btn-ghost{background:rgba(255,255,255,.07);color:white;border:1px solid var(--line)}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+.dashboard{display:none;margin-top:22px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.member{display:flex;align-items:center;gap:10px}.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(25,167,255,.15);border:1px solid rgba(25,167,255,.35)}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}.side .menu{display:grid;gap:10px}.menu button{text-align:left;background:rgba(255,255,255,.055);border:1px solid var(--line);color:#fff;padding:13px;border-radius:14px}.menu button.active{background:rgba(25,167,255,.14);border-color:rgba(25,167,255,.5)}
+.builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.span2{grid-column:1/-1}
+.progress{display:flex;align-items:center;gap:7px;margin-bottom:18px;overflow:auto;padding-bottom:4px}.dot{min-width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:#112f59;color:#95b8df;border:1px solid rgba(255,255,255,.12)}.dot.on{background:var(--gold);color:#15213a;font-weight:900}
+.prompt{display:none;margin-top:18px;border:1px solid rgba(38,208,124,.3);background:rgba(38,208,124,.06);border-radius:18px;padding:18px}
+.prompt pre{white-space:pre-wrap;word-break:break-word;margin:0;color:#eaf5ff;line-height:1.65;font-family:inherit;font-size:14px}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.kpi{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px}.kpi b{display:block;font-size:23px;color:var(--gold)}.kpi span{font-size:12px;color:var(--muted)}
+.footer{padding:28px 0 10px;color:#7f9ab9;text-align:center;font-size:12px}
+@media(max-width:850px){.hero,.grid{grid-template-columns:1fr}.side{display:none}.builder-grid{grid-template-columns:1fr}.span2{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start}.brand h1{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><div class="logo">📘</div><div><h1>คลังแผนการสอนหน้าเดียว</h1><p>ครบวิชา • ครบชั้น • ครบตัวชี้วัด</p></div></div>
+    <div class="vip">VIP MEMBER</div>
+  </div>
+
+  <section class="hero" id="landing">
+    <div class="panel">
+      <div class="chip" style="display:inline-block">✨ Prompt Generator สำหรับครู</div>
+      <h2>สร้าง Prompt แผนการสอน<br><span class="gold">จบในไม่กี่ขั้นตอน</span></h2>
+      <p class="sub">เลือกหลักสูตร ชั้น กลุ่มสาระ มาตรฐาน/ตัวชี้วัด เรื่อง และรูปแบบการสอน ระบบจะประกอบ Prompt ให้พร้อมคัดลอกไปใช้ใน ChatGPT</p>
+      <div class="steps">
+        <span class="chip">1. เลือกชั้น</span><span class="chip">2. เลือกวิชา</span><span class="chip">3. เลือกตัวชี้วัด</span><span class="chip">4. เลือกรูปแบบ</span><span class="chip">5. สร้าง Prompt</span>
+      </div>
+    </div>
+    <div class="panel login">
+      <h3>🔐 เข้าสู่ระบบสมาชิก VIP</h3>
+      <div class="field"><label>อีเมล / เบอร์โทร</label><input id="loginUser" placeholder="เช่น teacher@example.com"></div>
+      <div class="field"><label>รหัสผ่าน</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" onclick="login()">เข้าสู่ระบบ VIP</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:9px" onclick="demoLogin()">ทดลองระบบ</button>
+      <div class="note">เวอร์ชันนี้เป็นต้นแบบ Frontend สำหรับทดสอบ UX ก่อนเชื่อมระบบสมาชิกจริง (เช่น Supabase/Auth)</div>
+    </div>
+  </section>
+
+  <section class="dashboard" id="dashboard">
+    <div class="toolbar">
+      <div class="member"><div class="avatar">👩‍🏫</div><div><b id="memberName">สมาชิก VIP</b><div style="font-size:12px;color:var(--muted)">สถานะ: <span style="color:var(--ok)">● ใช้งานได้</span></div></div></div>
+      <button class="btn btn-ghost" onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="grid">
+      <aside class="panel side">
+        <h3 style="margin-top:0">เมนู</h3>
+        <div class="menu">
+          <button class="active">📝 สร้าง Prompt</button>
+          <button>📚 คลังแผนการสอน</button>
+          <button>🎯 คลังตัวชี้วัด</button>
+          <button>⭐ รายการโปรด</button>
+          <button>🕘 ประวัติการสร้าง</button>
+          <button>👤 บัญชีสมาชิก</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><b id="kpiRows">0</b><span>รายการในฐานข้อมูล</span></div>
+          <div class="kpi"><b>10+</b><span>รูปแบบการสอน</span></div>
+          <div class="kpi"><b>VIP</b><span>สิทธิ์สมาชิก</span></div>
+        </div>
+      </aside>
+
+      <main class="panel builder">
+        <h3>✨ สร้าง Prompt แผนการสอนหน้าเดียว</h3>
+        <div class="progress"><div class="dot on">1</div><div class="dot on">2</div><div class="dot on">3</div><div class="dot">4</div><div class="dot">5</div></div>
+        <div class="builder-grid">
+          <div class="field span2"><label>หลักสูตร</label><select id="curriculum"></select></div>
+          <div class="field"><label>ระดับชั้น</label><select id="grade"></select></div>
+          <div class="field"><label>กลุ่มสาระการเรียนรู้</label><select id="subject"></select></div>
+          <div class="field"><label>มาตรฐาน / ตัวชี้วัด</label><select id="indicator"></select>
+            <div id="indicatorMeta" class="note"></div>
+          </div>
+          <div class="field"><label>หน่วยการเรียนรู้</label><input id="unit" placeholder="ระบบเติมจากฐานข้อมูล"></div>
+          <div class="field span2"><label>เรื่องที่จะสอน</label><input id="topic" placeholder="เช่น การบวกจำนวนสองหลัก"></div>
+          <div class="field"><label>เวลา</label><select id="duration"><option>1 คาบ (50–60 นาที)</option><option>2 คาบ</option><option>3 คาบ</option><option>1 ชั่วโมง</option><option>2 ชั่วโมง</option></select></div>
+          <div class="field"><label>รูปแบบการจัดการเรียนรู้</label><select id="method">
+            <option>Active Learning</option><option>GPAS 5 Steps</option><option>5E</option><option>Game-Based Learning</option>
+            <option>Project-Based Learning (PBL)</option><option>Problem-Based Learning</option><option>Cooperative Learning</option>
+            <option>STEM / STEAM</option><option>Coding / Computational Thinking</option>
+          </select></div>
+          <div class="field span2"><label>บริบท/ข้อมูลเพิ่มเติม (ไม่บังคับ)</label><textarea id="extra" placeholder="เช่น นักเรียน 30 คน ต้องการกิจกรรมกลุ่ม ใช้สื่อที่หาได้ง่ายในห้องเรียน"></textarea></div>
+          <div class="span2"><button class="btn btn-primary" onclick="generatePrompt()">✨ สร้าง Prompt</button></div>
+        </div>
+
+        <div class="prompt" id="promptBox">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px">
+            <b>Prompt พร้อมใช้งาน</b><span style="font-size:12px;color:var(--ok)">● สร้างแล้ว</span>
+          </div>
+          <pre id="promptText"></pre>
+          <div class="actions">
+            <button class="btn btn-blue" onclick="copyPrompt()">📋 คัดลอก Prompt</button>
+            <button class="btn btn-ghost" onclick="generatePrompt()">🔄 สร้างใหม่</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <div class="footer">คลังแผนการสอนหน้าเดียว • เพิ่มฐานภาษาไทย ป.1–6 แล้ว และกำลังตรวจข้อความกับเอกสาร สพฐ.</div>
+</div>
+
+<script>
+let DATA = [];
+const $ = id => document.getElementById(id);
+
+async function loadData(){
+  try{ DATA = await fetch('data.json').then(r=>r.json()); }
+  catch(e){
+    DATA = [
+      {grade:"ป.1",subject:"ภาษาไทย",standard:"ท 1.1",indicator:"ท 1.1 ป.1/1",indicator_text:"ตัวอย่างข้อความตัวชี้วัด",unit:"การอ่าน",topic:"การอ่านคำพื้นฐาน"},
+      {grade:"ป.4",subject:"คณิตศาสตร์",standard:"ค 1.1",indicator:"ค 1.1 ป.4/1",indicator_text:"ตัวอย่างข้อความตัวชี้วัด",unit:"จำนวนและพีชคณิต",topic:"จำนวนนับ"}
+    ];
+  }
+  $('kpiRows').textContent = DATA.length;
+  buildCurricula();
+}
+function unique(arr){ return [...new Set(arr)].filter(Boolean); }
+function fillSelect(el, values, label){
+  el.innerHTML = '';
+  values.forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});
+  if(!values.length){let o=document.createElement('option');o.textContent=label||'ไม่มีข้อมูล';el.appendChild(o)}
+}
+function buildCurricula(){
+  fillSelect($('curriculum'), unique(DATA.map(x=>x.curriculum)));
+  $('curriculum').onchange=buildGrades;
+  $('grade').onchange=buildSubjects;
+  $('subject').onchange=buildIndicators;
+  $('indicator').onchange=syncRecord;
+  buildGrades();
+}
+function buildGrades(){
+  const c=$('curriculum').value;
+  fillSelect($('grade'), unique(DATA.filter(x=>x.curriculum===c).map(x=>x.grade)));
+  buildSubjects();
+}
+function buildSubjects(){
+  const c=$('curriculum').value,g=$('grade').value;
+  fillSelect($('subject'), unique(DATA.filter(x=>x.curriculum===c&&x.grade===g).map(x=>x.subject)));
+  buildIndicators();
+}
+function buildIndicators(){
+  const c=$('curriculum').value,g=$('grade').value,s=$('subject').value;
+  const rows=DATA.filter(x=>x.curriculum===c&&x.grade===g&&x.subject===s);
+  $('indicator').innerHTML='';
+  rows.forEach((r,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${r.indicator} — ${r.indicator_text}`;$('indicator').appendChild(o)});
+  syncRecord();
+}
+function selectedRecord(){
+  const c=$('curriculum').value,g=$('grade').value,s=$('subject').value;
+  const rows=DATA.filter(x=>x.curriculum===c&&x.grade===g&&x.subject===s);
+  return rows[Number($('indicator').value||0)] || {};
+}
+function syncRecord(){
+  const r=selectedRecord();
+  $('unit').value=r.unit||'';
+  $('topic').value=r.topic||'';
+  $('indicatorMeta').textContent = r.status ? `สถานะข้อมูล: ${r.status} • แหล่ง: ${r.source||'-'}` : '';
+}
+function demoLogin(){
+  $('landing').style.display='none'; $('dashboard').style.display='block';
+  $('memberName').textContent='คุณครู (โหมดทดลอง)';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function login(){
+  if(!$('loginUser').value.trim()){alert('กรุณากรอกอีเมลหรือเบอร์โทร');return}
+  demoLogin(); $('memberName').textContent=$('loginUser').value.trim();
+}
+function logout(){
+  $('dashboard').style.display='none'; $('landing').style.display='grid';
+}
+function generatePrompt(){
+  const r=selectedRecord();
+  const prompt=`สร้างแผนการจัดการเรียนรู้หน้าเดียวสำหรับครูไทย โดยใช้ข้อมูลต่อไปนี้
+
+หลักสูตร: ${$('curriculum').value}
+ระดับชั้น: ${$('grade').value}
+กลุ่มสาระการเรียนรู้: ${$('subject').value}
+มาตรฐานการเรียนรู้: ${r.standard||'-'}
+รหัสตัวชี้วัด/ผลลัพธ์การเรียนรู้: ${r.indicator||'-'}
+ข้อความตัวชี้วัด/ผลลัพธ์การเรียนรู้: ${r.indicator_text||'-'}
+หน่วยการเรียนรู้: ${$('unit').value||'-'}
+เรื่อง: ${$('topic').value||'-'}
+เวลา: ${$('duration').value}
+รูปแบบการจัดการเรียนรู้: ${$('method').value}
+บริบทเพิ่มเติม: ${$('extra').value||'ไม่มี'}
+
+ข้อกำหนด:
+1. จัดทำเป็น “แผนการสอนหน้าเดียว” ภาษาไทย อ่านง่าย กระชับ แต่ข้อมูลครบและสอดคล้องกัน
+2. ประกอบด้วย ชื่อแผน, มาตรฐาน/ตัวชี้วัด, สาระสำคัญ, จุดประสงค์การเรียนรู้, สมรรถนะ/คุณลักษณะที่เกี่ยวข้อง, สาระการเรียนรู้, ขั้นตอนกิจกรรมการเรียนรู้ตามรูปแบบที่เลือก, สื่อ/แหล่งเรียนรู้ และการวัดประเมินผล
+3. กิจกรรมต้องเหมาะกับระดับชั้น เวลา และบริบทห้องเรียนจริง
+4. จุดประสงค์ กิจกรรม และการประเมินต้องสอดคล้องกัน
+5. ออกแบบเลย์เอาต์ A4 แนวตั้ง สไตล์ Modern Thai Education Infographic สวยทันสมัย อ่านชัด และพร้อมนำไปสร้างเป็นภาพ
+6. ห้ามแต่งรหัสตัวชี้วัดใหม่ ให้ใช้ข้อมูลที่กำหนดเท่านั้น
+7. ตรวจทานภาษาไทยและความถูกต้องก่อนสร้างผลงาน\n8. หากสถานะข้อมูลยังเป็น “รอตรวจข้อความ” ห้ามแต่งหรือเดาข้อความตัวชี้วัด ให้แจ้งว่าต้องตรวจฐานข้อมูลทางการก่อน`;
+  $('promptText').textContent=prompt;
+  $('promptBox').style.display='block';
+  $('promptBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function copyPrompt(){
+  const text=$('promptText').textContent;
+  try{ await navigator.clipboard.writeText(text); alert('คัดลอก Prompt แล้ว ✅');}
+  catch(e){ const ta=document.createElement('textarea'); ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('คัดลอก Prompt แล้ว ✅');}
+}
+loadData();
+</script>
+</body>
+</html>
