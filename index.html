@@ -1,71 +1,101 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f7fbff"><title>คลังแผนการสอนหน้าเดียว</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f7fbff">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
 <header class="topbar"><div class="wrap nav"><div class="brand" data-go="home"><img class="brand-logo" src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว"><div><b>คลังแผนการสอนหน้าเดียว</b><small>แผนง่าย • ครบ • จบในหน้าเดียว</small></div></div><div class="nav-actions"><span id="memberChip" class="member-chip" style="display:none"></span><button class="btn btn-ghost hide-mobile" data-go="generator">สร้าง Prompt</button><button id="adminBtn" class="btn btn-ghost" data-go="admin" style="display:none">หลังบ้าน</button><button id="authBtn" class="btn btn-gold">เข้าสู่ระบบ</button></div></div></header>
 <main>
 <section id="homeView" class="view active">
-<div class="home-shell">
+<div class="simple-home">
   <div class="wrap">
-    <div class="learning-hero">
-      <div class="hero-copy">
-        <div class="eyebrow bright">✨ AI TEACHER WORKSPACE</div>
-        <h1>คลังแผน<br><span class="gradient-text">การสอนหน้าเดียว</span></h1>
-        <p class="hero-tagline">“แผนง่าย ครบ จบในหน้าเดียว”</p>
-        <p class="sub bright-sub">เลือกช่วงชั้นและตัวชี้วัดเพียงครั้งเดียว ระบบช่วยสร้าง Prompt สำหรับแผน ใบงาน แบบทดสอบ Rubric ใบความรู้ และสื่อการสอนที่สอดคล้องกัน</p>
-        <div class="benefit-row">
-          <div class="benefit"><span>👥</span><b>เข้าใจง่าย</b><small>ขั้นตอนชัดเจน</small></div>
-          <div class="benefit"><span>🎯</span><b>ใช้ได้จริง</b><small>ตรงตามหลักสูตร</small></div>
-          <div class="benefit"><span>✅</span><b>ครบมาตรฐาน</b><small>โยงตัวชี้วัด</small></div>
-          <div class="benefit"><span>🤖</span><b>สร้างด้วย AI</b><small>รวดเร็ว แม่นยำ</small></div>
-        </div>
-        <div class="hero-actions">
-          <button class="btn btn-primary-3d" data-go="generator">🚀 เริ่มสร้าง Prompt</button>
-          <button class="btn btn-soft" id="joinNow">👩‍🏫 สมัครสมาชิก</button>
-        </div>
-      </div>
-      <div class="hero-visual">
-        <div class="logo-orbit">
-          <img src="brand-logo.png" alt="โลโก้คลังแผนการสอนหน้าเดียว">
-          <span class="orb orb1">📚</span><span class="orb orb2">✏️</span><span class="orb orb3">💡</span><span class="orb orb4">🎓</span>
-        </div>
-        <div class="quick-stats">
-          <div><b>2,155</b><span>รายการหลักสูตร</span></div>
-          <div><b>อ.1–ม.6</b><span>ครอบคลุมทุกช่วงชั้น</span></div>
-          <div><b>8+</b><span>รูปแบบสื่อ</span></div>
-        </div>
+    <div class="simple-hero">
+      <div class="simple-hero-logo"><img src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว"></div>
+      <div class="simple-hero-copy">
+        <span class="simple-badge">✨ เครื่องมือสำหรับครูไทย</span>
+        <h1>สร้างงานสอนให้<span>ง่ายขึ้น</span><br>จากตัวชี้วัดเดียว</h1>
+        <p>เลือกสิ่งที่อยากสร้างก่อน แล้วค่อยกรอกข้อมูลหลักสูตร ระบบจะจัดลำดับให้ทีละขั้นจนถึงปุ่มสร้าง Prompt</p>
       </div>
     </div>
 
-    <div class="section-title-center">
-      <span>🌈 เริ่มต้นง่าย ๆ</span>
-      <h2>เลือกช่วงชั้นที่คุณสอน</h2>
-      <p>ระบบจะกรองหลักสูตร กลุ่มสาระ และตัวชี้วัดให้เหมาะสมโดยอัตโนมัติ</p>
-    </div>
+    <section class="start-create">
+      <div class="simple-section-title">
+        <span>ขั้นตอนที่ 1</span>
+        <h2>วันนี้อยากสร้างอะไร?</h2>
+        <p>กดเลือก 1 อย่างเพื่อเริ่มต้น</p>
+      </div>
+      <div class="start-tool-grid">
+        <button class="start-tool lesson" data-tool-start="lesson"><span class="tool-emoji">📘</span><b>แผนการสอน</b><small>แผนหน้าเดียวพร้อมใช้</small></button>
+        <button class="start-tool worksheet" data-tool-start="worksheet"><span class="tool-emoji">📝</span><b>ใบงาน</b><small>ตรงตามตัวชี้วัด</small></button>
+        <button class="start-tool quiz" data-tool-start="quiz"><span class="tool-emoji">✅</span><b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
+        <button class="start-tool knowledge" data-tool-start="knowledge"><span class="tool-emoji">📚</span><b>ใบความรู้</b><small>สรุปตรงระดับชั้น</small></button>
+        <button class="start-tool rubric" data-tool-start="rubric"><span class="tool-emoji">📊</span><b>แบบประเมิน</b><small>Rubric / Checklist</small></button>
+        <button class="start-tool game" data-tool-start="game"><span class="tool-emoji">🎮</span><b>กิจกรรม / เกม</b><small>Active Learning</small></button>
+        <button class="start-tool exercise" data-tool-start="exercise"><span class="tool-emoji">✏️</span><b>แบบฝึกหัด</b><small>หลายระดับความยาก</small></button>
+        <button class="start-tool pack featured" data-tool-start="pack"><span class="tool-emoji">🎁</span><b>Teaching Pack</b><small>ครบชุดในครั้งเดียว</small></button>
+      </div>
+    </section>
 
-    <div class="stage-grid learning-stages">
-      <article class="stage-card preschool" data-stage-go="ปฐมวัย">
-        <div class="stage-3d">🌱</div><div class="stage-no">01</div>
-        <h3>ปฐมวัย</h3><p>อนุบาล 1–3</p><small>เรียนรู้ผ่านประสบการณ์และกิจกรรม</small>
-        <div class="stage-arrow">เริ่มใช้งาน →</div>
-      </article>
-      <article class="stage-card primary" data-stage-go="ประถมศึกษา">
-        <div class="stage-3d">📘</div><div class="stage-no">02</div>
-        <h3>ประถมศึกษา</h3><p>ป.1–ป.6</p><small>8 กลุ่มสาระ • ตัวชี้วัดครบ</small>
-        <div class="stage-arrow">เริ่มใช้งาน →</div>
-      </article>
-      <article class="stage-card secondary" data-stage-go="มัธยมศึกษา">
-        <div class="stage-3d">🎓</div><div class="stage-no">03</div>
-        <h3>มัธยมศึกษา</h3><p>ม.1–ม.6</p><small>วางแผนการสอนและประเมินผล</small>
-        <div class="stage-arrow">เริ่มใช้งาน →</div>
-      </article>
-    </div>
-
-    <div class="feature-strip">
-      <div class="feature-intro"><span>🧰</span><div><b>เลือกตัวชี้วัดครั้งเดียว</b><small>นำข้อมูลเดียวกันไปสร้างสื่อได้หลายรูปแบบ</small></div></div>
-      <div class="feature-chips"><span>📋 แผนการสอน</span><span>📝 ใบงาน</span><span>✅ แบบทดสอบ</span><span>📊 Rubric</span><span>📚 ใบความรู้</span><span>🎮 เกมการเรียนรู้</span></div>
+    <div class="simple-how">
+      <div><span>1</span><b>เลือกงาน</b><small>แผน / ใบงาน / สื่อ</small></div>
+      <i>→</i><div><span>2</span><b>เลือกหลักสูตร</b><small>ชั้น วิชา ตัวชี้วัด</small></div>
+      <i>→</i><div><span>3</span><b>ใส่รายละเอียด</b><small>เรื่อง เวลา รูปแบบ</small></div>
+      <i>→</i><div><span>4</span><b>สร้าง Prompt</b><small>คัดลอกไปใช้ได้ทันที</small></div>
     </div>
   </div>
 </div>
 </section>
-<section id="generatorView" class="view"><div class="wrap"><div class="section-head"><h2>สร้างผลงานจากตัวชี้วัด</h2><p>ค้นหาและเลือกตัวชี้วัด แล้วเลือกชนิดผลงานที่ต้องการสร้าง</p></div><div class="generator-layout"><aside class="panel side"><h3>ข้อมูลหลักสูตร</h3><div class="steps"><div class="step on"><span class="n">1</span>ช่วงชั้น</div><div class="step"><span class="n">2</span>ชั้น</div><div class="step"><span class="n">3</span>กลุ่มสาระ</div><div class="step"><span class="n">4</span>ตัวชี้วัด</div><div class="step"><span class="n">5</span>เลือกผลงาน</div></div><div class="field"><label>ช่วงชั้น</label><div class="stage-tabs"><button class="stage-tab active" data-stage="ปฐมวัย">ปฐมวัย</button><button class="stage-tab" data-stage="ประถมศึกษา">ประถม</button><button class="stage-tab" data-stage="มัธยมศึกษา">มัธยม</button></div></div><div class="field"><label>ระดับชั้น</label><select id="grade"></select></div><div class="field"><label>กลุ่มสาระ / ด้าน</label><select id="subject"></select></div><div class="field"><label>ค้นหาตัวชี้วัด</label><input id="indicatorSearch" placeholder="พิมพ์รหัสหรือคำ เช่น เศษส่วน, สี, การอ่าน"><div id="searchResults" class="search-results"></div></div><div class="field"><label>ตัวชี้วัด / ความสามารถ</label><select id="indicator"></select></div><div id="indicatorBox" class="indicator-box">กำลังโหลดข้อมูล...</div><div class="field"><label>เรื่องที่จะสอน</label><input id="topic" placeholder="เช่น สีคู่ตรงข้ามสร้างอารมณ์"></div><div class="field"><label>เวลา</label><select id="duration"><option>1 คาบ (50–60 นาที)</option><option>2 คาบ</option><option>3 คาบ</option><option>1 ชั่วโมง</option><option>2 ชั่วโมง</option></select></div><div class="field"><label>รูปแบบการจัดการเรียนรู้</label><select id="method"><option>Active Learning</option><option>GPAS 5 Steps</option><option>5E</option><option>Game-Based Learning</option><option>Project-Based Learning (PBL)</option><option>Problem-Based Learning</option><option>Cooperative Learning</option><option>STEM / STEAM</option></select></div><div class="field"><label>บริบทเพิ่มเติม</label><textarea id="context" placeholder="เช่น นักเรียน 25 คน ใช้สื่อหาได้ง่าย"></textarea></div><div id="summary" class="summary"></div></aside><section class="panel"><h3 style="margin-top:0">เลือกสิ่งที่ต้องการสร้าง</h3><p class="sub" style="font-size:14px">สิทธิ์ของสมาชิกจะกำหนดเครื่องมือที่ใช้งานได้</p><div id="tools" class="tools"></div><div id="toolOptions"></div><div style="margin-top:14px"><button id="generateBtn" class="btn btn-gold" style="width:100%">✨ สร้าง Prompt</button></div><div id="promptBox" class="promptbox"><div class="prompt-actions"><button id="copyPrompt" class="btn btn-blue">📋 คัดลอก Prompt</button><button id="savePrompt" class="btn btn-ghost">♡ บันทึกประวัติ</button></div><pre id="promptText"></pre></div></section></div></div></section>
+<section id="generatorView" class="view">
+<div class="wrap simple-generator">
+  <div class="generator-top">
+    <button class="back-home" data-go="home">← หน้าแรก</button>
+    <div class="flow-progress">
+      <div class="flow-dot active"><span>1</span><b>เลือกงาน</b></div>
+      <div class="flow-line"></div>
+      <div class="flow-dot"><span>2</span><b>ข้อมูล</b></div>
+      <div class="flow-line"></div>
+      <div class="flow-dot"><span>3</span><b>รายละเอียด</b></div>
+      <div class="flow-line"></div>
+      <div class="flow-dot"><span>4</span><b>สร้าง</b></div>
+    </div>
+  </div>
+
+  <section class="flow-card" id="flowToolStep">
+    <div class="flow-head"><span class="flow-number">1</span><div><h2>เลือกสิ่งที่ต้องการสร้าง</h2><p>เริ่มจากเลือกผลงานก่อน ระบบจะพาไปขั้นถัดไป</p></div></div>
+    <div id="tools" class="tools simple-tools"></div>
+  </section>
+
+  <section class="flow-card" id="flowDetailsStep" style="display:none">
+    <div class="flow-head"><span class="flow-number">2</span><div><h2>เลือกข้อมูลหลักสูตร</h2><p>แสดงเฉพาะข้อมูลที่สัมพันธ์กัน เพื่อลดการเลือกผิด</p></div></div>
+    <div class="easy-form">
+      <div class="field full"><label>ช่วงชั้น</label><div class="stage-tabs big-tabs"><button class="stage-tab active" data-stage="ปฐมวัย">🌱 ปฐมวัย</button><button class="stage-tab" data-stage="ประถมศึกษา">📘 ประถม</button><button class="stage-tab" data-stage="มัธยมศึกษา">🎓 มัธยม</button></div></div>
+      <div class="field"><label>ระดับชั้น</label><select id="grade"></select></div>
+      <div class="field"><label>กลุ่มสาระ / ด้าน</label><select id="subject"></select></div>
+      <div class="field full"><label>ค้นหาตัวชี้วัด</label><input id="indicatorSearch" placeholder="พิมพ์รหัสหรือคำ เช่น เศษส่วน, สี, การอ่าน"><div id="searchResults" class="search-results"></div></div>
+      <div class="field full"><label>ตัวชี้วัด / ความสามารถ</label><select id="indicator"></select></div>
+      <div id="indicatorBox" class="indicator-box full">กำลังโหลดข้อมูล...</div>
+    </div>
+  </section>
+
+  <section class="flow-card" id="flowOptionsStep" style="display:none">
+    <div class="flow-head"><span class="flow-number">3</span><div><h2>รายละเอียดของงาน</h2><p>กรอกเท่าที่จำเป็น ช่องเพิ่มเติมไม่บังคับ</p></div></div>
+    <div class="easy-form">
+      <div class="field full"><label>เรื่องที่จะสอน <em>จำเป็น</em></label><input id="topic" placeholder="เช่น สีคู่ตรงข้ามสร้างอารมณ์"></div>
+      <div class="field"><label>เวลา</label><select id="duration"><option>1 คาบ (50–60 นาที)</option><option>2 คาบ</option><option>3 คาบ</option><option>1 ชั่วโมง</option><option>2 ชั่วโมง</option></select></div>
+      <div class="field"><label>รูปแบบการเรียนรู้</label><select id="method"><option>Active Learning</option><option>GPAS 5 Steps</option><option>5E</option><option>Game-Based Learning</option><option>Project-Based Learning (PBL)</option><option>Problem-Based Learning</option><option>Cooperative Learning</option><option>STEM / STEAM</option></select></div>
+      <div class="field full"><label>ตัวเลือกของผลงาน</label><div id="toolOptions"></div></div>
+      <details class="advanced-box"><summary>+ เพิ่มบริบทเพิ่มเติม (ไม่บังคับ)</summary><div class="field" style="margin-top:12px"><textarea id="context" placeholder="เช่น นักเรียน 25 คน ใช้สื่อหาได้ง่าย"></textarea></div></details>
+    </div>
+  </section>
+
+  <section class="flow-card final-card" id="flowFinalStep" style="display:none">
+    <div class="flow-head"><span class="flow-number">4</span><div><h2>ตรวจสอบและสร้าง Prompt</h2><p>ขั้นตอนสุดท้าย — ตรวจข้อมูลก่อนกดสร้าง</p></div></div>
+    <div id="summary" class="summary clean-summary"></div>
+    <button id="generateBtn" class="btn final-generate">✨ สร้าง Prompt ตอนนี้</button>
+    <div id="promptBox" class="promptbox"><div class="prompt-actions"><button id="copyPrompt" class="btn btn-blue">📋 คัดลอก Prompt</button><button id="savePrompt" class="btn btn-ghost">♡ บันทึกประวัติ</button></div><pre id="promptText"></pre></div>
+  </section>
+</div>
+</section>
 <section id="adminView" class="view"><div class="wrap admin"><div class="section-head"><h2>ระบบหลังบ้าน</h2><p>สมาชิก · ลิงก์เชิญ · ฐานหลักสูตร · การใช้งาน</p></div><div id="backendWarning" class="backend-warning">กำลังตรวจสอบสิทธิ์ Admin และเชื่อมต่อฐานสมาชิก</div><div class="admin-nav"><button class="admin-tab active" data-admin="dashboard">Dashboard</button><button class="admin-tab" data-admin="members">สมาชิก</button><button class="admin-tab" data-admin="invites">ลิงก์เชิญ</button><button class="admin-tab" data-admin="curriculum">หลักสูตร/QC</button><button class="admin-tab" data-admin="usage">ประวัติ Prompt</button></div><div id="admin-dashboard" class="admin-pane active"><div class="kpis"><div class="kpi"><b id="kAll">—</b><span>สมาชิกทั้งหมด</span></div><div class="kpi"><b id="kPending">—</b><span>รออนุมัติ</span></div><div class="kpi"><b id="kVip">—</b><span>VIP</span></div><div class="kpi"><b id="kPrompts">—</b><span>Prompt ที่สร้าง</span></div><div class="kpi"><b>2,155</b><span>ข้อมูลหลักสูตร</span></div></div></div><div id="admin-members" class="admin-pane"><div class="field"><label>ค้นหาสมาชิก</label><input id="memberSearch" placeholder="ชื่อ อีเมล โรงเรียน"></div><div class="table-wrap"><table><thead><tr><th>สมาชิก</th><th>โรงเรียน</th><th>สถานะ</th><th>สิทธิ์ / คำขอ</th><th>หมดอายุ</th><th>จัดการ</th></tr></thead><tbody id="memberRows"></tbody></table></div></div><div id="admin-invites" class="admin-pane"><div class="panel" style="padding:15px"><h3>สร้างลิงก์เชิญ</h3><div class="invite-row"><select id="inviteTier"><option value="member">Member</option><option value="vip">VIP</option></select><input id="inviteMax" type="number" min="1" value="1" placeholder="จำนวนครั้ง"><input id="inviteDays" type="number" min="1" value="30" placeholder="หมดอายุ (วัน)"><button id="createInvite" class="btn btn-blue">สร้าง</button></div><div id="inviteOutput" style="margin-top:12px"></div></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>สิทธิ์ / คำขอ</th><th>ใช้แล้ว</th><th>หมดอายุ</th><th>ลิงก์</th></tr></thead><tbody id="inviteRows"></tbody></table></div></div><div id="admin-curriculum" class="admin-pane"><div class="kpis"><div class="kpi"><b>99</b><span>ปฐมวัย</span></div><div class="kpi"><b>1,061</b><span>ประถม</span></div><div class="kpi"><b>995</b><span>มัธยม</span></div><div class="kpi"><b>2,155</b><span>VERIFIED</span></div><div class="kpi"><b>0</b><span>Missing</span></div></div><div class="alert info">ฐานหลักสูตรยังอ่านจาก data.json เพื่อความเสถียร เมื่อเชื่อม Supabase สามารถ Import curriculum_records.csv แล้วจัดการ CRUD/QC จากหลังบ้านได้</div></div><div id="admin-usage" class="admin-pane"><div class="table-wrap"><table><thead><tr><th>เวลา</th><th>สมาชิก</th><th>เครื่องมือ</th><th>ชั้น/วิชา</th><th>ตัวชี้วัด</th></tr></thead><tbody id="usageRows"></tbody></table></div></div></div></section>
 </main>
 <div id="authModal" class="modal"><div class="modal-card"><div class="modal-head"><h3>สมาชิกคลังแผน</h3><button class="close" id="closeAuth">×</button></div><div class="tabs"><button class="auth-tab active" data-auth="login">เข้าสู่ระบบ</button><button class="auth-tab" data-auth="register">สมัครสมาชิก</button></div><div id="auth-login" class="auth-pane active"><div class="field"><label>อีเมล</label><input id="loginEmail" type="email"></div><div class="field"><label>รหัสผ่าน</label><input id="loginPassword" type="password"></div><button id="loginBtn" class="btn btn-gold" style="width:100%">เข้าสู่ระบบ</button><div id="loginMsg"></div></div><div id="auth-register" class="auth-pane"><div class="alert info">สมัครเหมือนเข้ากลุ่มปิด: ส่งคำขอ → รอแอดมินอนุมัติ → Login ใช้งาน</div><div class="field"><label>ชื่อ-สกุล</label><input id="regName"></div><div class="field"><label>อีเมล</label><input id="regEmail" type="email"></div><div class="field"><label>รหัสผ่าน</label><input id="regPassword" type="password" minlength="6"></div><div class="field"><label>โรงเรียน</label><input id="regSchool"></div><div class="field"><label>เบอร์โทร</label><input id="regPhone"></div><div class="field"><label>ชื่อ Facebook (ถ้ามี)</label><input id="regFacebook"></div><div class="field"><label>รหัสเชิญ</label><input id="regInvite" placeholder="ถ้ามีลิงก์เชิญ ระบบจะใส่ให้เอง"></div><button id="registerBtn" class="btn btn-blue" style="width:100%">ส่งคำขอสมัครสมาชิก</button><div id="registerMsg"></div></div></div></div>
