@@ -4,12 +4,56 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
-<header class="topbar"><div class="wrap nav"><div class="brand" data-go="home"><img class="brand-logo" src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว"><div><b>คลังแผนการสอนหน้าเดียว</b><small>แผนง่าย • ครบ • จบในหน้าเดียว</small></div></div><div class="nav-actions"><span id="memberChip" class="member-chip" style="display:none"></span><button class="btn btn-ghost hide-mobile" data-go="generator">สร้างแผน</button><button id="adminBtn" class="btn btn-ghost" data-go="admin" style="display:none">หลังบ้าน</button><span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN • Full Access</span><button id="authBtn" class="btn btn-gold">เข้าสู่ระบบ</button></div></div></header>
+<header class="topbar v72-topbar">
+  <div class="wrap nav v72-nav">
+    <div class="brand" data-go="home">
+      <img class="brand-logo" src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว">
+      <div><b>คลังแผนการสอนหน้าเดียว</b><small>ง่าย • สวย • ตรงตัวชี้วัด</small></div>
+    </div>
+    <nav class="workspace-nav" aria-label="เมนูหลัก">
+      <button class="workspace-nav-btn active" data-app-nav="home">หน้าหลัก</button>
+      <button class="workspace-nav-btn" data-app-nav="plans">แผนของฉัน</button>
+      <button class="workspace-nav-btn" data-app-nav="indicators">คลังตัวชี้วัด</button>
+      <button class="workspace-nav-btn" data-app-nav="styles">สไตล์และเทมเพลต</button>
+      <button class="workspace-nav-btn" data-app-nav="guide">คู่มือการใช้งาน</button>
+      <button class="workspace-nav-btn" data-app-nav="help">ศูนย์ช่วยเหลือ</button>
+    </nav>
+    <div class="nav-actions">
+      <div id="profileMini" class="profile-mini" style="display:none">
+        <img id="profileMiniAvatar" alt="รูปผู้ใช้">
+        <div><b id="profileMiniName">ผู้ใช้</b><small id="profileMiniRole">สมาชิก</small></div>
+      </div>
+      <span id="memberChip" class="member-chip" style="display:none"></span>
+      <button id="adminBtn" class="btn btn-ghost" data-go="admin" style="display:none">หลังบ้าน</button>
+      <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN • Full Access</span>
+      <button id="authBtn" class="btn btn-gold">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</header>
 <main>
 <section id="homeView" class="view active">
 <div class="lesson-first-home">
   <div class="wrap">
-    <div class="lf-hero">
+    
+<div class="home-utility-strip" id="homeUtilityStrip">
+  <button class="utility-card" data-quick="recent">
+    <span class="utility-icon blue">🕘</span>
+    <div><small>งานล่าสุด</small><b id="homeRecentText">ยังไม่มีงานล่าสุด</b><em>เปิดงานต่อ →</em></div>
+  </button>
+  <button class="utility-card" data-quick="profile">
+    <span class="utility-icon green">👩‍🏫</span>
+    <div><small>โปรไฟล์ครู</small><b id="homeProfileText">ยังไม่ได้บันทึกข้อมูล</b><em>จัดการข้อมูล →</em></div>
+  </button>
+  <button class="utility-card" data-quick="style">
+    <span class="utility-icon purple">🎨</span>
+    <div><small>สไตล์ที่เลือก</small><b id="homeStyleText">ราชการโมเดิร์น</b><em>เปลี่ยนสไตล์ →</em></div>
+  </button>
+  <button class="utility-card" data-quick="continue">
+    <span class="utility-icon orange">🧩</span>
+    <div><small>พร้อมสร้างต่อ</small><b id="homeContinueText">สร้างแผนก่อน 1 ครั้ง</b><em>ไปที่ชุดสื่อ →</em></div>
+  </button>
+</div>
+<div class="lf-hero">
       <div class="lf-brand-art">
         <img src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว">
       </div>
@@ -26,6 +70,17 @@
         <button class="btn lf-start-btn" data-go="generator">🚀 เริ่มสร้างแผนการสอนหน้าเดียว</button>
       </div>
     </div>
+  
+    <section class="home-guide-panel" id="homeGuidePanel">
+      <div class="guide-head"><div><span>📖</span><div><h2>ใช้งานง่ายใน 4 ขั้นตอน</h2><p>สร้างแผนก่อน แล้วต่อยอดสื่อจากข้อมูลเดิม</p></div></div></div>
+      <div class="guide-steps">
+        <article><b>1</b><strong>เลือกข้อมูลหลักสูตร</strong><small>เลือกชั้น วิชา หน่วย เรื่อง และเวลา</small></article>
+        <article><b>2</b><strong>เลือกตัวชี้วัด</strong><small>ค้นด้วยรหัส/คีย์เวิร์ด หรือกดการ์ด</small></article>
+        <article><b>3</b><strong>เลือกสไตล์ + โทนสี</strong><small>ดูตัวอย่างแล้วเลือกคู่สีที่เหมาะกับงาน</small></article>
+        <article><b>4</b><strong>คัดลอก Prompt</strong><small>แนบรูปครู/โลโก้ แล้วสร้างภาพด้วย AI ที่ต้องการ</small></article>
+      </div>
+    </section>
+
   </div>
 </div>
 </section>
@@ -50,7 +105,7 @@
   <section id="flowToolStep" style="display:none"><div id="tools"></div></section>
 
   <section class="flow-card" id="flowDetailsStep">
-    <div class="flow-head"><span class="flow-number">1</span><div><h2>เลือกข้อมูลหลักสูตร</h2><p>เลือกช่วงชั้นและค้นหาตัวชี้วัดด้วยรหัสหรือคำ ระบบจะแสดงเฉพาะข้อมูลที่สัมพันธ์กัน</p></div></div>
+    <div class="flow-head"><span class="flow-number">1</span><div><h2>ข้อมูลพื้นฐานของแผน</h2><p>ข้อมูลทั่วไปที่ใช้ระบุแผน เช่น หลักสูตร ชั้น กลุ่มสาระ หน่วย เรื่อง และเวลา</p></div></div>
     <div class="easy-form">
       <div class="field full">
         <label>ช่วงชั้น</label>
@@ -60,7 +115,7 @@
           <button class="stage-tab" data-stage="มัธยมศึกษา">🎓 มัธยม</button>
         </div>
       </div>
-      <div class="field"><label>ระดับชั้น</label><select id="grade" disabled><option>กำลังโหลดข้อมูล...</option></select></div>
+      <div class="field full"><label>ระดับชั้น</label><select id="grade" class="sr-only-select" disabled><option>กำลังโหลดข้อมูล...</option></select><div id="gradeCards" class="grade-cards"></div></div>
       <div class="field"><label>กลุ่มสาระ / ด้าน</label><select id="subject" disabled><option>กำลังโหลดข้อมูล...</option></select></div>
       <div class="field full">
         <label>ค้นหาตัวชี้วัด <span class="field-tip">พิมพ์ได้ทั้งรหัสและคำ</span></label>
@@ -68,13 +123,14 @@
         <div id="searchResults" class="search-results"></div>
       </div>
       <div class="field full"><label>ตัวชี้วัด / ความสามารถ</label><select id="indicator" disabled><option>กำลังโหลดข้อมูล...</option></select></div>
-      <div id="indicatorBox" class="indicator-box full">กำลังโหลดฐานข้อมูลหลักสูตร...</div>
+      <div id="indicatorBox" class="indicator-box full">กำลังโหลดฐานข้อมูลหลักสูตร...</div><div class="field full"><label>ตัวชี้วัดที่แนะนำ <span class="field-tip">กดเลือกได้ทันที</span></label><div id="indicatorCards" class="indicator-cards"></div></div>
     </div>
   </section>
 
   <section class="flow-card" id="flowOptionsStep">
-    <div class="flow-head"><span class="flow-number">2</span><div><h2>รายละเอียดแผน</h2><p>กรอกข้อมูลที่ใช้จริงในแผน ช่องบริบทเพิ่มเติมไม่บังคับ</p></div></div>
+    <div class="flow-head"><span class="flow-number">2</span><div><h2>มาตรฐานการเรียนรู้และตัวชี้วัด</h2><p>ค้นด้วยรหัสหรือคีย์เวิร์ด และเลือกจากการ์ด ระบบเก็บมาตรฐานกับตัวชี้วัดเป็นข้อมูลชุดเดียวกัน</p></div></div>
     <div class="easy-form">
+<div class="section-inline-title full">📝 รายละเอียดการจัดการเรียนรู้</div>
       <div class="field"><label>หน่วยการเรียนรู้</label><input id="unitName" placeholder="เช่น จำนวนและการดำเนินการ"></div>
       <div class="field"><label>เรื่อง <em>จำเป็น</em></label><input id="topic" placeholder="เช่น การบวกจำนวนไม่เกิน 1,000"></div>
 
@@ -98,6 +154,18 @@
           <option>Design Thinking</option><option>อื่น ๆ</option>
         </select>
         <input id="customMethod" class="conditional-field" style="display:none;margin-top:8px" placeholder="ระบุรูปแบบการเรียนรู้">
+      </div>
+      <div class="field">
+        <label>แนวการจัดการเรียนรู้ <span class="field-tip">ถ้ามี</span></label>
+        <select id="learningApproach">
+          <option>ผสมผสานตามแผน</option>
+          <option>เน้นกิจกรรม / เกม</option>
+          <option>เน้นใบงาน / ฝึกทักษะ</option>
+          <option>เน้นสืบค้น / ใบความรู้</option>
+          <option>เน้นสร้างชิ้นงาน / โครงงาน</option>
+          <option>เน้นอภิปราย / ทำงานกลุ่ม</option>
+          <option>เน้นเทคโนโลยี / สื่อดิจิทัล</option>
+        </select>
       </div>
 
       <div class="field full">
@@ -127,6 +195,17 @@
     <details id="teacherDetails">
       <summary class="teacher-summary">👩‍🏫 เพิ่มข้อมูลผู้สอน <span>เปิดเพื่อกรอก</span></summary>
       <div class="easy-form teacher-form">
+<div class="teacher-assets full">
+  <div class="asset-upload-card">
+    <div class="asset-preview" id="teacherPhotoPreview"><span>👩‍🏫</span></div>
+    <div><b>รูปครู</b><small>ใช้รูปจริงหรือ Avatar ได้</small><label class="upload-btn">อัปโหลดรูป<input id="teacherPhotoInput" type="file" accept="image/*" hidden></label></div>
+  </div>
+  <div class="asset-upload-card">
+    <div class="asset-preview logo-preview" id="schoolLogoPreview"><span>🏫</span></div>
+    <div><b>โลโก้โรงเรียน</b><small>PNG โปร่งใสจะสวยที่สุด</small><label class="upload-btn">อัปโหลดโลโก้<input id="schoolLogoInput" type="file" accept="image/*" hidden></label></div>
+  </div>
+</div>
+
         <div class="field"><label>ชื่อ-สกุลผู้สอน</label><input id="teacherName" placeholder="เช่น นายสมชาย ใจดี"></div>
         <div class="field"><label>ตำแหน่ง</label><input id="teacherPosition" placeholder="เช่น ครู / ครูชำนาญการ"></div>
         <div class="field"><label>โรงเรียน</label><input id="schoolName" placeholder="ชื่อโรงเรียน"></div>
@@ -140,8 +219,18 @@
     </details>
   </section>
 
-  <section class="flow-card style-section" id="styleSection">
-    <div class="flow-head"><span class="flow-number">4</span><div><h2>เลือกสไตล์แผนการสอน</h2><p>ตัวอย่างเป็นแนวภาพเพื่อช่วยเลือก ระบบจะนำสไตล์ที่เลือกไปใส่ใน Prompt อัตโนมัติ</p></div></div>
+  
+<section class="flow-card signature-section" id="signatureSection">
+  <div class="flow-head"><span class="flow-number">4</span><div><h2>การลงชื่อและวันที่</h2><p>ใช้สำหรับส่วนรับรองท้ายแผน ไม่บังคับกรอกทุกช่อง</p></div></div>
+  <div class="easy-form">
+    <div class="field"><label>วันที่สอน</label><input id="teachDate" type="date"></div>
+    <div class="field"><label>ชื่อสำหรับช่องลงชื่อครู</label><input id="teacherSignName" placeholder="ถ้าเว้นว่างจะใช้ชื่อผู้สอน"></div>
+    <div class="field"><label>ชื่อผู้บริหาร / ผู้อำนวยการ</label><input id="directorName" placeholder="เช่น นาย..."></div>
+    <div class="field"><label>ตำแหน่งผู้บริหาร</label><input id="directorPosition" placeholder="เช่น ผู้อำนวยการโรงเรียน"></div>
+  </div>
+</section>
+<section class="flow-card style-section" id="styleSection">
+    <div class="flow-head"><span class="flow-number">5</span><div><h2>เลือกสไตล์และโทนสี</h2><p>ตัวอย่างเป็นแนวภาพเพื่อช่วยเลือก ระบบจะนำสไตล์ที่เลือกไปใส่ใน Prompt อัตโนมัติ</p></div></div>
     <div id="styleSelector" class="style-selector">
       <button type="button" class="style-card selected" data-style="modern-government">
         <div class="style-preview government-preview"><span></span><i></i><b></b></div>
@@ -167,11 +256,23 @@
         <div class="style-preview threed-preview"><span></span><i></i><b></b></div>
         <div class="style-info"><strong>3D สะดุดตา</strong><small>มีมิติ สดใส ทันสมัย</small><em>เลือกสไตล์นี้</em></div>
       </button>
+    
+    <div class="color-pair-section">
+      <div class="section-inline-title">🎨 เลือกโทนสี (Color Pair)</div>
+      <div id="colorPairSelector" class="color-pair-selector">
+        <button type="button" class="color-pair active" data-color-pair="ฟ้า–ม่วง–ทอง" data-colors="#1FA2FF,#6C5CE7,#F4C95D"><span><i style="background:#1FA2FF"></i><i style="background:#6C5CE7"></i><i style="background:#F4C95D"></i></span><b>ฟ้า–ม่วง–ทอง</b></button>
+        <button type="button" class="color-pair" data-color-pair="กรมท่า–ทอง" data-colors="#173F6D,#F0C75E,#FFFFFF"><span><i style="background:#173F6D"></i><i style="background:#F0C75E"></i><i style="background:#FFFFFF"></i></span><b>กรมท่า–ทอง</b></button>
+        <button type="button" class="color-pair" data-color-pair="มิ้นต์–ฟ้า" data-colors="#5DD9C1,#64B5F6,#F7FFFF"><span><i style="background:#5DD9C1"></i><i style="background:#64B5F6"></i><i style="background:#F7FFFF"></i></span><b>มิ้นต์–ฟ้า</b></button>
+        <button type="button" class="color-pair" data-color-pair="ส้ม–ครีม" data-colors="#FF9F43,#FFE8C2,#FFF9F0"><span><i style="background:#FF9F43"></i><i style="background:#FFE8C2"></i><i style="background:#FFF9F0"></i></span><b>ส้ม–ครีม</b></button>
+        <button type="button" class="color-pair" data-color-pair="ชมพู–ฟ้า" data-colors="#FF78B5,#70C7FF,#FFF5FA"><span><i style="background:#FF78B5"></i><i style="background:#70C7FF"></i><i style="background:#FFF5FA"></i></span><b>ชมพู–ฟ้า</b></button>
+        <button type="button" class="color-pair" data-color-pair="เขียว–ทอง" data-colors="#2E9D68,#F1C75B,#F7FFF9"><span><i style="background:#2E9D68"></i><i style="background:#F1C75B"></i><i style="background:#F7FFF9"></i></span><b>เขียว–ทอง</b></button>
+      </div>
     </div>
+
   </section>
 
   <section class="flow-card final-card" id="flowFinalStep">
-    <div class="flow-head"><span class="flow-number">5</span><div><h2>ตรวจสอบและสร้าง Prompt</h2><p>Prompt ถูกออกแบบให้คัดลอกไปสร้าง “ภาพแผนการสอนหน้าเดียว” ได้โดยตรง</p></div></div>
+    <div class="flow-head"><span class="flow-number">6</span><div><h2>ตรวจสอบและสร้าง Prompt</h2><p>Prompt ถูกออกแบบให้คัดลอกไปสร้าง “ภาพแผนการสอนหน้าเดียว” ได้โดยตรง</p></div></div>
     <div id="summary" class="summary clean-summary"></div>
     <button id="generateBtn" class="btn final-generate">✨ สร้าง Prompt แผนการสอนหน้าเดียว</button>
 
@@ -189,6 +290,19 @@
       </div>
     </div>
 
+    
+<div class="ai-use-guide" id="aiUseGuide">
+  <div class="section-inline-title">🚀 นำ Prompt ไปใช้ต่อ</div>
+  <p>กดปุ่ม ระบบจะคัดลอก Prompt ก่อน แล้วเปิดแพลตฟอร์มที่เลือก จากนั้นแนบรูปครูและโลโก้โรงเรียนของคุณ (ถ้ามี)</p>
+  <div class="ai-platform-cards">
+    <button type="button" class="ai-platform" data-ai-launch="chatgpt"><span class="ai-logo chatgpt-logo">◎</span><div><b>ChatGPT</b><small>สร้างภาพ/ปรับ Prompt</small></div></button>
+    <button type="button" class="ai-platform" data-ai-launch="gemini"><span class="ai-logo gemini-logo">✦</span><div><b>Gemini</b><small>สร้างภาพและตรวจข้อความ</small></div></button>
+    <button type="button" class="ai-platform" data-ai-launch="claude"><span class="ai-logo claude-logo">✳</span><div><b>Claude</b><small>ช่วยตรวจ/ปรับเนื้อหา</small></div></button>
+    <button type="button" class="ai-platform" data-ai-launch="canva"><span class="ai-logo canva-logo">C</span><div><b>Canva</b><small>จัดหน้า/แก้ไขงานต่อ</small></div></button>
+  </div>
+  <div class="asset-reminder" id="assetReminder">📎 ถ้า Prompt ระบุใช้รูปครู/โลโก้ อย่าลืมแนบไฟล์เดิมกับ AI ที่เปิดใช้งาน</div>
+</div>
+
     <div id="continuePanel" class="continue-panel" style="display:none">
       <div class="continue-head">
         <span class="continue-spark">✨</span>
@@ -204,7 +318,7 @@
           <button id="closeSmartConfig" class="smart-close" type="button">✕</button>
         </div>
         <div id="smartConfigBody" class="smart-config-body"></div>
-        <button id="smartCreateBtn" class="btn smart-create-btn" type="button">✨ สร้าง Prompt</button>
+        <button id="smartCreateBtn" class="btn smart-create-btn" type="button">✨ สร้าง Prompt</button><button id="openGamePlatformBtn" class="btn open-platform-btn" type="button" style="display:none">🔗 เปิดแพลตฟอร์มเกม</button>
       </div>
       <div class="continue-note">ทุกตัวเลือกใช้ข้อมูลหลักสูตรและตัวชี้วัดเดิมอัตโนมัติ</div>
     </div>

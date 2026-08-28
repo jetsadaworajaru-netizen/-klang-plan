@@ -1,28 +1,26 @@
-KLANG PLAN V7.1 — LESSON PLAN FIRST
+KLANG PLAN V7.2 — SMART LESSON WORKSPACE
 
-แนวคิด:
-สร้างแผนการสอนหน้าเดียวก่อน แล้วค่อยต่อยอดสื่อจากแผนเดิม
+ฐาน: V7.1 Lesson Plan First + Supabase + Member/VIP/Admin + Curriculum 2,155 records
 
-ใหม่ใน V7.1
-- ตัด Step “วันนี้อยากสร้างอะไร?”
-- Lesson Plan เป็นงานหลักเริ่มต้นอัตโนมัติ
-- ค้นหาตัวชี้วัดด้วยรหัสหรือคำ + ranking + debounce
-- เพิ่ม หน่วยการเรียนรู้ และเปลี่ยนช่องเป็น “เรื่อง”
-- เพิ่มเวลาแบบกำหนดเอง / รูปแบบการเรียนรู้แบบกำหนดเอง
-- เพิ่มข้อมูลผู้สอนแบบพับ/ขยาย และจำข้อมูลในอุปกรณ์
-- เพิ่ม Style Presets 6 แบบ พร้อม CSS Preview
-- Prompt ใหม่เป็น Image-first One Page Lesson Plan Prompt
-- A4 Portrait 2:3, Canva Ready, Print Ready, Thai Typography rules
-- คง Smart Continue Builder: ใบงาน / แบบทดสอบ / ใบความรู้ / Rubric / เกม / Teaching Pack
-- คง Supabase Auth, Member/VIP/Admin, Invite, Prompt History, Curriculum 2,155 records
-- Admin Full Access ทดสอบทุกฟีเจอร์ได้
+V7.2 เพิ่ม:
+- Navigation: หน้าหลัก / แผนของฉัน / คลังตัวชี้วัด / สไตล์และเทมเพลต / คู่มือ / ช่วยเหลือ
+- Home utility cards ที่มีประโยชน์: งานล่าสุด / โปรไฟล์ครู / สไตล์ล่าสุด / สร้างต่อ
+- โลโก้ brand-logo.png ปรับพื้นรอบนอกโปร่งใส
+- ระดับชั้นแบบการ์ดสี
+- ตัวชี้วัดแบบ Search + การ์ดกดเลือก
+- แยกคำว่า “ข้อมูลพื้นฐานของแผน”
+- มาตรฐานและตัวชี้วัดอยู่เป็นข้อมูลชุดเดียวใน Prompt
+- เพิ่มแนวการจัดการเรียนรู้
+- ข้อมูลผู้สอนแยกชัดเจน
+- อัปโหลดรูปครูและโลโก้โรงเรียน + Preview + จำในเครื่องเมื่อเลือก Remember
+- เพิ่มวันที่สอน / ลงชื่อครู / ผู้บริหาร
+- Style เดิม + Color Pair 6 ชุด
+- Prompt ใหม่ห้ามใช้ “แผนการจัดการเรียนรู้หน้าเดียว” เป็นชื่อบนภาพ ใช้ “แผนการจัดการเรียนรู้”
+- Prompt ลดข้อมูลซ้ำซ้อน
+- AI launch cards: ChatGPT / Gemini / Claude / Canva (คัดลอก Prompt ก่อนเปิด)
+- Game flow ง่ายขึ้น พร้อมปุ่มเปิด Canva / Wordwall / Quizizz / Kahoot / Genially / ChatGPT
+- เก็บงานล่าสุดใน localStorage เพื่อเปิด/ต่อยอดเร็ว
+- Admin Full Access คงเดิม
 
-ไฟล์หลัก:
-index.html
-styles.css
-app.js
-config.js
-data.json
-brand-logo.png
-favicon.png
-apple-touch-icon.png
+หมายเหตุ:
+รูปครู/โลโก้ที่อัปโหลดในเว็บเป็น Preview และข้อมูลช่วยสร้าง Prompt ผู้ใช้ยังต้องแนบไฟล์จริงกับแพลตฟอร์ม AI ที่เปิดใช้งาน

@@ -27,6 +27,9 @@ const STYLE_PRESETS={
   }
 };
 let selectedStyle="modern-government";
+let selectedColorPair="ฟ้า–ม่วง–ทอง";
+let teacherPhotoData="";
+let schoolLogoData="";
 
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}function go(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(v+"View").classList.add("active");scrollTo({top:0,behavior:"smooth"});if(v==="admin")loadAdmin()}document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));document.querySelectorAll("[data-stage-go]").forEach(b=>b.onclick=()=>{ACTIVE_STAGE=b.dataset.stageGo;go("generator");syncStageTabs();buildGrades()});
 document.querySelectorAll("[data-tool-start]").forEach(b=>b.onclick=()=>{
@@ -62,8 +65,18 @@ function buildGrades(){
   let arr=(grades[ACTIVE_STAGE]||[]).filter(g=>DATA.some(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)));
   if(!arr.length&&DATA.length) arr=[...new Set(DATA.filter(r=>r.stage===ACTIVE_STAGE).map(r=>r.grade).filter(Boolean))];
   setSelectState($("grade"),arr,"ไม่พบระดับชั้น");
-  $("grade").onchange=()=>{buildSubjects();savePrefs()};
+  $("grade").onchange=()=>{renderGradeCards();buildSubjects();savePrefs()};
+  renderGradeCards();
   buildSubjects()
+}
+function renderGradeCards(){
+  const wrap=$("gradeCards");if(!wrap)return;
+  const vals=[...$("grade").options].map(o=>o.value).filter(Boolean);
+  const palette=["c1","c2","c3","c4","c5","c6","c7","c8","c9"];
+  wrap.innerHTML=vals.map((g,i)=>`<button type="button" class="grade-card ${$("grade").value===g?"active":""} ${palette[i%palette.length]}" data-grade-card="${g}"><span>${g.includes("อ.")?"🧸":g.includes("ป.")?"📘":"🎓"}</span><b>${g}</b></button>`).join("");
+  wrap.querySelectorAll("[data-grade-card]").forEach(btn=>btn.onclick=()=>{
+    $("grade").value=btn.dataset.gradeCard;renderGradeCards();buildSubjects();savePrefs()
+  })
 }
 function fill(el,arr){setSelectState(el,arr,"ไม่มีตัวเลือก")}
 function buildSubjects(){
@@ -80,13 +93,24 @@ function rows(){
   if(!g||!s)return[];
   return DATA.filter(r=>r.stage===ACTIVE_STAGE&&matchGrade(r,g)&&r.subject===s)
 }
+function renderIndicatorCards(){
+  const wrap=$("indicatorCards");if(!wrap)return;
+  const rs=rows(),current=Number($("indicator")?.value||0);
+  wrap.innerHTML=rs.slice(0,8).map((r,i)=>`<button type="button" class="indicator-select-card ${i===current?"active":""}" data-ind-card="${i}">
+    <div><b>${r.indicator}</b>${r.classification?`<span>${r.classification}</span>`:""}</div>
+    <small>${r.indicator_text}</small>
+  </button>`).join("") || '<div class="indicator-empty">ไม่พบตัวชี้วัดสำหรับตัวเลือกนี้</div>';
+  wrap.querySelectorAll("[data-ind-card]").forEach(btn=>btn.onclick=()=>{
+    $("indicator").value=btn.dataset.indCard;syncRecord()
+  })
+}
 function buildIndicators(){
   const rs=rows(),el=$("indicator");el.innerHTML="";
-  if(!rs.length){setSelectState(el,[],"ไม่พบตัวชี้วัด");$("indicatorBox").textContent="ไม่พบข้อมูลที่สัมพันธ์กับตัวเลือกนี้";renderSummary();return}
+  if(!rs.length){setSelectState(el,[],"ไม่พบตัวชี้วัด");$("indicatorBox").textContent="ไม่พบข้อมูลที่สัมพันธ์กับตัวเลือกนี้";renderIndicatorCards();renderSummary();return}
   rs.forEach((r,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${r.indicator}${r.classification?` [${r.classification}]`:""} — ${r.indicator_text}`;el.appendChild(o)});
   el.disabled=false;el.onchange=syncRecord;syncRecord()
 }
-function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น หัวข้อใน ${r.domain}`:"เช่น เรื่องที่ต้องการจัดการเรียนรู้";renderSummary()}["unitName","topic","duration","customDuration","method","customMethod","context","teacherName","teacherPosition","schoolName","organization","province","semester","academicYear","studentCount"].forEach(id=>{
+function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น หัวข้อใน ${r.domain}`:"เช่น เรื่องที่ต้องการจัดการเรียนรู้";renderIndicatorCards();renderSummary()}["unitName","topic","duration","customDuration","method","customMethod","context","teacherName","teacherPosition","schoolName","organization","province","semester","academicYear","studentCount","learningApproach","teachDate","teacherSignName","directorName","directorPosition"].forEach(id=>{
   const el=$(id);if(el)el.addEventListener(["unitName","topic","customDuration","customMethod","context","teacherName","teacherPosition","schoolName","organization","province","academicYear","studentCount"].includes(id)?"input":"change",renderSummary)
 });
 function renderSummary(){
@@ -99,7 +123,7 @@ function renderSummary(){
       <span><small>หน่วยการเรียนรู้</small>${unit}</span>
       <span><small>เรื่อง</small>${c.topic||"ยังไม่ระบุ"}</span>
       <span><small>เวลา / รูปแบบ</small>${c.duration} • ${c.method}</span>
-      <span><small>สไตล์</small>${c.styleTitle}</span>
+      <span><small>แนวการจัดการเรียนรู้</small>${c.learningApproach}</span><span><small>สไตล์ / โทนสี</small>${c.styleTitle} • ${c.colorPair}</span>
     </div>`
 }
 let searchTimer=null;
@@ -174,7 +198,9 @@ function teacherData(){
     province:$("province")?.value?.trim()||"",
     semester:$("semester")?.value||"",
     academicYear:$("academicYear")?.value?.trim()||"",
-    studentCount:$("studentCount")?.value?.trim()||""
+    studentCount:$("studentCount")?.value?.trim()||"",
+    photoAttached:!!teacherPhotoData,
+    logoAttached:!!schoolLogoData
   }
 }
 function resolvedDuration(){
@@ -194,11 +220,17 @@ function common(){
     topic:$("topic")?.value?.trim()||"",
     duration:resolvedDuration(),
     method:resolvedMethod(),
+    learningApproach:$("learningApproach")?.value||"ผสมผสานตามแผน",
     detailLevel:$("detailLevel")?.value||"กระชับพร้อมใช้",
     context:$("context")?.value?.trim()||"",
     teacher:teacherData(),
     styleKey:selectedStyle,
     styleTitle:STYLE_PRESETS[selectedStyle]?.title||"ราชการโมเดิร์น",
+    colorPair:selectedColorPair,
+    teachDate:$("teachDate")?.value||"",
+    teacherSignName:$("teacherSignName")?.value?.trim()||"",
+    directorName:$("directorName")?.value?.trim()||"",
+    directorPosition:$("directorPosition")?.value?.trim()||"",
     styleInstruction:STYLE_PRESETS[selectedStyle]?.instruction||"",
     curriculum:r.curriculum||r.source_curriculum||"",
     domain:r.domain||"",
@@ -234,65 +266,114 @@ function promptHeader(c){
 เรื่อง: ${c.topic||"-"}
 เวลา: ${c.duration||"-"}
 รูปแบบการเรียนรู้: ${c.method||"-"}
-ระดับรายละเอียด: ${c.detailLevel||"กระชับพร้อมใช้"}${c.context?`\nบริบทเพิ่มเติม: ${c.context}`:""}${teacherPromptBlock(c.teacher)}`
+แนวการจัดการเรียนรู้: ${c.learningApproach||"-"}
+ระดับรายละเอียด: ${c.detailLevel||"กระชับพร้อมใช้"}
+สไตล์ภาพ: ${c.styleTitle||"-"}
+โทนสี: ${c.colorPair||"-"}${c.context?`\nบริบทเพิ่มเติม: ${c.context}`:""}${teacherPromptBlock(c.teacher)}`
 }
 function promptFor(tool,c){
   const base=promptHeader(c);
   const detail=optionValue("optDetail","กระชับพร้อมใช้");
   if(tool==="lesson"){
-    return `${promptHeader(c)}
+    const signTeacher=c.teacherSignName||c.teacher.name||"";
+    const assetRule=`${c.teacher.photoAttached?"มีการอัปโหลดรูปครูในระบบ — เมื่อนำ Prompt ไปใช้ ให้ผู้ใช้แนบรูปครูไฟล์เดิมกับ AI และใช้บุคคลจากรูปเป็นภาพครู โดยรักษาใบหน้าให้ใกล้เคียงต้นฉบับ ห้ามสร้างบุคคลอื่นแทน":"ไม่ได้แนบรูปครู — ไม่ต้องสร้างภาพครูสมมติ"}\n${c.teacher.logoAttached?"มีการอัปโหลดโลโก้โรงเรียนในระบบ — เมื่อนำ Prompt ไปใช้ ให้ผู้ใช้แนบโลโก้ไฟล์เดิมกับ AI และใช้โลโก้นั้นเท่านั้น ห้ามสร้างโลโก้ใหม่":"ไม่ได้แนบโลโก้โรงเรียน — ห้ามสร้างโลโก้สมมติ"}`;
+    return `คุณคือผู้เชี่ยวชาญด้านหลักสูตรไทย Instructional Design การจัดการเรียนรู้ และ Educational Graphic Design
 
-งานที่ต้องการ:
-สร้าง “ภาพแผนการจัดการเรียนรู้หน้าเดียว” ภาษาไทย สำหรับครูไทย โดยเนื้อหาต้องถูกต้องตามตัวชี้วัดและสามารถใช้สอนได้จริง ไม่ใช่อินโฟกราฟิกตกแต่งอย่างเดียว
+เป้าหมาย:
+สร้างภาพเอกสาร “แผนการจัดการเรียนรู้” ภาษาไทย แบบหน้าเดียว A4 แนวตั้ง อัตราส่วน 2:3 ที่สวยงาม อ่านง่าย ใช้สอนได้จริง และพร้อมแก้ไขต่อใน Canva
 
-OUTPUT:
-- A4 แนวตั้ง / Vertical One-Page Lesson Plan
-- อัตราส่วน 2:3
-- High Resolution, Print Ready, Canva Ready
-- ภาษาไทยทั้งหมด ยกเว้นชื่อรูปแบบการเรียนรู้ที่จำเป็น
-- จัดข้อมูลทั้งหมดให้อยู่ในหน้าเดียวอย่างอ่านง่าย ไม่แน่นเกินไป
+สำคัญ:
+- บนหัวเอกสารให้ใช้คำว่า “แผนการจัดการเรียนรู้” เท่านั้น
+- ห้ามเขียนคำว่า “แผนการจัดการเรียนรู้หน้าเดียว” เป็นชื่อบนภาพ
+- คำว่า “หน้าเดียว” เป็นเพียงข้อกำหนดด้านการจัดหน้า ไม่ใช่ชื่อเอกสาร
+- ห้ามทำข้อมูลซ้ำหลาย Section
 
-เนื้อหาที่ต้องมีบนแผน:
-1. ข้อมูลหัวแผน: กลุ่มสาระ ระดับชั้น หน่วยการเรียนรู้ เรื่อง เวลา และข้อมูลผู้สอนเท่าที่ให้มา
-2. มาตรฐานการเรียนรู้ / ตัวชี้วัด โดยคงรหัสและข้อความเดิม ห้ามแต่ง ห้ามเปลี่ยน
-3. สาระสำคัญ / ความคิดรวบยอด
-4. จุดประสงค์การเรียนรู้ที่สังเกตและประเมินได้ และเชื่อมกับตัวชี้วัด
-5. สาระการเรียนรู้
-6. สมรรถนะสำคัญและคุณลักษณะที่เกี่ยวข้องเท่าที่เหมาะสม
-7. ขั้นตอนกิจกรรมการเรียนรู้ตาม “${c.method}” พร้อมแบ่งเวลาให้รวมเหมาะสมกับ ${c.duration}
-8. สื่อ / อุปกรณ์ / แหล่งเรียนรู้
-9. การวัดและประเมินผล โดยระบุ วิธีการ เครื่องมือ และเกณฑ์ผ่านให้สัมพันธ์กับจุดประสงค์และตัวชี้วัด
+━━━━━━━━━━━━━━━━━━
+1) ข้อมูลพื้นฐานของแผน
+━━━━━━━━━━━━━━━━━━
+หลักสูตร: ${c.curriculum||"-"}
+ช่วงชั้น: ${c.stage||"-"}
+ระดับชั้น: ${c.grade||"-"}
+กลุ่มสาระ/ด้าน: ${c.subject||"-"}
+สาระ/พัฒนาการ: ${c.domain||"-"}
+หน่วยการเรียนรู้: ${c.unitName||"-"}
+เรื่อง: ${c.topic||"-"}
+เวลา: ${c.duration||"-"}
+รูปแบบการเรียนรู้: ${c.method||"-"}
+แนวการจัดการเรียนรู้: ${c.learningApproach||"-"}
+ระดับรายละเอียด: ${c.detailLevel||"-"}${c.context?`\nบริบทเพิ่มเติม: ${c.context}`:""}
 
-หลักการออกแบบกิจกรรม:
-- กิจกรรมทุกขั้นต้องเหมาะกับ ${c.grade} และนำไปทำได้จริง
-- ห้ามใช้กิจกรรมกว้าง ๆ ที่ไม่สัมพันธ์กับตัวชี้วัด
-- ถ้ามีบริบทผู้เรียน ให้ปรับกิจกรรมตามบริบทนั้น
-- เขียนกระชับพอสำหรับหน้าเดียว แต่ห้ามตัดสาระสำคัญจนไม่สามารถใช้เป็นแผนจริง
+━━━━━━━━━━━━━━━━━━
+2) มาตรฐานการเรียนรู้และตัวชี้วัด
+━━━━━━━━━━━━━━━━━━
+มาตรฐาน: ${c.standard||"-"}
+ตัวชี้วัด/ความสามารถ: ${c.indicator||"-"}
+ข้อความตัวชี้วัด/ความสามารถ: ${c.indicatorText||"-"}
+ประเภทตัวชี้วัด: ${c.classification||"-"}
 
-STYLE ที่เลือก:
-“${c.styleTitle}”
-${c.styleInstruction}
+ให้ข้อมูลมาตรฐานและตัวชี้วัดจบใน Section นี้เพียงครั้งเดียว ห้ามนำไปรวมซ้ำใน “ข้อมูลพื้นฐานของแผน”
 
-DESIGN & LAYOUT RULES:
-- ใช้ Visual Hierarchy ชัดเจน: ชื่อแผน > หัวข้อ Section > เนื้อหา
-- แบ่งข้อมูลเป็นการ์ด/Section ที่มีขอบเขตชัด อ่านตามลำดับได้ทันที
-- เว้น White Space ให้เพียงพอ ห้ามยัดข้อความ
-- Activity Steps ควรมี flow หรือลำดับที่มองเห็นง่าย
-- ใช้ไอคอนการศึกษาได้อย่างพอดี แต่ห้ามไอคอนหรือวัตถุตกแต่งบังข้อความ
-- องค์ประกอบตกแต่งต้องสนับสนุนการอ่าน ไม่ใช่แย่งจุดเด่น
-- ถ้าเป็นสไตล์ 3D ให้ใช้ 3D เฉพาะองค์ประกอบประกอบฉาก/ไอคอน ไม่ทำให้เนื้อหาอ่านยาก
-- ต้องดูสวยสะดุดตา แต่ยังเป็นเอกสารทางการศึกษาที่ครูนำไปใช้จริงได้
+━━━━━━━━━━━━━━━━━━
+3) ข้อมูลผู้สอน
+━━━━━━━━━━━━━━━━━━
+${[
+["ชื่อผู้สอน",c.teacher.name],["ตำแหน่ง",c.teacher.position],["โรงเรียน",c.teacher.school],
+["สังกัด",c.teacher.organization],["จังหวัด",c.teacher.province],["ภาคเรียน",c.teacher.semester],
+["ปีการศึกษา",c.teacher.academicYear],["จำนวนนักเรียน",c.teacher.studentCount?c.teacher.studentCount+" คน":""]
+].filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join("\n") || "ไม่ได้ระบุ — ห้ามสร้างข้อมูลผู้สอนหรือโรงเรียนสมมติ"}
 
-THAI TYPOGRAPHY:
-- ตัวอักษรไทยต้องคมชัด อ่านง่าย และไม่ผิดรูป
-- Body text ห้ามใช้ฟอนต์ตกแต่งที่อ่านยาก
-- ห้ามสร้างข้อความไทยมั่วหรือ placeholder
-- ให้ความสำคัญกับความถูกต้องของข้อความมากกว่าเอฟเฟกต์ภาพ
+━━━━━━━━━━━━━━━━━━
+4) เนื้อหาแผนที่ต้องสร้าง
+━━━━━━━━━━━━━━━━━━
+- สาระสำคัญ / ความคิดรวบยอด
+- จุดประสงค์การเรียนรู้ที่สังเกตและประเมินได้
+- สาระการเรียนรู้
+- สมรรถนะสำคัญและคุณลักษณะอันพึงประสงค์ เฉพาะที่สัมพันธ์กับกิจกรรม
+- ขั้นตอนกิจกรรมการเรียนรู้ตาม ${c.method} และแนว “${c.learningApproach}”
+- สื่อ / อุปกรณ์ / แหล่งเรียนรู้
+- การวัดและประเมินผล: จุดประสงค์ / วิธีการ / เครื่องมือ / เกณฑ์ผ่าน
 
-สำคัญมาก:
-- คงรหัสและข้อความตัวชี้วัดตามข้อมูลที่ให้
-- ห้ามสร้างข้อมูลผู้สอน/โรงเรียนขึ้นเองหากไม่ได้ให้
-- ผลลัพธ์สุดท้ายต้องทำหน้าที่เป็น “แผนการสอนหน้าเดียวจริง” ที่สวยงาม พร้อมนำไปใช้/พิมพ์/แก้ไขต่อได้`;
+กิจกรรมทุกขั้นต้องสัมพันธ์กับตัวชี้วัดและเหมาะกับ ${c.grade}
+ถ้าแนวการจัดการเรียนรู้เน้นเกม ใบงาน ใบความรู้ เทคโนโลยี หรือชิ้นงาน ให้เลือกกิจกรรมและสื่อให้สอดคล้องกับแนวนั้นจริง
+
+━━━━━━━━━━━━━━━━━━
+5) การลงชื่อและวันที่
+━━━━━━━━━━━━━━━━━━
+วันที่สอน: ${c.teachDate||"เว้นเส้นสำหรับกรอก"}
+ลงชื่อผู้สอน: ${signTeacher||"เว้นเส้นสำหรับลงชื่อและชื่อผู้สอน"}
+ลงชื่อผู้บริหาร/ผู้อำนวยการ: ${c.directorName||"เว้นเส้นสำหรับลงชื่อและชื่อผู้บริหาร"}
+ตำแหน่งผู้บริหาร: ${c.directorPosition||"ผู้อำนวยการโรงเรียน / เว้นเส้นสำหรับกรอก"}
+
+จัดส่วนลงชื่อไว้ท้ายเอกสารอย่างสุภาพ ไม่เด่นกว่าสาระการเรียนรู้
+
+━━━━━━━━━━━━━━━━━━
+6) STYLE & COLOR
+━━━━━━━━━━━━━━━━━━
+สไตล์: ${c.styleTitle}
+คำอธิบายสไตล์: ${c.styleInstruction}
+โทนสีที่เลือก: ${c.colorPair}
+
+ใช้คู่สีนี้เป็นแนวทางหลักอย่างสมดุล สีต้องช่วยแบ่ง Section และอ่านง่าย ไม่ใช้สีมากเกินไป
+เพิ่มไอคอนการศึกษา/บุคลากรการศึกษาแบบ 3D ได้อย่างพอดี โดยห้ามบังข้อความ
+
+━━━━━━━━━━━━━━━━━━
+7) รูปครูและโลโก้
+━━━━━━━━━━━━━━━━━━
+${assetRule}
+
+━━━━━━━━━━━━━━━━━━
+8) DESIGN RULES
+━━━━━━━━━━━━━━━━━━
+- A4 Portrait, 2:3, High Resolution, Print Ready, Canva Ready
+- ใช้ Visual Hierarchy ชัดเจน
+- เนื้อหาเป็นการ์ด/บล็อกที่อ่านตามลำดับได้
+- ใช้ White Space เพียงพอ
+- ตัวอักษรไทยคมชัด ไม่เพี้ยน ไม่บิดรูป
+- ห้ามสร้าง Placeholder ภาษาไทยมั่ว
+- ห้ามทำ Section ซ้ำ
+- ห้ามนำ “ข้อมูลผู้สอน” ไปปะปนใน “ข้อมูลพื้นฐานของแผน”
+- ห้ามทำ “มาตรฐาน/ตัวชี้วัด” ซ้ำใน Section อื่น
+- ผลงานต้องดูเป็นแผนการจัดการเรียนรู้จริง ไม่ใช่โปสเตอร์โฆษณาหรืออินโฟกราฟิกตกแต่งอย่างเดียว`;
   }
   if(tool==="worksheet"){
     const type=optionValue("optType","เติมคำ");
@@ -679,6 +760,7 @@ $("generateBtn").onclick=()=>{
     $("promptText").textContent=p;
     $("promptBox").style.display="block";
     logPrompt(t.id,c,p);
+    saveLastLessonSnapshot(c);
     renderContinuePanel(t.id);
     $("promptBox").scrollIntoView({behavior:"smooth",block:"start"});
     toast("สร้าง Prompt สำเร็จ ✓")
@@ -715,7 +797,7 @@ document.querySelectorAll("[data-detail]").forEach(btn=>btn.onclick=()=>{
   btn.classList.add("active");$("detailLevel").value=btn.dataset.detail;renderSummary()
 });
 document.querySelectorAll("[data-style]").forEach(card=>card.onclick=()=>{
-  selectedStyle=card.dataset.style;
+  selectedStyle=card.dataset.style;localStorage.setItem("klangLastStyle",selectedStyle);
   document.querySelectorAll("[data-style]").forEach(x=>{
     x.classList.toggle("selected",x===card);
     const e=x.querySelector(".style-info em");if(e)e.textContent=x===card?"✓ เลือกแล้ว":"เลือกสไตล์นี้"
@@ -744,6 +826,160 @@ readTeacherProfile();
 updateConditionalFields();
 revealFlowAfterTool(false);
 
+
+const COLOR_PAIRS={
+  "ฟ้า–ม่วง–ทอง":"Blue, violet and restrained warm gold accents",
+  "กรมท่า–ทอง":"Deep navy and refined gold on white",
+  "มิ้นต์–ฟ้า":"Fresh mint and sky blue on clean white",
+  "ส้ม–ครีม":"Warm orange and soft cream",
+  "ชมพู–ฟ้า":"Friendly pink and sky blue",
+  "เขียว–ทอง":"Education green with restrained gold"
+};
+document.querySelectorAll("[data-color-pair]").forEach(btn=>btn.onclick=()=>{
+  selectedColorPair=btn.dataset.colorPair;
+  document.querySelectorAll("[data-color-pair]").forEach(x=>x.classList.toggle("active",x===btn));
+  localStorage.setItem("klangColorPair",selectedColorPair);renderSummary();refreshHomeUtilities()
+});
+const savedColor=localStorage.getItem("klangColorPair");
+if(savedColor&&COLOR_PAIRS[savedColor]){
+  selectedColorPair=savedColor;
+  document.querySelectorAll("[data-color-pair]").forEach(x=>x.classList.toggle("active",x.dataset.colorPair===savedColor))
+}
+const savedStyle=localStorage.getItem("klangLastStyle");
+if(savedStyle&&STYLE_PRESETS[savedStyle]){
+  selectedStyle=savedStyle;
+  document.querySelectorAll("[data-style]").forEach(x=>{
+    const on=x.dataset.style===savedStyle;x.classList.toggle("selected",on);
+    const e=x.querySelector(".style-info em");if(e)e.textContent=on?"✓ เลือกแล้ว":"เลือกสไตล์นี้"
+  })
+}
+
+async function imageFileToSmallData(file,max=420){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const scale=Math.min(1,max/Math.max(img.width,img.height));
+        const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",.82))
+      };
+      img.onerror=reject;img.src=reader.result
+    };
+    reader.onerror=reject;reader.readAsDataURL(file)
+  })
+}
+function setAssetPreview(id,data,fallback){
+  const box=$(id);if(!box)return;
+  box.innerHTML=data?`<img src="${data}" alt="">`:`<span>${fallback}</span>`
+}
+async function handleAssetInput(input,type){
+  const file=input.files?.[0];if(!file)return;
+  if(file.size>8*1024*1024){toast("ไฟล์ใหญ่เกินไป กรุณาใช้ไฟล์ไม่เกิน 8 MB");return}
+  try{
+    const data=await imageFileToSmallData(file,type==="logo"?500:420);
+    if(type==="teacher"){teacherPhotoData=data;setAssetPreview("teacherPhotoPreview",data,"👩‍🏫")}
+    else{schoolLogoData=data;setAssetPreview("schoolLogoPreview",data,"🏫")}
+    if($("rememberTeacher")?.checked)persistTeacherProfile();
+    refreshProfileMini();toast("เพิ่มรูปเรียบร้อย ✓")
+  }catch(e){console.error(e);toast("ไม่สามารถอ่านรูปได้")}
+}
+if($("teacherPhotoInput"))$("teacherPhotoInput").onchange=e=>handleAssetInput(e.target,"teacher");
+if($("schoolLogoInput"))$("schoolLogoInput").onchange=e=>handleAssetInput(e.target,"logo");
+
+const oldPersistTeacherProfile=persistTeacherProfile;
+persistTeacherProfile=function(){
+  if(!$("rememberTeacher"))return;
+  if(!$("rememberTeacher").checked){localStorage.removeItem("klangTeacherProfile");return}
+  const d=teacherData();d.photoData=teacherPhotoData;d.logoData=schoolLogoData;
+  try{localStorage.setItem("klangTeacherProfile",JSON.stringify(d))}catch(e){
+    d.photoData="";d.logoData="";localStorage.setItem("klangTeacherProfile",JSON.stringify(d))
+  }
+  refreshHomeUtilities();refreshProfileMini()
+};
+(function restoreV72TeacherAssets(){
+  try{
+    const p=JSON.parse(localStorage.getItem("klangTeacherProfile")||"{}");
+    teacherPhotoData=p.photoData||"";schoolLogoData=p.logoData||"";
+    setAssetPreview("teacherPhotoPreview",teacherPhotoData,"👩‍🏫");
+    setAssetPreview("schoolLogoPreview",schoolLogoData,"🏫")
+  }catch{}
+})();
+
+function refreshProfileMini(){
+  const box=$("profileMini");if(!box)return;
+  const t=teacherData(),has=t.name||currentProfile?.full_name||currentUser;
+  if(!has){box.style.display="none";return}
+  box.style.display="flex";
+  $("profileMiniName").textContent=t.name||currentProfile?.full_name||"ผู้ใช้";
+  $("profileMiniRole").textContent=currentProfile?.role==="admin"?"ADMIN":currentProfile?.role==="vip"?"VIP":"ครูผู้ใช้งาน";
+  const img=$("profileMiniAvatar");
+  if(teacherPhotoData){img.src=teacherPhotoData;img.style.display="block"}
+  else{img.removeAttribute("src");img.style.display="none"}
+}
+function refreshHomeUtilities(){
+  let last={};try{last=JSON.parse(localStorage.getItem("klangLastLesson")||"{}")}catch{}
+  let tp={};try{tp=JSON.parse(localStorage.getItem("klangTeacherProfile")||"{}")}catch{}
+  if($("homeRecentText"))$("homeRecentText").textContent=last.topic?`${last.grade||""} ${last.subject||""} • ${last.topic}`:"ยังไม่มีงานล่าสุด";
+  if($("homeProfileText"))$("homeProfileText").textContent=tp.name?`${tp.name}${tp.school?` • ${tp.school}`:""}`:"ยังไม่ได้บันทึกข้อมูล";
+  if($("homeStyleText"))$("homeStyleText").textContent=`${STYLE_PRESETS[selectedStyle]?.title||"ราชการโมเดิร์น"} • ${selectedColorPair}`;
+  if($("homeContinueText"))$("homeContinueText").textContent=last.topic?`ต่อยอดจาก “${last.topic}”`:"สร้างแผนก่อน 1 ครั้ง"
+}
+document.querySelectorAll("[data-quick]").forEach(btn=>btn.onclick=()=>{
+  const q=btn.dataset.quick;
+  if(q==="recent"||q==="continue"){go("generator");setTimeout(()=>$("flowFinalStep")?.scrollIntoView({behavior:"smooth"}),100)}
+  if(q==="profile"){go("generator");setTimeout(()=>$("teacherSection")?.scrollIntoView({behavior:"smooth"}),100)}
+  if(q==="style"){go("generator");setTimeout(()=>$("styleSection")?.scrollIntoView({behavior:"smooth"}),100)}
+});
+function appNav(target){
+  document.querySelectorAll("[data-app-nav]").forEach(x=>x.classList.toggle("active",x.dataset.appNav===target));
+  if(target==="home"){go("home");return}
+  if(target==="plans"){go("home");setTimeout(()=>$("homeUtilityStrip")?.scrollIntoView({behavior:"smooth"}),100);return}
+  if(target==="indicators"){go("generator");setTimeout(()=>$("flowDetailsStep")?.scrollIntoView({behavior:"smooth"}),100);return}
+  if(target==="styles"){go("generator");setTimeout(()=>$("styleSection")?.scrollIntoView({behavior:"smooth"}),100);return}
+  if(target==="guide"){go("home");setTimeout(()=>$("homeGuidePanel")?.scrollIntoView({behavior:"smooth"}),100);return}
+  if(target==="help"){toast("ศูนย์ช่วยเหลือ: เริ่มจากเลือกชั้น → ตัวชี้วัด → รายละเอียด → สไตล์ → สร้าง Prompt");go("home")}
+}
+document.querySelectorAll("[data-app-nav]").forEach(btn=>btn.onclick=()=>appNav(btn.dataset.appNav));
+
+const AI_LINKS={
+  chatgpt:"https://chatgpt.com/",
+  gemini:"https://gemini.google.com/",
+  claude:"https://claude.ai/",
+  canva:"https://www.canva.com/"
+};
+document.querySelectorAll("[data-ai-launch]").forEach(btn=>btn.onclick=async()=>{
+  await copyCurrentPrompt();window.open(AI_LINKS[btn.dataset.aiLaunch],"_blank","noopener")
+});
+
+const GAME_LINKS={
+  "Canva":"https://www.canva.com/",
+  "Wordwall":"https://wordwall.net/",
+  "Quizizz":"https://quizizz.com/",
+  "Kahoot!":"https://create.kahoot.it/",
+  "Genially":"https://genially.com/",
+  "ChatGPT":"https://chatgpt.com/"
+};
+function syncGamePlatformButton(){
+  const b=$("openGamePlatformBtn");if(!b)return;
+  const platform=chipValue("gamePlatform");
+  const url=GAME_LINKS[platform];
+  b.style.display=smartContinueTool==="game"&&url?"block":"none";
+  if(url){b.textContent=`🔗 เปิด ${platform}`;b.onclick=()=>window.open(url,"_blank","noopener")}
+}
+const originalInitSmartChips=initSmartChips;
+initSmartChips=function(){
+  originalInitSmartChips();
+  document.querySelectorAll('[data-chip-group="gamePlatform"] .smart-chip').forEach(x=>x.addEventListener("click",()=>setTimeout(syncGamePlatformButton,0)));
+  syncGamePlatformButton()
+};
+
+function saveLastLessonSnapshot(c){
+  const snap={stage:c.stage,grade:c.grade,subject:c.subject,indicator:c.indicator,unitName:c.unitName,topic:c.topic,duration:c.duration,method:c.method,styleKey:c.styleKey,colorPair:c.colorPair,createdAt:new Date().toISOString()};
+  localStorage.setItem("klangLastLesson",JSON.stringify(snap));refreshHomeUtilities()
+}
+refreshHomeUtilities();refreshProfileMini();
 if($("adminRefresh"))$("adminRefresh").onclick=()=>loadAdmin();
 if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="lesson";go("generator");renderTools();renderOptions();revealFlowAfterTool(true);toast("Admin Test Mode: ทดสอบ Lesson Plan และเครื่องมือต่อยอดได้ทุกระดับ")};
 if($("adminCreateVipInvite"))$("adminCreateVipInvite").onclick=async()=>{
