@@ -80,7 +80,7 @@ if($("mobileAccountBtn"))$("mobileAccountBtn").onclick=()=>{
   closeMobileMenus();
   if(currentUser)logout();else openAuth("login")
 };
-if($("mobileAdminBtn"))$("mobileAdminBtn").onclick=()=>{closeMobileMenus();location.href="/admin"};
+if($("mobileAdminBtn"))$("mobileAdminBtn").onclick=()=>{closeMobileMenus();location.href="/admin/"};
 document.querySelectorAll("[data-mobile-go]").forEach(btn=>btn.onclick=()=>go(btn.dataset.mobileGo));
 
 document.addEventListener("click",e=>{

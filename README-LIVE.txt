@@ -1,21 +1,14 @@
-KLANG PLAN V7.8 — ZERO-INPUT ADMIN + FAST MODE SWITCH
+KLANG PLAN V7.8.1 — ADMIN ROUTE LOOP FIX
+
+แก้ Safari “เกิดการเปลี่ยนเส้นทางที่อยู่หน้าเว็บมากไป”
+- ยกเลิกไฟล์ _redirects สำหรับ /admin
+- ใช้โฟลเดอร์จริง admin/index.html
+- URL Admin ใช้ /admin/
+- ปุ่มสลับ Admin/User ใช้ /admin/
+- ไม่ rewrite /admin ไป admin.html อีก
+
+User:
+https://klang-plan.pages.dev/
 
 Admin:
-- แอดมินไม่ต้องกรอกชื่อลูกค้า/ข้อมูลสมาชิก
-- ตรวจสลิป → กด “สร้างลิงก์เชิญหลังชำระเงินทันที” ปุ่มเดียว
-- ระบบสร้าง Private Invite ใช้ได้ 1 คน
-- สมัครจากลิงก์แล้ว Active Member อัตโนมัติ
-- ครูเป็นคนกรอกชื่อ / อีเมล / ตั้งรหัสผ่านเอง
-- ราคา / ช่องทาง / แคมเปญ เป็น Advanced Options ไม่บังคับ
-- CTA สร้างลิงก์ปรับให้สีสดและเด่นชัดมากขึ้น
-
-Fast switch:
-- Admin page มีปุ่ม “สลับเป็นมุมผู้ใช้งาน”
-- หน้าเว็บครู เมื่อ Login เป็น Admin จะแสดงแถบ “คุณกำลังดูเว็บในมุมผู้ใช้งาน”
-- กดกลับหลังบ้านได้ทันที
-- ใช้ Supabase session เดียวกัน ไม่ต้อง Login ใหม่
-- คล้ายการสลับมุมมอง Admin/User ของเพจ Facebook
-
-URL:
-- User: /
-- Admin: /admin
+https://klang-plan.pages.dev/admin/
