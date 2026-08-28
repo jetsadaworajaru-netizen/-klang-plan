@@ -1,19 +1,21 @@
-KLANG PLAN V7.8.2 — ADMIN ↔ USER FAST SWITCH SESSION FIX
+KLANG PLAN V7.8.3 — CONTROL ROUTE FIX
 
-แก้ปัญหา:
-กด “สลับเป็นมุมผู้ใช้งาน” แล้วเหมือนถูก Logout
+แก้ Safari Redirect Loop ตอนสลับจากมุมผู้ใช้กลับหลังบ้าน
 
-วิธีใหม่:
-- ปุ่มสลับจะตรวจ Supabase Session ก่อน
-- ไม่เรียก signOut
-- ใช้ Session เดิมของ Admin
-- ไปหน้า /?adminview=1
-- หน้าเว็บครูแสดงแถบ “คุณกำลังดูเว็บในมุมผู้ใช้งาน”
-- ปุ่มด้านบนสำหรับ Admin เปลี่ยนจาก “ออกจากระบบ” เป็น “กลับหลังบ้าน”
-  เพื่อป้องกัน Admin เผลอกด Logout
-- หน้า User มีปุ่มกลับ /admin/ ทันที
-- มี auth resolving state ลดอาการหน้า Login กระพริบตอนกำลังอ่าน Session
+สาเหตุ:
+ไฟล์ _redirects เก่าบน GitHub อาจยังคงอยู่ แม้ ZIP รุ่นใหม่จะไม่มีไฟล์นั้น
+เพราะการอัปโหลดไฟล์ทับ GitHub ไม่ได้ลบไฟล์เก่าอัตโนมัติ
 
-URL:
-User view: https://klang-plan.pages.dev/?adminview=1
-Admin: https://klang-plan.pages.dev/admin/
+วิธีแก้:
+- เปลี่ยน Admin route ใหม่เป็น /control/
+- ใช้โฟลเดอร์จริง control/index.html
+- ใส่ _redirects ตัวใหม่เพื่อ overwrite กฎเก่าที่อาจค้าง
+- /admin/ เป็นหน้าแจ้งย้าย ไม่ auto redirect
+- ปุ่ม User → Admin ใช้ /control/
+- Session Admin เดิมยังคงอยู่
+
+User:
+https://klang-plan.pages.dev/
+
+Admin:
+https://klang-plan.pages.dev/control/
