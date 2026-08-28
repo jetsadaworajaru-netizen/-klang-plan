@@ -771,3 +771,8 @@ body{overscroll-behavior-y:none}
 .admin-user-mode-bar{max-width:1180px;margin:8px auto 0;padding:8px 12px;border-radius:13px;background:linear-gradient(135deg,#eef3ff,#f8f6ff);border:1px solid #d9def6;align-items:center;justify-content:space-between;gap:10px;color:#38527d}
 .admin-user-mode-bar>div{display:flex;align-items:center;gap:7px}.admin-user-mode-bar b{font-size:.76rem}.admin-user-mode-bar small{font-size:.65rem;color:#7b8da1}.admin-user-mode-bar a{font-size:.7rem;font-weight:900;color:#4c5bc8;text-decoration:none;white-space:nowrap}
 @media(max-width:600px){.admin-user-mode-bar{margin:6px 8px 0}.admin-user-mode-bar small{display:none}.admin-user-mode-bar b{font-size:.68rem}.admin-user-mode-bar a{font-size:.65rem}.admin-mode-switch b{display:none}}
+
+/* ===== V7.8.2 ADMIN ↔ USER SESSION SWITCH FIX ===== */
+.auth-resolving-bar{position:fixed;top:0;left:0;right:0;z-index:9999;background:#eef4ff;color:#4358b9;text-align:center;padding:5px;font-size:.7rem;font-weight:800}
+body.auth-resolving #authBtn{visibility:hidden}
+.admin-user-mode-bar a{background:linear-gradient(135deg,#3548b8,#6556e3);color:#fff!important;padding:7px 10px;border-radius:10px}

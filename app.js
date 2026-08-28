@@ -122,9 +122,19 @@ function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||
       else if(claimError)console.error("claim invite",claimError)
     }
   }renderAuthState()}
-function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!btn)return;if(!currentUser){if(chip)chip.style.display="none";if(admin)admin.style.display="none";if($("adminUserModeBar"))$("adminUserModeBar").style.display="none";btn.textContent="เข้าสู่ระบบ";if(btn.tagName==="A"){btn.setAttribute("href","#authModal");btn.onclick=null}else btn.onclick=()=>openAuth("login");if($("mobileAdminBtn"))$("mobileAdminBtn").style.display="none";return}if(chip)chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";if(chip)chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;if(admin)admin.style.display=(currentProfile?.role==="admin")?"inline-flex":"none";if($("adminUserModeBar"))$("adminUserModeBar").style.display=currentProfile?.role==="admin"?"flex":"none";
+function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!btn)return;if(!currentUser){if(chip)chip.style.display="none";if(admin)admin.style.display="none";if($("adminUserModeBar"))$("adminUserModeBar").style.display="none";btn.textContent="เข้าสู่ระบบ";if(btn.tagName==="A"){btn.setAttribute("href","#authModal");btn.onclick=null}else btn.onclick=()=>openAuth("login");if($("mobileAdminBtn"))$("mobileAdminBtn").style.display="none";document.body.classList.remove("auth-resolving");$("authResolvingBar")?.remove();return}if(chip)chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";if(chip)chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;if(admin)admin.style.display=(currentProfile?.role==="admin")?"inline-flex":"none";if($("adminUserModeBar"))$("adminUserModeBar").style.display=currentProfile?.role==="admin"?"flex":"none";
 const testBadge=$("adminTestBadge");if(testBadge)testBadge.style.display=currentProfile?.role==="admin"?"inline-flex":"none";
-btn.textContent="ออกจากระบบ";if(btn.tagName==="A"){btn.setAttribute("href","#");btn.onclick=(e)=>{e.preventDefault();logout()}}else btn.onclick=logout;if($("mobileAdminBtn"))$("mobileAdminBtn").style.display=currentProfile?.role==="admin"?"flex":"none"}
+const isAdmin=currentProfile?.role==="admin";
+if(isAdmin){
+  btn.textContent="กลับหลังบ้าน";
+  if(btn.tagName==="A"){btn.setAttribute("href","/admin/");btn.onclick=null}else btn.onclick=()=>location.href="/admin/";
+}else{
+  btn.textContent="ออกจากระบบ";
+  if(btn.tagName==="A"){btn.setAttribute("href","#");btn.onclick=(e)=>{e.preventDefault();logout()}}else btn.onclick=logout;
+}
+if($("mobileAdminBtn"))$("mobileAdminBtn").style.display=isAdmin?"flex":"none";
+document.body.classList.remove("auth-resolving");$("authResolvingBar")?.remove()
+}
 async function logout(){if(supabaseClient)await supabaseClient.auth.signOut();currentUser=null;currentProfile=null;renderAuthState();go("home")}
 function openAuth(tab="login"){
   if(window.KlangAuthFallback){window.KlangAuthFallback.open(tab);return}
@@ -153,6 +163,8 @@ $("registerBtn").onclick=async()=>{if(!backendReady()){msg("registerMsg","ระ
   if(currentProfile?.status==="active"){msg("registerMsg","สมัครสำเร็จ ✓ เปิดสิทธิ์ Member แล้ว เข้าใช้งานได้ทันที","ok");setTimeout(()=>$("authModal").classList.remove("open"),900)}
   else msg("registerMsg","สมัครสำเร็จ ✓ คำขออยู่ระหว่างรอแอดมินอนุมัติ","ok")
 }else msg("registerMsg","สมัครสำเร็จ ✓ หากได้รับอีเมลยืนยัน ให้กด 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ","ok")};function msg(id,t,type){$(id).innerHTML=`<div class="alert ${type}">${t}</div>`}
+const adminViewMode=new URLSearchParams(location.search).get("adminview")==="1";
+if(adminViewMode)sessionStorage.setItem("klangAdminUserView","1");
 const invite=new URLSearchParams(location.search).get("invite");if(invite){$("regInvite").value=invite;setTimeout(()=>openAuth("register"),500)}
 function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=()=>{if(!DATA.length){toast("กำลังโหลดฐานข้อมูล กรุณารอสักครู่");return}ACTIVE_STAGE=b.dataset.stage;syncStageTabs();buildGrades();savePrefs()});
 function setSelectState(el,items,placeholder){

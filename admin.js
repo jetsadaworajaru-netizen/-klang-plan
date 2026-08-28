@@ -41,6 +41,14 @@ $("adminLoginBtn").onclick=async()=>{
   await useSession(data.session)
 };
 $("logoutBtn").onclick=async()=>{await sb.auth.signOut();showLogin()};
+
+$("switchToUserBtn").onclick=async()=>{
+  // Do NOT sign out. Verify current session and move to teacher-facing UI.
+  const {data}=await sb.auth.getSession();
+  if(!data?.session){toast("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");showLogin();return}
+  sessionStorage.setItem("klangAdminUserView","1");
+  location.assign("/?adminview=1")
+};
 $("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("adminLoginBtn").click()});
 
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
