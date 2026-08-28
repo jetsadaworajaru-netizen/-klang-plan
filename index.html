@@ -26,7 +26,7 @@
       <span id="memberChip" class="member-chip compact-member-chip" style="display:none"></span>
       <button id="adminBtn" class="btn btn-ghost compact-admin-btn" data-go="admin" style="display:none">หลังบ้าน</button>
       <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN</span>
-      <button id="authBtn" type="button" class="btn btn-gold compact-auth-btn" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.open('login')">เข้าสู่ระบบ</button>
+      <a id="authBtn" class="btn btn-gold compact-auth-btn top-login-link" href="#authModal" aria-controls="authModal">เข้าสู่ระบบ</a>
       <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="เมนู">☰</button>
     </div>
   </div>
@@ -531,7 +531,7 @@
   <div class="modal-card easy-access-card v75-auth-card">
     <div class="modal-head">
       <div><h3>สมาชิก Klang Plan</h3><p>สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด</p></div>
-      <button class="close" id="closeAuth" type="button" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.close()">×</button>
+      <a class="close" id="closeAuth" href="#" aria-label="ปิด" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.close()">×</a>
     </div>
 
     <div class="tabs easy-access-tabs">
@@ -592,6 +592,7 @@
   };
   document.addEventListener("DOMContentLoaded",function(){
     var auth=byId("authBtn");
+    if(location.hash==="#authModal"){window.KlangAuthFallback.open("login")}
     if(auth){
       auth.style.pointerEvents="auto";
       auth.style.position="relative";

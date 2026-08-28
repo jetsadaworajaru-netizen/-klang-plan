@@ -742,3 +742,25 @@ body{overscroll-behavior-y:none}
   #authModal{align-items:flex-end!important}
   #authBtn{min-width:96px}
 }
+
+/* ===== V7.6.2 TOP LOGIN FIX ===== */
+.top-login-link{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-decoration:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+#authModal:target{
+  display:flex!important;
+  pointer-events:auto!important;
+}
+#closeAuth{
+  text-decoration:none!important;
+  display:grid!important;
+  place-items:center!important;
+}
+@media(max-width:980px){
+  .top-login-link{min-width:102px!important;min-height:44px!important}
+}

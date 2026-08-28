@@ -1,10 +1,6 @@
-KLANG PLAN V7.6.1 — LOGIN HOTFIX
+KLANG PLAN V7.6.2 — TOP LOGIN FIX
 
-แก้เร่งด่วน:
-- ปุ่ม “เข้าสู่ระบบ” บนคอมและมือถือมี Fallback เปิด Login Modal โดยตรง
-- เพิ่ม z-index / pointer-events ป้องกัน element อื่นทับปุ่ม
-- Login Modal มี fallback เปิด/ปิด/สลับแท็บ แม้ main app event handler มีปัญหา
-- renderAuthState null-safe และคืน handler ปุ่ม login ทุกครั้ง
-- เมื่อ Login สำเร็จ ปิด modal ด้วย fallback
-- Supabase เพิ่ม claim_member_invite RPC แล้ว เพื่อรองรับ Private Invite/OAuth flow
-- ฟีเจอร์ V7.6 Mobile First + V7.5 Member/Sales + V7.4 Smart Indicator คงเดิม
+- ปุ่มเข้าสู่ระบบด้านบนเปลี่ยนเป็น link ไป #authModal
+- CSS :target เปิด Login Modal ได้แม้ event JS มีปัญหา
+- ระบบ Auth เดิมยังทำงานร่วมกัน
+- เมื่อ Login แล้วปุ่มเดิมเปลี่ยนเป็นออกจากระบบ
