@@ -26,7 +26,7 @@
       <span id="memberChip" class="member-chip compact-member-chip" style="display:none"></span>
       <button id="adminBtn" class="btn btn-ghost compact-admin-btn" data-go="admin" style="display:none">หลังบ้าน</button>
       <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN</span>
-      <button id="authBtn" class="btn btn-gold compact-auth-btn">เข้าสู่ระบบ</button>
+      <button id="authBtn" type="button" class="btn btn-gold compact-auth-btn" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.open('login')">เข้าสู่ระบบ</button>
       <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="เมนู">☰</button>
     </div>
   </div>
@@ -385,7 +385,7 @@
     <div class="workspace-page-head"><div><span>💬</span><div><h1>ศูนย์ช่วยเหลือ</h1><p>คำตอบสำหรับเรื่องที่ใช้บ่อย</p></div></div></div>
     <div class="faq-list">
       <details open><summary>สมัครเข้าใช้งานอย่างไร?</summary><p>ครั้งแรกกรอกชื่อครู อีเมล รหัสเข้ากลุ่ม และตั้งรหัสผ่านเพียงครั้งเดียว จากนั้นรอแอดมินอนุมัติ เมื่อกลับมาใช้ครั้งต่อไปล็อกอินด้วยอีเมลและรหัสผ่านได้เลย</p></details>
-      <details><summary>รหัสเข้ากลุ่มคืออะไร?</summary><p>เป็นรหัสที่แอดมินสร้างจากหลังบ้านเพื่อเชิญสมาชิก คล้ายลิงก์/คำเชิญเข้ากลุ่ม Facebook โดยช่วงนี้สมาชิกทุกคนเป็น Member และใช้ฟีเจอร์เหมือนกันทั้งหมด</p></details>
+      <details><summary>รหัสเข้ากลุ่มคืออะไร?</summary><p>เป็นรหัสที่แอดมินสร้างจากหลังบ้านเพื่อเชิญสมาชิก คล้ายลิงก์/คำเชิญเข้ากลุ่ม Facebook และสามารถกำหนด Member หรือ VIP ได้</p></details>
       <details><summary>ต้องอัปโหลดรูปครูหรือโลโก้ใน Klang Plan ไหม?</summary><p>ไม่ต้องครับ รูปในระบบใช้เป็นรูปโปรไฟล์เท่านั้น หากต้องการให้ AI ใส่รูปครูหรือโลโก้ในแผน ให้แนบไฟล์จริงกับ AI ตอนนำ Prompt ไปสร้างภาพ</p></details>
       <details><summary>ข้อมูลครูจำไว้ครั้งถัดไปได้ไหม?</summary><p>ได้ เปิด “จำข้อมูลผู้สอน” ระบบจะเก็บข้อมูลพื้นฐานไว้ในอุปกรณ์ที่ใช้งาน</p></details>
     </div>
@@ -492,7 +492,7 @@
 
   <div id="admin-settings" class="admin-pane">
     <div class="settings-grid">
-      <section class="admin-dashboard-card"><h3>👥 รูปแบบสมาชิก</h3><p><b>Member Only</b> — สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด ใช้สิทธิ์ Member แบบเดียวในช่วงเริ่มต้น</p></section>
+      <section class="admin-dashboard-card"><h3>👥 รูปแบบสมาชิก</h3><p><b>Member Only</b> — สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด ไม่มี VIP ในช่วงเริ่มต้น</p></section>
       <section class="admin-dashboard-card"><h3>💳 การชำระเงิน</h3><p>รับชำระโดยโอนเข้าบัญชีและตรวจสลิปผ่านเพจ จากนั้นสร้าง Private Invite ให้ลูกค้า</p></section>
       <section class="admin-dashboard-card"><h3>🔵 Facebook Login</h3><p id="facebookAdminStatus">โครงสร้างรองรับแล้ว แต่ต้องเชื่อม Meta App กับ Supabase จึงจะเปิดใช้งานจริง</p></section>
       <section class="admin-dashboard-card"><h3>💬 ลิงก์เพจ</h3><p>ตั้งค่า <code>salesContactUrl</code> ใน config.js เพื่อให้ปุ่ม “ติดต่อเพจ” เปิด Messenger/เพจโดยตรง</p></section>
@@ -531,7 +531,7 @@
   <div class="modal-card easy-access-card v75-auth-card">
     <div class="modal-head">
       <div><h3>สมาชิก Klang Plan</h3><p>สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด</p></div>
-      <button class="close" id="closeAuth">×</button>
+      <button class="close" id="closeAuth" type="button" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.close()">×</button>
     </div>
 
     <div class="tabs easy-access-tabs">
@@ -567,4 +567,44 @@
     </div>
   </div>
 </div>
-<div id="toast" class="toast"></div><footer><div class="wrap">Klang Plan · Member Only · Curriculum VERIFIED 2,155 รายการ</div></footer><script src="app.js"></script></body></html>
+<div id="toast" class="toast"></div><footer><div class="wrap">คลังแผนการสอนหน้าเดียว · ระบบสมาชิกแบบรออนุมัติ · Curriculum Dataset VERIFIED 2,155 รายการ</div></footer><script>
+(function(){
+  function byId(id){return document.getElementById(id)}
+  function switchTab(tab){
+    document.querySelectorAll(".auth-tab").forEach(function(x){x.classList.toggle("active",x.dataset.auth===tab)});
+    document.querySelectorAll(".auth-pane").forEach(function(x){x.classList.toggle("active",x.id==="auth-"+tab)});
+  }
+  window.KlangAuthFallback={
+    open:function(tab){
+      var m=byId("authModal");if(!m)return;
+      m.classList.add("open");m.style.display="flex";m.style.pointerEvents="auto";
+      switchTab(tab||"login");
+      setTimeout(function(){
+        var el=byId((tab||"login")==="login"?"loginEmail":"regName");
+        if(el)el.focus({preventScroll:true})
+      },60)
+    },
+    close:function(){
+      var m=byId("authModal");if(!m)return;
+      m.classList.remove("open");m.style.display="";
+    },
+    switchTab:switchTab
+  };
+  document.addEventListener("DOMContentLoaded",function(){
+    var auth=byId("authBtn");
+    if(auth){
+      auth.style.pointerEvents="auto";
+      auth.style.position="relative";
+      auth.style.zIndex="12";
+      auth.addEventListener("click",function(e){
+        if(!byId("authModal")?.classList.contains("open")){
+          e.preventDefault();e.stopPropagation();window.KlangAuthFallback.open("login")
+        }
+      },true)
+    }
+    document.querySelectorAll("[data-auth]").forEach(function(btn){
+      btn.addEventListener("click",function(e){e.preventDefault();switchTab(btn.dataset.auth)},true)
+    });
+  });
+})();
+</script><script src="app.js"></script></body></html>

@@ -732,18 +732,13 @@ body{overscroll-behavior-y:none}
 }
 
 
-/* ===== V7.6.1 RELEASE QA HOTFIX ===== */
+/* ===== V7.6.1 LOGIN HOTFIX ===== */
+#authBtn{pointer-events:auto!important;position:relative!important;z-index:12!important}
+.v73-nav-actions{position:relative;z-index:12}
+#authModal{z-index:999!important;pointer-events:none}
+#authModal.open{display:flex!important;pointer-events:auto!important}
+#authModal .modal-card{pointer-events:auto!important;position:relative;z-index:1000}
 @media(max-width:980px){
-  body.mobile-sheet-open{overflow:hidden}
-  .mobile-sheet:not(.open){display:none!important;pointer-events:none!important}
-  .mobile-sheet.open{display:block!important}
-  .mobile-sheet-backdrop{touch-action:none}
-  .search-results{position:relative;z-index:20;background:#fff}
-  .flow-card,.workspace-page,.lesson-first-home{position:relative;z-index:auto}
-  input,select,textarea,button{pointer-events:auto!important}
-  .mobile-bottom-nav{pointer-events:auto}
-  .mobile-builder-bar{pointer-events:auto}
-  .mobile-generate-shortcut.show{pointer-events:auto!important}
+  #authModal{align-items:flex-end!important}
+  #authBtn{min-width:96px}
 }
-#facebookLoginBtn[style*="display: none"],#contactPageBtn[style*="display: none"]{display:none!important}
-#regInvite[readonly]{background:#f1f6fb!important;color:#315a7c!important;font-weight:800}

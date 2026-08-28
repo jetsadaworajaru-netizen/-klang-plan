@@ -1,11 +1,4 @@
-const $=id=>document.getElementById(id);const CFG=window.KLANG_CONFIG||{};
-function syncOptionalAuthControls(){
-  const fb=$("facebookLoginBtn");
-  if(fb)fb.style.display=CFG.facebookOAuthEnabled?"block":"none";
-  const contact=$("contactPageBtn");
-  if(contact)contact.style.display=CFG.salesContactUrl?"block":"none";
-}
-let DATA=[],ACTIVE_STAGE="ปฐมวัย",selectedTool="lesson",supabaseClient=null,currentUser=null,currentProfile=null;const grades={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};const SUBJECT_ORDER=["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนาและวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ (ภาษาอังกฤษ)","ปฐมวัย"];
+const $=id=>document.getElementById(id);const CFG=window.KLANG_CONFIG||{};let DATA=[],ACTIVE_STAGE="ปฐมวัย",selectedTool="lesson",supabaseClient=null,currentUser=null,currentProfile=null;const grades={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};const SUBJECT_ORDER=["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนาและวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ (ภาษาอังกฤษ)","ปฐมวัย"];
 const TOOLS=[{id:"lesson",icon:"📘",title:"แผนการสอนหน้าเดียว",desc:"Prompt แผนกระชับ ครบองค์ประกอบ และสอดคล้องตัวชี้วัด",tier:"member"},{id:"worksheet",icon:"📝",title:"ใบงาน",desc:"สร้างใบงานตามตัวชี้วัด พร้อมตัวเลือกชนิดงานและเฉลย",tier:"member"},{id:"exercise",icon:"✏️",title:"แบบฝึกหัด",desc:"แบบฝึกหลายระดับพร้อมเฉลยและเกณฑ์",tier:"member"},{id:"quiz",icon:"✅",title:"แบบทดสอบ",desc:"ก่อนเรียน/หลังเรียน พร้อมเฉลยและวิเคราะห์ตัวชี้วัด",tier:"member"},{id:"rubric",icon:"📊",title:"แบบประเมิน / Rubric",desc:"เกณฑ์ประเมินที่โยงกับพฤติกรรมตามตัวชี้วัด",tier:"member"},{id:"knowledge",icon:"📚",title:"ใบความรู้",desc:"สรุปความรู้ที่ตรงกับเรื่องและระดับชั้น",tier:"member"},{id:"game",icon:"🎮",title:"เกม / Active Learning",desc:"กิจกรรมเล่นได้จริงในคาบเรียน",tier:"member"},{id:"pack",icon:"🎁",title:"Teaching Pack",desc:"แผน + ใบงาน + ใบความรู้ + แบบประเมิน + แบบทดสอบ ในชุดเดียว",tier:"member"}];
 const STYLE_PRESETS={
   "modern-government":{
@@ -121,24 +114,22 @@ function makeTapSafe(root=document){
   })
 }
 makeTapSafe();
-function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||CFG.supabaseAnonKey)&&window.supabase)}function initBackend(){if(!backendReady()){$("backendWarning").style.display="block";return}const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey;supabaseClient=window.supabase.createClient(CFG.supabaseUrl,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});supabaseClient.auth.getSession().then(({data})=>applySession(data.session));supabaseClient.auth.onAuthStateChange((_e,s)=>applySession(s))}let applyingSessionFor="";
-async function applySession(session){
-  const uid=session?.user?.id||"";
-  if(uid&&applyingSessionFor===uid&&currentProfile)return;
-  applyingSessionFor=uid;
-  currentUser=session?.user||null;currentProfile=null;if(currentUser){const {data,error}=await supabaseClient.from("profiles").select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,membership_started_at,membership_expires_at,approved_at,created_at").eq("id",currentUser.id).maybeSingle();if(error)console.error(error);currentProfile=data||null;
+function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||CFG.supabaseAnonKey)&&window.supabase)}function initBackend(){if(!backendReady()){$("backendWarning").style.display="block";return}const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey;supabaseClient=window.supabase.createClient(CFG.supabaseUrl,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});supabaseClient.auth.getSession().then(({data})=>applySession(data.session));supabaseClient.auth.onAuthStateChange((_e,s)=>applySession(s))}async function applySession(session){currentUser=session?.user||null;currentProfile=null;if(currentUser){const {data,error}=await supabaseClient.from("profiles").select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,membership_started_at,membership_expires_at,approved_at,created_at").eq("id",currentUser.id).maybeSingle();if(error)console.error(error);currentProfile=data||null;
     const pendingInvite=localStorage.getItem("klangPendingInvite");
     if(pendingInvite&&currentProfile&&!currentProfile.invite_code){
       const {data:claimed,error:claimError}=await supabaseClient.rpc("claim_member_invite",{p_code:pendingInvite});
       if(!claimError&&claimed){currentProfile=Array.isArray(claimed)?claimed[0]:claimed;localStorage.removeItem("klangPendingInvite")}
       else if(claimError)console.error("claim invite",claimError)
     }
-  }else{applyingSessionFor=""}renderAuthState()}
-function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!currentUser){chip.style.display="none";admin.style.display="none";btn.textContent="เข้าสู่ระบบ";btn.onclick=openAuth;if($("mobileAdminBtn"))$("mobileAdminBtn").style.display="none";return}chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;admin.style.display=(currentProfile?.role==="admin")?"inline-block":"none";
+  }renderAuthState()}
+function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!btn)return;if(!currentUser){if(chip)chip.style.display="none";if(admin)admin.style.display="none";btn.textContent="เข้าสู่ระบบ";btn.onclick=()=>openAuth("login");if($("mobileAdminBtn"))$("mobileAdminBtn").style.display="none";return}if(chip)chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";if(chip)chip.textContent=currentProfile?`${currentProfile.full_name||currentUser.email} · ${role}${status!=="active"?` · ${status}`:""}`:currentUser.email;if(admin)admin.style.display=(currentProfile?.role==="admin")?"inline-block":"none";
 const testBadge=$("adminTestBadge");if(testBadge)testBadge.style.display=currentProfile?.role==="admin"?"inline-flex":"none";
 btn.textContent="ออกจากระบบ";btn.onclick=logout;if($("mobileAdminBtn"))$("mobileAdminBtn").style.display=currentProfile?.role==="admin"?"flex":"none"}
 async function logout(){if(supabaseClient)await supabaseClient.auth.signOut();currentUser=null;currentProfile=null;renderAuthState();go("home")}
-function openAuth(tab="login"){$("authModal").classList.add("open");switchAuth(tab)}
+function openAuth(tab="login"){
+  if(window.KlangAuthFallback){window.KlangAuthFallback.open(tab);return}
+  const m=$("authModal");if(!m)return;m.classList.add("open");m.style.display="flex";switchAuth(tab)
+}
 if($("authBtn"))$("authBtn").onclick=openAuth;
 if($("facebookLoginBtn"))$("facebookLoginBtn").onclick=async()=>{
   if(!CFG.facebookOAuthEnabled){toast("Facebook Login เตรียมไว้แล้ว แต่ยังต้องเชื่อม Meta App กับ Supabase");return}
@@ -153,90 +144,16 @@ if($("contactPageBtn"))$("contactPageBtn").onclick=()=>{
   else toast("ยังไม่ได้ตั้งค่าลิงก์เพจใน config.js")
 };
 if($("joinNow"))$("joinNow").onclick=()=>openAuth("register");
-if($("closeAuth"))$("closeAuth").onclick=()=>$("authModal").classList.remove("open");document.querySelectorAll("[data-auth]").forEach(b=>b.onclick=()=>switchAuth(b.dataset.auth));function switchAuth(t){document.querySelectorAll(".auth-tab").forEach(x=>x.classList.toggle("active",x.dataset.auth===t));document.querySelectorAll(".auth-pane").forEach(x=>x.classList.toggle("active",x.id==="auth-"+t))}
-$("loginBtn").onclick=async()=>{
-  if(!backendReady()){msg("loginMsg","ยังไม่ได้เชื่อม Supabase","warn");return}
-  const email=$("loginEmail").value.trim(),password=$("loginPassword").value;
-  if(!email||!password){msg("loginMsg","กรุณากรอกอีเมลและรหัสผ่าน","warn");return}
-  $("loginBtn").disabled=true;$("loginBtn").textContent="กำลังเข้าสู่ระบบ...";
-  try{
-    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
-    if(error){
-      const t=(error.message||"").toLowerCase();
-      if(t.includes("email not confirmed")) msg("loginMsg","อีเมลนี้ยังไม่ได้ยืนยัน กรุณาเปิดอีเมลยืนยันบัญชีก่อน แล้วกลับมาเข้าสู่ระบบ","warn");
-      else if(t.includes("invalid login")) msg("loginMsg","อีเมลหรือรหัสผ่านไม่ถูกต้อง","warn");
-      else msg("loginMsg",error.message,"warn");
-      return
-    }
-    await applySession(data.session);
-    const p=currentProfile;
-    if(p?.status==="pending")msg("loginMsg","เข้าสู่ระบบแล้ว แต่บัญชียังรอแอดมินอนุมัติ","warn");
-    else if(["suspended","expired"].includes(p?.status))msg("loginMsg","บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อแอดมิน","warn");
-    else if(p?.status==="active"){$("authModal").classList.remove("open");toast("เข้าสู่ระบบสำเร็จ")}
-    else msg("loginMsg","กำลังตรวจสอบสถานะสมาชิก กรุณาลองใหม่อีกครั้ง","warn")
-  }finally{$("loginBtn").disabled=false;$("loginBtn").textContent="เข้าสู่ระบบ"}
-}
-$("registerBtn").onclick=async()=>{
-  if(!backendReady()){msg("registerMsg","ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์","warn");return}
-  const email=$("regEmail").value.trim(),
-        password=$("regPassword").value,
-        inviteCode=$("regInvite").value.trim(),
-        teacherName=$("regName").value.trim();
-  if(!email||!password||!teacherName||!inviteCode){
-    msg("registerMsg","กรุณากรอกชื่อคุณครู อีเมล รหัสสมาชิก และรหัสผ่านให้ครบ","warn");return
-  }
-  if(password.length<6){msg("registerMsg","รหัสผ่านควรมีอย่างน้อย 6 ตัวอักษร","warn");return}
-
-  $("registerBtn").disabled=true;
-  $("registerBtn").textContent="กำลังตรวจสอบรหัส...";
-  try{
-    const {data:check,error:checkError}=await supabaseClient.rpc("check_member_invite",{p_code:inviteCode});
-    if(checkError){
-      console.error(checkError);
-      msg("registerMsg","ตรวจสอบรหัสไม่ได้ กรุณาลองใหม่อีกครั้ง","warn");return
-    }
-    if(!check?.valid){
-      msg("registerMsg","รหัสสมาชิกไม่ถูกต้อง หมดอายุ หรือถูกใช้งานครบแล้ว กรุณาตรวจสอบลิงก์/รหัสที่ได้รับจากแอดมิน","warn");return
-    }
-
-    $("registerBtn").textContent="กำลังสมัครสมาชิก...";
-    const meta={full_name:teacherName,school_name:"",phone:"",facebook_name:"",invite_code:inviteCode};
-    const {data,error}=await supabaseClient.auth.signUp({
-      email,password,
-      options:{data:meta,emailRedirectTo:CFG.siteUrl||location.origin}
-    });
-    if(error){
-      const text=(error.message||"").toLowerCase();
-      if(text.includes("rate")||text.includes("seconds")){
-        msg("registerMsg","ระบบส่งอีเมลถี่เกินไป กรุณารอสักครู่แล้วลองใหม่","warn")
-      }else if(text.includes("invalid_or_expired_invite")){
-        msg("registerMsg","รหัสสมาชิกหมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่จากแอดมิน","warn")
-      }else{
-        msg("registerMsg",error.message,"warn")
-      }
-      return
-    }
-    if(data.session){
-      await applySession(data.session);
-      if(currentProfile?.status==="active"){
-        msg("registerMsg","สมัครสำเร็จ ✓ เปิดสิทธิ์ Member แล้ว เข้าใช้งานได้ทันที","ok");
-        setTimeout(()=>$("authModal").classList.remove("open"),900)
-      }else msg("registerMsg","สมัครสำเร็จ ✓ คำขออยู่ระหว่างรอแอดมินอนุมัติ","ok")
-    }else{
-      msg("registerMsg","สมัครสำเร็จ ✓ กรุณาเปิดอีเมลยืนยันบัญชี 1 ครั้ง แล้วกลับมาเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน","ok")
-    }
-  }finally{
-    $("registerBtn").disabled=false;
-    $("registerBtn").textContent="สมัครสมาชิก"
-  }
-};function msg(id,t,type){$(id).innerHTML=`<div class="alert ${type}">${t}</div>`}
-const invite=new URLSearchParams(location.search).get("invite");
-if(invite){
-  $("regInvite").value=invite;
-  $("regInvite").readOnly=true;
-  $("regInvite").title="รหัสจากลิงก์ส่วนตัว";
-  setTimeout(()=>openAuth("register"),350)
-}
+if($("closeAuth"))$("closeAuth").onclick=()=>{
+  const m=$("authModal");if(!m)return;m.classList.remove("open");m.style.display=""
+};document.querySelectorAll("[data-auth]").forEach(b=>b.onclick=()=>switchAuth(b.dataset.auth));function switchAuth(t){document.querySelectorAll(".auth-tab").forEach(x=>x.classList.toggle("active",x.dataset.auth===t));document.querySelectorAll(".auth-pane").forEach(x=>x.classList.toggle("active",x.id==="auth-"+t))}
+$("loginBtn").onclick=async()=>{if(!backendReady()){msg("loginMsg","ยังไม่ได้เชื่อม Supabase","warn");return}const email=$("loginEmail").value.trim(),password=$("loginPassword").value;if(!email||!password){msg("loginMsg","กรุณากรอกอีเมลและรหัสผ่าน","warn");return}const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){msg("loginMsg",error.message,"warn");return}await applySession(data.session);const p=currentProfile;if(p?.status==="pending")msg("loginMsg","เข้าสู่ระบบแล้ว แต่บัญชียังรอแอดมินอนุมัติ","warn");else if(["suspended","expired"].includes(p?.status))msg("loginMsg","บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อแอดมิน","warn");else if(p?.status==="active"){if(window.KlangAuthFallback)window.KlangAuthFallback.close();else $("authModal")?.classList.remove("open");toast("เข้าสู่ระบบสำเร็จ")}else msg("loginMsg","กำลังตรวจสอบสถานะสมาชิก กรุณาลองใหม่อีกครั้ง","warn")};
+$("registerBtn").onclick=async()=>{if(!backendReady()){msg("registerMsg","ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์","warn");return}const email=$("regEmail").value.trim(),password=$("regPassword").value,inviteCode=$("regInvite").value.trim(),teacherName=$("regName").value.trim();if(!email||!password||!teacherName||!inviteCode){msg("registerMsg","กรุณากรอกชื่อคุณครู อีเมล รหัสเข้ากลุ่ม และรหัสผ่านให้ครบ","warn");return}if(password.length<6){msg("registerMsg","รหัสผ่านควรมีอย่างน้อย 6 ตัวอักษร","warn");return}const meta={full_name:teacherName,school_name:"",phone:"",facebook_name:"",invite_code:inviteCode};const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:meta,emailRedirectTo:CFG.siteUrl||location.origin}});if(error){msg("registerMsg",error.message,"warn");return}if(data.session){
+  await applySession(data.session);
+  if(currentProfile?.status==="active"){msg("registerMsg","สมัครสำเร็จ ✓ เปิดสิทธิ์ Member แล้ว เข้าใช้งานได้ทันที","ok");setTimeout(()=>$("authModal").classList.remove("open"),900)}
+  else msg("registerMsg","สมัครสำเร็จ ✓ คำขออยู่ระหว่างรอแอดมินอนุมัติ","ok")
+}else msg("registerMsg","สมัครสำเร็จ ✓ หากได้รับอีเมลยืนยัน ให้กด 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ","ok")};function msg(id,t,type){$(id).innerHTML=`<div class="alert ${type}">${t}</div>`}
+const invite=new URLSearchParams(location.search).get("invite");if(invite){$("regInvite").value=invite;setTimeout(()=>openAuth("register"),500)}
 function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=()=>{if(!DATA.length){toast("กำลังโหลดฐานข้อมูล กรุณารอสักครู่");return}ACTIVE_STAGE=b.dataset.stage;syncStageTabs();buildGrades();savePrefs()});
 function setSelectState(el,items,placeholder){
   el.innerHTML="";
@@ -1310,7 +1227,7 @@ function refreshProfileMini(){
   if(!has){box.style.display="none";return}
   box.style.display="flex";
   $("profileMiniName").textContent=t.name||currentProfile?.full_name||"ผู้ใช้";
-  $("profileMiniRole").textContent=currentProfile?.role==="admin"?"ADMIN":"ครูผู้ใช้งาน";
+  $("profileMiniRole").textContent=currentProfile?.role==="admin"?"ADMIN":currentProfile?.role==="vip"?"VIP":"ครูผู้ใช้งาน";
   const img=$("profileMiniAvatar");
   if(teacherPhotoData){img.src=teacherPhotoData;img.style.display="block"}
   else{img.removeAttribute("src");img.style.display="none"}
@@ -1445,7 +1362,6 @@ if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="le
 
 
 
-syncOptionalAuthControls();
 fetch("data.json",{cache:"no-store"})
 .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
 .then(d=>{
