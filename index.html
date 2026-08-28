@@ -4,30 +4,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
-<header class="topbar v72-topbar">
-  <div class="wrap nav v72-nav">
-    <div class="brand" data-go="home">
+<header class="topbar v72-topbar v73-topbar">
+  <div class="wrap nav v72-nav v73-nav">
+    <button class="brand v73-brand" data-go="home" aria-label="หน้าหลัก">
       <img class="brand-logo" src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว">
-      <div><b>คลังแผนการสอนหน้าเดียว</b><small>ง่าย • สวย • ตรงตัวชี้วัด</small></div>
-    </div>
-    <nav class="workspace-nav" aria-label="เมนูหลัก">
+      <div class="brand-copy"><b>คลังแผน</b><small>การสอนหน้าเดียว</small></div>
+    </button>
+    <nav class="workspace-nav v73-workspace-nav" aria-label="เมนูหลัก">
       <button class="workspace-nav-btn active" data-app-nav="home">หน้าหลัก</button>
       <button class="workspace-nav-btn" data-app-nav="plans">แผนของฉัน</button>
       <button class="workspace-nav-btn" data-app-nav="indicators">คลังตัวชี้วัด</button>
-      <button class="workspace-nav-btn" data-app-nav="styles">สไตล์และเทมเพลต</button>
-      <button class="workspace-nav-btn" data-app-nav="guide">คู่มือการใช้งาน</button>
-      <button class="workspace-nav-btn" data-app-nav="help">ศูนย์ช่วยเหลือ</button>
+      <button class="workspace-nav-btn" data-app-nav="styles">สไตล์</button>
+      <button class="workspace-nav-btn" data-app-nav="guide">คู่มือ</button>
+      <button class="workspace-nav-btn" data-app-nav="help">ช่วยเหลือ</button>
     </nav>
-    <div class="nav-actions">
+    <div class="nav-actions v73-nav-actions">
       <div id="profileMini" class="profile-mini" style="display:none">
         <img id="profileMiniAvatar" alt="รูปผู้ใช้">
         <div><b id="profileMiniName">ผู้ใช้</b><small id="profileMiniRole">สมาชิก</small></div>
       </div>
-      <span id="memberChip" class="member-chip" style="display:none"></span>
-      <button id="adminBtn" class="btn btn-ghost" data-go="admin" style="display:none">หลังบ้าน</button>
-      <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN • Full Access</span>
-      <button id="authBtn" class="btn btn-gold">เข้าสู่ระบบ</button>
+      <span id="memberChip" class="member-chip compact-member-chip" style="display:none"></span>
+      <button id="adminBtn" class="btn btn-ghost compact-admin-btn" data-go="admin" style="display:none">หลังบ้าน</button>
+      <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN</span>
+      <button id="authBtn" class="btn btn-gold compact-auth-btn">เข้าสู่ระบบ</button>
+      <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="เมนู">☰</button>
     </div>
+  </div>
+  <div id="mobileWorkspaceMenu" class="mobile-workspace-menu">
+    <button data-app-nav="home">หน้าหลัก</button><button data-app-nav="plans">แผนของฉัน</button>
+    <button data-app-nav="indicators">คลังตัวชี้วัด</button><button data-app-nav="styles">สไตล์และเทมเพลต</button>
+    <button data-app-nav="guide">คู่มือการใช้งาน</button><button data-app-nav="help">ศูนย์ช่วยเหลือ</button>
   </div>
 </header>
 <main>
@@ -118,12 +124,19 @@
       <div class="field full"><label>ระดับชั้น</label><select id="grade" class="sr-only-select" disabled><option>กำลังโหลดข้อมูล...</option></select><div id="gradeCards" class="grade-cards"></div></div>
       <div class="field"><label>กลุ่มสาระ / ด้าน</label><select id="subject" disabled><option>กำลังโหลดข้อมูล...</option></select></div>
       <div class="field full">
-        <label>ค้นหาตัวชี้วัด <span class="field-tip">พิมพ์ได้ทั้งรหัสและคำ</span></label>
-        <input id="indicatorSearch" placeholder="เช่น ค 1.1, ป.2/4, การบวก, เศษส่วน, สี, การอ่าน">
+        <label>ค้นหาตัวชี้วัด <span class="field-tip">พิมพ์ไม่ครบก็ได้ ระบบหาใกล้เคียงให้</span></label>
+        <input id="indicatorSearch" placeholder="พิมพ์เท่าที่จำได้ เช่น บวก, อ่าน, สี, เศษส่วน, ค 1.1">
         <div id="searchResults" class="search-results"></div>
       </div>
       <div class="field full"><label>ตัวชี้วัด / ความสามารถ</label><select id="indicator" disabled><option>กำลังโหลดข้อมูล...</option></select></div>
-      <div id="indicatorBox" class="indicator-box full">กำลังโหลดฐานข้อมูลหลักสูตร...</div><div class="field full"><label>ตัวชี้วัดที่แนะนำ <span class="field-tip">กดเลือกได้ทันที</span></label><div id="indicatorCards" class="indicator-cards"></div></div>
+      <div id="indicatorBox" class="indicator-box full">กำลังโหลดฐานข้อมูลหลักสูตร...</div><div class="field full">
+  <div class="indicator-recommend-head">
+    <label>ตัวชี้วัดในชั้นและมาตรฐานนี้ <span class="field-tip">กดเลือกได้ทันที</span></label>
+    <span id="indicatorRecommendCount" class="indicator-count">0 รายการ</span>
+  </div>
+  <div id="indicatorCards" class="indicator-cards"></div>
+  <button id="toggleMoreIndicators" type="button" class="tiny-more-btn" style="display:none">ดูเพิ่มเติม ↓</button>
+</div>
     </div>
   </section>
 
@@ -195,12 +208,7 @@
     <details id="teacherDetails">
       <summary class="teacher-summary">👩‍🏫 เพิ่มข้อมูลผู้สอน <span>เปิดเพื่อกรอก</span></summary>
       <div class="easy-form teacher-form">
-<div class="teacher-assets full">
-  <div class="asset-upload-card">
-    <div class="asset-preview" id="teacherPhotoPreview"><span>👩‍🏫</span></div>
-    <div><b>รูปครู</b><small>ใช้รูปจริงหรือ Avatar ได้</small><label class="upload-btn">อัปโหลดรูป<input id="teacherPhotoInput" type="file" accept="image/*" hidden></label></div>
-  </div>
-  <div class="asset-upload-card">
+<div class="asset-upload-card">
     <div class="asset-preview logo-preview" id="schoolLogoPreview"><span>🏫</span></div>
     <div><b>โลโก้โรงเรียน</b><small>PNG โปร่งใสจะสวยที่สุด</small><label class="upload-btn">อัปโหลดโลโก้<input id="schoolLogoInput" type="file" accept="image/*" hidden></label></div>
   </div>
@@ -221,7 +229,7 @@
 
   
 <section class="flow-card signature-section" id="signatureSection">
-  <div class="flow-head"><span class="flow-number">4</span><div><h2>การลงชื่อและวันที่</h2><p>ใช้สำหรับส่วนรับรองท้ายแผน ไม่บังคับกรอกทุกช่อง</p></div></div>
+  <div class="flow-head"><span class="flow-number">4</span><div><h2>การรับรองแผนและบันทึกการสอน</h2><p>สำหรับวันที่สอน การลงชื่อผู้สอน และการรับรองโดยผู้บริหาร</p></div></div>
   <div class="easy-form">
     <div class="field"><label>วันที่สอน</label><input id="teachDate" type="date"></div>
     <div class="field"><label>ชื่อสำหรับช่องลงชื่อครู</label><input id="teacherSignName" placeholder="ถ้าเว้นว่างจะใช้ชื่อผู้สอน"></div>
@@ -293,14 +301,14 @@
     
 <div class="ai-use-guide" id="aiUseGuide">
   <div class="section-inline-title">🚀 นำ Prompt ไปใช้ต่อ</div>
-  <p>กดปุ่ม ระบบจะคัดลอก Prompt ก่อน แล้วเปิดแพลตฟอร์มที่เลือก จากนั้นแนบรูปครูและโลโก้โรงเรียนของคุณ (ถ้ามี)</p>
+  <p>กดปุ่ม ระบบจะคัดลอก Prompt ก่อน แล้วเปิดแพลตฟอร์มที่เลือก หากต้องการให้ภาพมีรูปครูหรือโลโก้โรงเรียน ให้แนบไฟล์จริงกับ AI ตอนสร้างภาพ</p>
   <div class="ai-platform-cards">
     <button type="button" class="ai-platform" data-ai-launch="chatgpt"><span class="ai-logo chatgpt-logo">◎</span><div><b>ChatGPT</b><small>สร้างภาพ/ปรับ Prompt</small></div></button>
     <button type="button" class="ai-platform" data-ai-launch="gemini"><span class="ai-logo gemini-logo">✦</span><div><b>Gemini</b><small>สร้างภาพและตรวจข้อความ</small></div></button>
     <button type="button" class="ai-platform" data-ai-launch="claude"><span class="ai-logo claude-logo">✳</span><div><b>Claude</b><small>ช่วยตรวจ/ปรับเนื้อหา</small></div></button>
     <button type="button" class="ai-platform" data-ai-launch="canva"><span class="ai-logo canva-logo">C</span><div><b>Canva</b><small>จัดหน้า/แก้ไขงานต่อ</small></div></button>
   </div>
-  <div class="asset-reminder" id="assetReminder">📎 ถ้า Prompt ระบุใช้รูปครู/โลโก้ อย่าลืมแนบไฟล์เดิมกับ AI ที่เปิดใช้งาน</div>
+  <div class="asset-reminder" id="assetReminder">📎 Klang Plan ไม่จำเป็นต้องรับรูปครู/โลโก้สำหรับสร้างแผน — ให้แนบไฟล์กับ AI ที่คุณเลือกโดยตรงเมื่อต้องการใช้ภาพจริง</div>
 </div>
 
     <div id="continuePanel" class="continue-panel" style="display:none">
@@ -325,19 +333,205 @@
   </section>
 </div>
 </section>
-<section id="adminView" class="view"><div class="wrap admin"><div class="section-head"><h2>ระบบหลังบ้าน</h2><p>สมาชิก · ลิงก์เชิญ · ฐานหลักสูตร · การใช้งาน</p></div><div id="backendWarning" class="backend-warning">กำลังตรวจสอบสิทธิ์ Admin และเชื่อมต่อฐานสมาชิก</div>
-<div class="admin-quickbar">
-  <div class="admin-quick-title">
-    <span>⚡</span><div><b>Admin Quick Actions</b><small>งานที่ใช้บ่อย ทำได้จากจุดเดียว</small></div>
+
+<section id="plansView" class="view">
+  <div class="wrap workspace-page">
+    <div class="workspace-page-head"><div><span>📁</span><div><h1>แผนของฉัน</h1><p>งานล่าสุดและแผนที่บันทึกไว้ในอุปกรณ์นี้</p></div></div><button class="btn btn-blue" data-go="generator">+ สร้างแผนใหม่</button></div>
+    <div id="myPlansList" class="content-card-grid"></div>
   </div>
-  <div class="admin-quick-actions">
-    <button class="btn btn-blue" id="adminRefresh">↻ รีเฟรชข้อมูล</button>
-    <button class="btn btn-gold" id="adminCreateVipInvite">👑 สร้างลิงก์ VIP</button>
-    <button class="btn btn-ghost" id="adminCreateMemberInvite">🔗 สร้างลิงก์ Member</button>
-    <button class="btn btn-ghost" id="adminOpenGenerator">🧪 ทดสอบเครื่องมือทั้งหมด</button>
+</section>
+
+<section id="indicatorsView" class="view">
+  <div class="wrap workspace-page">
+    <div class="workspace-page-head"><div><span>🎯</span><div><h1>คลังตัวชี้วัด</h1><p>ค้นจากฐานหลักสูตร 2,155 รายการด้วยรหัสหรือคีย์เวิร์ด</p></div></div></div>
+    <div class="indicator-library-toolbar">
+      <input id="libraryIndicatorSearch" placeholder="ค้นหา เช่น ค 1.1, การบวก, การอ่าน, สี">
+      <select id="libraryStage"><option value="">ทุกช่วงชั้น</option><option>ปฐมวัย</option><option>ประถมศึกษา</option><option>มัธยมศึกษา</option></select>
+      <select id="librarySubject"><option value="">ทุกกลุ่มสาระ</option></select>
+    </div>
+    <div id="indicatorLibraryResults" class="library-results"></div>
+  </div>
+</section>
+
+<section id="stylesView" class="view">
+  <div class="wrap workspace-page">
+    <div class="workspace-page-head"><div><span>🎨</span><div><h1>สไตล์และเทมเพลต</h1><p>ดูแนวงาน เลือกสไตล์และคู่สีก่อนสร้างแผน</p></div></div></div>
+    <div id="stylesLibrary" class="styles-library"></div>
+    <div class="workspace-info-card"><b>💡 วิธีใช้</b><p>เลือกสไตล์ที่ชอบ แล้วกด “ใช้สไตล์นี้” ระบบจะนำไปใช้ในหน้าสร้างแผนอัตโนมัติ</p></div>
+  </div>
+</section>
+
+<section id="guideView" class="view">
+  <div class="wrap workspace-page">
+    <div class="workspace-page-head"><div><span>📖</span><div><h1>คู่มือการใช้งาน</h1><p>สร้างแผนให้เสร็จใน 4 ขั้นตอน</p></div></div></div>
+    <div class="guide-detail-grid">
+      <article><b>1</b><h3>เลือกหลักสูตรและตัวชี้วัด</h3><p>เลือกช่วงชั้น ระดับชั้น กลุ่มสาระ แล้วค้นตัวชี้วัดด้วยรหัสหรือคำ</p></article>
+      <article><b>2</b><h3>กรอกรายละเอียดแผน</h3><p>ระบุหน่วย เรื่อง เวลา รูปแบบและแนวการจัดการเรียนรู้</p></article>
+      <article><b>3</b><h3>เลือกสไตล์และโทนสี</h3><p>เลือกตัวอย่างงานและคู่สีที่เหมาะกับระดับชั้นหรือวิชา</p></article>
+      <article><b>4</b><h3>คัดลอก Prompt ไปใช้</h3><p>กดคัดลอก แล้วเปิด ChatGPT / Gemini / Canva หากต้องการรูปครูหรือโลโก้ ให้แนบไฟล์กับ AI ตอนสร้างภาพ</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="helpView" class="view">
+  <div class="wrap workspace-page">
+    <div class="workspace-page-head"><div><span>💬</span><div><h1>ศูนย์ช่วยเหลือ</h1><p>คำตอบสำหรับเรื่องที่ใช้บ่อย</p></div></div></div>
+    <div class="faq-list">
+      <details open><summary>สมัครเข้าใช้งานอย่างไร?</summary><p>ครั้งแรกกรอกชื่อครู อีเมล รหัสเข้ากลุ่ม และตั้งรหัสผ่านเพียงครั้งเดียว จากนั้นรอแอดมินอนุมัติ เมื่อกลับมาใช้ครั้งต่อไปล็อกอินด้วยอีเมลและรหัสผ่านได้เลย</p></details>
+      <details><summary>รหัสเข้ากลุ่มคืออะไร?</summary><p>เป็นรหัสที่แอดมินสร้างจากหลังบ้านเพื่อเชิญสมาชิก คล้ายลิงก์/คำเชิญเข้ากลุ่ม Facebook และสามารถกำหนด Member หรือ VIP ได้</p></details>
+      <details><summary>ต้องอัปโหลดรูปครูหรือโลโก้ใน Klang Plan ไหม?</summary><p>ไม่ต้องครับ รูปในระบบใช้เป็นรูปโปรไฟล์เท่านั้น หากต้องการให้ AI ใส่รูปครูหรือโลโก้ในแผน ให้แนบไฟล์จริงกับ AI ตอนนำ Prompt ไปสร้างภาพ</p></details>
+      <details><summary>ข้อมูลครูจำไว้ครั้งถัดไปได้ไหม?</summary><p>ได้ เปิด “จำข้อมูลผู้สอน” ระบบจะเก็บข้อมูลพื้นฐานไว้ในอุปกรณ์ที่ใช้งาน</p></details>
+    </div>
+  </div>
+</section>
+<section id="adminView" class="view">
+<div class="wrap admin v75-admin">
+  <div class="section-head admin-main-head">
+    <div><h2>ระบบหลังบ้าน</h2><p>สมาชิก · คำขอ · ลิงก์หลังชำระเงิน · โปรโมชั่น · การใช้งาน</p></div>
+    <span class="member-only-badge">MEMBER ONLY</span>
+  </div>
+  <div id="backendWarning" class="backend-warning">กำลังตรวจสอบสิทธิ์ Admin และเชื่อมต่อฐานสมาชิก</div>
+
+  <div class="admin-quickbar">
+    <div class="admin-quick-title"><span>⚡</span><div><b>งานด่วนสำหรับแอดมิน</b><small>ตรวจสลิปแล้วสร้างลิงก์ให้ครูได้ทันที</small></div></div>
+    <div class="admin-quick-actions">
+      <button class="btn btn-blue" id="adminCreatePaidInvite">💳 สร้างลิงก์หลังชำระเงิน</button>
+      <button class="btn btn-ghost" id="adminCreatePromoInvite">🎟️ สร้าง Code โปรโมชั่น</button>
+      <button class="btn btn-ghost" id="adminRefresh">↻ รีเฟรช</button>
+      <button class="btn btn-ghost" id="adminOpenGenerator">🧪 ทดสอบระบบ</button>
+    </div>
+  </div>
+
+  <div class="admin-nav v75-admin-nav">
+    <button class="admin-tab active" data-admin="dashboard">Dashboard</button>
+    <button class="admin-tab" data-admin="pending">รออนุมัติ <span id="pendingTabCount">0</span></button>
+    <button class="admin-tab" data-admin="members">สมาชิก</button>
+    <button class="admin-tab" data-admin="invites">ลิงก์/Code</button>
+    <button class="admin-tab" data-admin="usage">การใช้งาน</button>
+    <button class="admin-tab" data-admin="curriculum">หลักสูตร</button>
+    <button class="admin-tab" data-admin="settings">ตั้งค่า</button>
+  </div>
+
+  <div id="admin-dashboard" class="admin-pane active">
+    <div class="kpis v75-kpis">
+      <div class="kpi"><b id="kAll">—</b><span>สมาชิกทั้งหมด</span></div>
+      <div class="kpi attention"><b id="kPending">—</b><span>รออนุมัติ</span></div>
+      <div class="kpi"><b id="kActive">—</b><span>ใช้งานอยู่</span></div>
+      <div class="kpi"><b id="kPrompts">—</b><span>Prompt ทั้งหมด</span></div>
+      <div class="kpi sales"><b id="kSalesTotal">—</b><span>ยอดบันทึกการขาย</span></div>
+    </div>
+    <div class="admin-dashboard-grid">
+      <section class="admin-dashboard-card"><h3>🔔 สิ่งที่ต้องจัดการ</h3><div id="adminAttentionList"></div></section>
+      <section class="admin-dashboard-card"><h3>📊 ช่องทางสมาชิก</h3><div id="adminSourceSummary"></div></section>
+    </div>
+  </div>
+
+  <div id="admin-pending" class="admin-pane">
+    <div class="admin-pane-head"><div><h3>คำขอที่รออนุมัติ</h3><p>เหมือนหน้ารออนุมัติในกลุ่ม Facebook</p></div><button id="approveAllPending" class="btn btn-blue">✓ อนุมัติทั้งหมด</button></div>
+    <div id="pendingMemberCards" class="pending-member-cards"></div>
+  </div>
+
+  <div id="admin-members" class="admin-pane">
+    <div class="admin-member-toolbar">
+      <div class="field"><label>ค้นหาสมาชิก</label><input id="memberSearch" placeholder="ชื่อ อีเมล โรงเรียน Code หรือช่องทาง"></div>
+      <select id="memberStatusFilter"><option value="">ทุกสถานะ</option><option value="active">Active</option><option value="pending">Pending</option><option value="suspended">Suspended</option><option value="expired">Expired</option></select>
+    </div>
+    <div id="memberCards" class="member-admin-cards"></div>
+    <div class="table-wrap desktop-member-table"><table><thead><tr><th>สมาชิก</th><th>สมัครผ่าน</th><th>สถานะ</th><th>Code/แคมเปญ</th><th>ยอด</th><th>จัดการ</th></tr></thead><tbody id="memberRows"></tbody></table></div>
+  </div>
+
+  <div id="admin-invites" class="admin-pane">
+    <div class="invite-builder-grid">
+      <section class="panel invite-builder-panel">
+        <h3>💳 ลิงก์ส่วนตัวหลังตรวจสลิป</h3>
+        <p>ครูกดลิงก์ → สมัคร → Active Member อัตโนมัติ</p>
+        <div class="easy-form compact-form">
+          <div class="field"><label>ชื่อ/หมายเหตุ</label><input id="paidInviteLabel" placeholder="เช่น คุณครูสมหญิง 28/8"></div>
+          <div class="field"><label>ยอดที่ชำระ (บาท)</label><input id="paidInvitePrice" type="number" min="0" step="1" placeholder="เช่น 99"></div>
+          <div class="field"><label>ช่องทางที่มา</label><select id="paidInviteSource"><option>Facebook Page</option><option>Facebook Group</option><option>TikTok</option><option>เพื่อนแนะนำ</option><option>อื่น ๆ</option></select></div>
+          <div class="field"><label>โปรโมชั่น/แคมเปญ</label><input id="paidInviteCampaign" placeholder="เช่น เปิดตัว 99 บาท"></div>
+          <div class="field"><label>หมดอายุลิงก์ (วัน)</label><input id="paidInviteDays" type="number" min="1" value="30"></div>
+          <div class="field"><label>หมายเหตุการชำระเงิน</label><input id="paidInvitePaymentNote" placeholder="เช่น ตรวจสลิปแล้ว"></div>
+        </div>
+        <button id="createPaidInvite" class="btn btn-blue full-admin-btn">สร้างและคัดลอกลิงก์ Member</button>
+        <div id="paidInviteOutput" class="invite-output"></div>
+      </section>
+
+      <section class="panel invite-builder-panel">
+        <h3>🎟️ Code โปรโมชั่น / แจกสาธารณะ</h3>
+        <p>เหมาะกับกิจกรรม โปรโมชัน หรือแจก Code — สมาชิกใหม่จะ Pending ให้แอดมินตรวจ</p>
+        <div class="easy-form compact-form">
+          <div class="field"><label>ชื่อแคมเปญ</label><input id="promoInviteCampaign" placeholder="เช่น แจกครู 50 คน"></div>
+          <div class="field"><label>จำนวนครั้งที่ใช้ได้</label><input id="promoInviteMax" type="number" min="1" value="20"></div>
+          <div class="field"><label>หมดอายุ (วัน)</label><input id="promoInviteDays" type="number" min="1" value="7"></div>
+          <div class="field"><label>ช่องทาง</label><select id="promoInviteSource"><option>Facebook Page</option><option>Facebook Group</option><option>กิจกรรมแจก Code</option><option>อื่น ๆ</option></select></div>
+        </div>
+        <button id="createPromoInvite" class="btn btn-ghost full-admin-btn">สร้างและคัดลอก Code โปรโมชั่น</button>
+        <div id="promoInviteOutput" class="invite-output"></div>
+      </section>
+    </div>
+
+    <div class="table-wrap"><table><thead><tr><th>Code</th><th>ประเภท</th><th>ช่องทาง/แคมเปญ</th><th>ยอด</th><th>ใช้แล้ว</th><th>หมดอายุ</th><th>ลิงก์</th></tr></thead><tbody id="inviteRows"></tbody></table></div>
+  </div>
+
+  <div id="admin-usage" class="admin-pane">
+    <div class="table-wrap"><table><thead><tr><th>เวลา</th><th>สมาชิก</th><th>เครื่องมือ</th><th>ชั้น/วิชา</th><th>ตัวชี้วัด</th></tr></thead><tbody id="usageRows"></tbody></table></div>
+  </div>
+
+  <div id="admin-curriculum" class="admin-pane">
+    <div class="kpis"><div class="kpi"><b>99</b><span>ปฐมวัย</span></div><div class="kpi"><b>1,061</b><span>ประถม</span></div><div class="kpi"><b>995</b><span>มัธยม</span></div><div class="kpi"><b>2,155</b><span>รายการทั้งหมด</span></div></div>
+    <div class="alert info">V7.5 ยังคงอ่านฐานหลักสูตรจาก data.json เพื่อความเสถียร และใช้ระบบค้นหาใกล้เคียง/การ์ดตัวชี้วัดจาก V7.4</div>
+  </div>
+
+  <div id="admin-settings" class="admin-pane">
+    <div class="settings-grid">
+      <section class="admin-dashboard-card"><h3>👥 รูปแบบสมาชิก</h3><p><b>Member Only</b> — สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด ไม่มี VIP ในช่วงเริ่มต้น</p></section>
+      <section class="admin-dashboard-card"><h3>💳 การชำระเงิน</h3><p>รับชำระโดยโอนเข้าบัญชีและตรวจสลิปผ่านเพจ จากนั้นสร้าง Private Invite ให้ลูกค้า</p></section>
+      <section class="admin-dashboard-card"><h3>🔵 Facebook Login</h3><p id="facebookAdminStatus">โครงสร้างรองรับแล้ว แต่ต้องเชื่อม Meta App กับ Supabase จึงจะเปิดใช้งานจริง</p></section>
+      <section class="admin-dashboard-card"><h3>💬 ลิงก์เพจ</h3><p>ตั้งค่า <code>salesContactUrl</code> ใน config.js เพื่อให้ปุ่ม “ติดต่อเพจ” เปิด Messenger/เพจโดยตรง</p></section>
+    </div>
   </div>
 </div>
-<div class="admin-nav"><button class="admin-tab active" data-admin="dashboard">Dashboard</button><button class="admin-tab" data-admin="members">สมาชิก</button><button class="admin-tab" data-admin="invites">ลิงก์เชิญ</button><button class="admin-tab" data-admin="curriculum">หลักสูตร/QC</button><button class="admin-tab" data-admin="usage">ประวัติ Prompt</button></div><div id="admin-dashboard" class="admin-pane active"><div class="kpis"><div class="kpi"><b id="kAll">—</b><span>สมาชิกทั้งหมด</span></div><div class="kpi"><b id="kPending">—</b><span>รออนุมัติ</span></div><div class="kpi"><b id="kVip">—</b><span>VIP</span></div><div class="kpi"><b id="kPrompts">—</b><span>Prompt ที่สร้าง</span></div><div class="kpi"><b>2,155</b><span>ข้อมูลหลักสูตร</span></div></div></div><div id="admin-members" class="admin-pane"><div class="field"><label>ค้นหาสมาชิก</label><input id="memberSearch" placeholder="ชื่อ อีเมล โรงเรียน"></div><div class="table-wrap"><table><thead><tr><th>สมาชิก</th><th>โรงเรียน</th><th>สถานะ</th><th>สิทธิ์ / คำขอ</th><th>หมดอายุ</th><th>จัดการ</th></tr></thead><tbody id="memberRows"></tbody></table></div></div><div id="admin-invites" class="admin-pane"><div class="panel" style="padding:15px"><h3>สร้างลิงก์เชิญ</h3><div class="invite-row"><select id="inviteTier"><option value="member">Member</option><option value="vip">VIP</option></select><input id="inviteMax" type="number" min="1" value="1" placeholder="จำนวนครั้ง"><input id="inviteDays" type="number" min="1" value="30" placeholder="หมดอายุ (วัน)"><button id="createInvite" class="btn btn-blue">สร้าง</button></div><div id="inviteOutput" style="margin-top:12px"></div></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>สิทธิ์ / คำขอ</th><th>ใช้แล้ว</th><th>หมดอายุ</th><th>ลิงก์</th></tr></thead><tbody id="inviteRows"></tbody></table></div></div><div id="admin-curriculum" class="admin-pane"><div class="kpis"><div class="kpi"><b>99</b><span>ปฐมวัย</span></div><div class="kpi"><b>1,061</b><span>ประถม</span></div><div class="kpi"><b>995</b><span>มัธยม</span></div><div class="kpi"><b>2,155</b><span>VERIFIED</span></div><div class="kpi"><b>0</b><span>Missing</span></div></div><div class="alert info">ฐานหลักสูตรยังอ่านจาก data.json เพื่อความเสถียร เมื่อเชื่อม Supabase สามารถ Import curriculum_records.csv แล้วจัดการ CRUD/QC จากหลังบ้านได้</div></div><div id="admin-usage" class="admin-pane"><div class="table-wrap"><table><thead><tr><th>เวลา</th><th>สมาชิก</th><th>เครื่องมือ</th><th>ชั้น/วิชา</th><th>ตัวชี้วัด</th></tr></thead><tbody id="usageRows"></tbody></table></div></div></div></section>
+</section>
 </main>
-<div id="authModal" class="modal"><div class="modal-card"><div class="modal-head"><h3>สมาชิกคลังแผน</h3><button class="close" id="closeAuth">×</button></div><div class="tabs"><button class="auth-tab active" data-auth="login">เข้าสู่ระบบ</button><button class="auth-tab" data-auth="register">สมัครสมาชิก</button></div><div id="auth-login" class="auth-pane active"><div class="field"><label>อีเมล</label><input id="loginEmail" type="email"></div><div class="field"><label>รหัสผ่าน</label><input id="loginPassword" type="password"></div><button id="loginBtn" class="btn btn-gold" style="width:100%">เข้าสู่ระบบ</button><div id="loginMsg"></div></div><div id="auth-register" class="auth-pane"><div class="alert info">สมัครเหมือนเข้ากลุ่มปิด: ส่งคำขอ → รอแอดมินอนุมัติ → Login ใช้งาน</div><div class="field"><label>ชื่อ-สกุล</label><input id="regName"></div><div class="field"><label>อีเมล</label><input id="regEmail" type="email"></div><div class="field"><label>รหัสผ่าน</label><input id="regPassword" type="password" minlength="6"></div><div class="field"><label>โรงเรียน</label><input id="regSchool"></div><div class="field"><label>เบอร์โทร</label><input id="regPhone"></div><div class="field"><label>ชื่อ Facebook (ถ้ามี)</label><input id="regFacebook"></div><div class="field"><label>รหัสเชิญ</label><input id="regInvite" placeholder="ถ้ามีลิงก์เชิญ ระบบจะใส่ให้เอง"></div><button id="registerBtn" class="btn btn-blue" style="width:100%">ส่งคำขอสมัครสมาชิก</button><div id="registerMsg"></div></div></div></div>
+<div id="authModal" class="modal easy-access-modal">
+  <div class="modal-card easy-access-card v75-auth-card">
+    <div class="modal-head">
+      <div><h3>สมาชิก Klang Plan</h3><p>สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด</p></div>
+      <button class="close" id="closeAuth">×</button>
+    </div>
+
+    <div class="tabs easy-access-tabs">
+      <button class="auth-tab active" data-auth="login">เข้าสู่ระบบ</button>
+      <button class="auth-tab" data-auth="register">เข้ากลุ่มครั้งแรก</button>
+    </div>
+
+    <div id="auth-login" class="auth-pane active">
+      <div class="easy-auth-intro"><span>👋</span><div><b>ยินดีต้อนรับกลับ</b><small>ครั้งต่อไปใช้เพียงอีเมลและรหัสผ่าน</small></div></div>
+      <button id="facebookLoginBtn" type="button" class="facebook-login-btn">f&nbsp;&nbsp;ดำเนินการต่อด้วย Facebook <small id="facebookStatusText">เตรียมระบบไว้แล้ว</small></button>
+      <div class="social-auth-divider"><span>หรือใช้อีเมล</span></div>
+      <div class="field"><label>อีเมล</label><input id="loginEmail" type="email" autocomplete="email" placeholder="อีเมลที่ใช้สมัคร"></div>
+      <div class="field"><label>รหัสผ่าน</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="รหัสผ่านของคุณ"></div>
+      <button id="loginBtn" class="btn btn-gold easy-auth-main">เข้าสู่ระบบ</button>
+      <div id="loginMsg"></div>
+    </div>
+
+    <div id="auth-register" class="auth-pane">
+      <div class="member-flow-note">
+        <b>สมัครง่ายเหมือนรับลิงก์เข้ากลุ่ม</b>
+        <span>① ชำระเงินและส่งสลิปให้เพจ → ② รับลิงก์ส่วนตัวจากแอดมิน → ③ สมัครครั้งเดียว → ④ เข้าใช้งาน</span>
+      </div>
+      <div class="easy-auth-intro"><span>🔑</span><div><b>เข้ากลุ่มด้วยลิงก์/รหัสสมาชิก</b><small>ถ้ากดลิงก์จากแอดมิน ระบบจะใส่รหัสให้อัตโนมัติ</small></div></div>
+      <div class="field"><label>ชื่อคุณครู</label><input id="regName" autocomplete="name" placeholder="ชื่อ-สกุล"></div>
+      <div class="field"><label>อีเมล <small>ใช้สำหรับเข้าใช้งานครั้งต่อไป</small></label><input id="regEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label>รหัสสมาชิก</label><input id="regInvite" autocomplete="off" placeholder="รหัสจากลิงก์หรือแอดมิน"></div>
+      <div class="field"><label>ตั้งรหัสผ่านครั้งเดียว</label><input id="regPassword" type="password" minlength="6" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
+      <input id="regSchool" type="hidden"><input id="regPhone" type="hidden"><input id="regFacebook" type="hidden">
+      <button id="registerBtn" class="btn btn-blue easy-auth-main">สมัครสมาชิก</button>
+      <button id="contactPageBtn" type="button" class="contact-page-btn">💬 ยังไม่มีรหัส? ติดต่อเพจเพื่อสมัครสมาชิก</button>
+      <div class="easy-auth-note">ลิงก์ส่วนตัวที่แอดมินส่งหลังตรวจสลิป สามารถเปิดสิทธิ์ Member ให้อัตโนมัติได้ ไม่ต้องรออนุมัติซ้ำ</div>
+      <div id="registerMsg"></div>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast"></div><footer><div class="wrap">คลังแผนการสอนหน้าเดียว · ระบบสมาชิกแบบรออนุมัติ · Curriculum Dataset VERIFIED 2,155 รายการ</div></footer><script src="app.js"></script></body></html>

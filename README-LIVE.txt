@@ -1,26 +1,36 @@
-KLANG PLAN V7.2 — SMART LESSON WORKSPACE
+KLANG PLAN V7.5 — MEMBER ONLY + SALES READY
 
-ฐาน: V7.1 Lesson Plan First + Supabase + Member/VIP/Admin + Curriculum 2,155 records
+แนวทางธุรกิจช่วงเริ่มต้น
+- มีสิทธิ์ใช้งานจริงเพียง Member และ Admin
+- Member ทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด
+- ไม่มีการแบ่ง VIP ในหน้าเว็บช่วงนี้
+- การชำระเงินยังใช้โอนเข้าบัญชี + ส่งสลิปผ่านเพจ
+- หลังแอดมินตรวจสลิป กดสร้าง Private Invite Link
+- Private Invite: สมัครสำเร็จแล้ว Active Member อัตโนมัติ
+- Public Promo Code: สมัครแล้ว Pending ให้แอดมินอนุมัติ
 
-V7.2 เพิ่ม:
-- Navigation: หน้าหลัก / แผนของฉัน / คลังตัวชี้วัด / สไตล์และเทมเพลต / คู่มือ / ช่วยเหลือ
-- Home utility cards ที่มีประโยชน์: งานล่าสุด / โปรไฟล์ครู / สไตล์ล่าสุด / สร้างต่อ
-- โลโก้ brand-logo.png ปรับพื้นรอบนอกโปร่งใส
-- ระดับชั้นแบบการ์ดสี
-- ตัวชี้วัดแบบ Search + การ์ดกดเลือก
-- แยกคำว่า “ข้อมูลพื้นฐานของแผน”
-- มาตรฐานและตัวชี้วัดอยู่เป็นข้อมูลชุดเดียวใน Prompt
-- เพิ่มแนวการจัดการเรียนรู้
-- ข้อมูลผู้สอนแยกชัดเจน
-- อัปโหลดรูปครูและโลโก้โรงเรียน + Preview + จำในเครื่องเมื่อเลือก Remember
-- เพิ่มวันที่สอน / ลงชื่อครู / ผู้บริหาร
-- Style เดิม + Color Pair 6 ชุด
-- Prompt ใหม่ห้ามใช้ “แผนการจัดการเรียนรู้หน้าเดียว” เป็นชื่อบนภาพ ใช้ “แผนการจัดการเรียนรู้”
-- Prompt ลดข้อมูลซ้ำซ้อน
-- AI launch cards: ChatGPT / Gemini / Claude / Canva (คัดลอก Prompt ก่อนเปิด)
-- Game flow ง่ายขึ้น พร้อมปุ่มเปิด Canva / Wordwall / Quizizz / Kahoot / Genially / ChatGPT
-- เก็บงานล่าสุดใน localStorage เพื่อเปิด/ต่อยอดเร็ว
-- Admin Full Access คงเดิม
+Supabase V7.5
+- invite_codes เพิ่ม invite_type, auto_activate, sales_source, campaign_name, price_paid, payment_note
+- profiles เพิ่ม auth_provider, provider_user_id, avatar_url, sales_source, campaign_name, price_paid, payment_status
+- RPC admin_create_member_invite
+- RPC claim_member_invite สำหรับ OAuth/Facebook flow
+- handle_new_user รองรับ Member-only + Auto Activate
 
-หมายเหตุ:
-รูปครู/โลโก้ที่อัปโหลดในเว็บเป็น Preview และข้อมูลช่วยสร้าง Prompt ผู้ใช้ยังต้องแนบไฟล์จริงกับแพลตฟอร์ม AI ที่เปิดใช้งาน
+ระบบสมาชิก
+- ครั้งแรก: ชื่อครู + อีเมล + Invite/Code + ตั้งรหัสผ่าน
+- ครั้งถัดไป: Email + Password
+- Facebook Login เตรียมโค้ดไว้แล้ว แต่ต้องเชื่อม Meta App/Supabase Provider ก่อน
+- สามารถตั้ง salesContactUrl ใน config.js เพื่อเปิดปุ่มติดต่อเพจ
+
+Admin
+- Dashboard
+- รออนุมัติ
+- สมาชิก
+- ลิงก์ส่วนตัวหลังชำระเงิน
+- Code โปรโมชั่น
+- ประวัติการใช้งาน
+- หลักสูตร
+- ตั้งค่าระบบ
+- เก็บ source / campaign / price เพื่อวิเคราะห์ยอดขายและโปรโมชั่นในอนาคต
+
+ฟีเจอร์ Lesson Builder / Smart Indicator Search / Styles / Continue Builder จาก V7.4 ยังคงอยู่
