@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7fbff">
+  <title>Klang Plan Admin</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+</head>
+<body>
+<header class="admin-top">
+  <a class="admin-brand" href="/">
+    <img src="/brand-logo.png" alt="Klang Plan">
+    <div><b>Klang Plan Admin</b><small>ระบบหลังบ้านสำหรับผู้ดูแล</small></div>
+  </a>
+  <div class="admin-top-actions">
+    <a href="/" class="ghost-link">← กลับหน้าเว็บครู</a>
+    <button id="logoutBtn" class="ghost-btn" style="display:none">ออกจากระบบ</button>
+  </div>
+</header>
+
+<main>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="lock-ico">🔐</div>
+      <h1>เข้าสู่ระบบ Admin</h1>
+      <p>ใช้บัญชี Admin ของ Klang Plan</p>
+      <label>อีเมล<input id="adminEmail" type="email" autocomplete="email" placeholder="อีเมล Admin"></label>
+      <label>รหัสผ่าน<input id="adminPassword" type="password" autocomplete="current-password" placeholder="รหัสผ่าน"></label>
+      <button id="adminLoginBtn" class="primary-btn">เข้าสู่หลังบ้าน</button>
+      <div id="adminLoginMsg"></div>
+    </div>
+  </section>
+
+  <section id="adminApp" class="admin-app" style="display:none">
+    <div class="admin-shell">
+      <aside class="admin-side">
+        <div class="admin-profile">
+          <div class="profile-avatar">A</div>
+          <div><b id="adminName">Admin</b><small>ผู้ดูแลระบบ</small></div>
+        </div>
+        <nav>
+          <button class="side-tab active" data-tab="quick">⚡ สร้างลิงก์ด่วน</button>
+          <button class="side-tab" data-tab="dashboard">📊 Dashboard</button>
+          <button class="side-tab" data-tab="pending">⏳ รออนุมัติ <span id="sidePendingCount">0</span></button>
+          <button class="side-tab" data-tab="members">👥 สมาชิก</button>
+          <button class="side-tab" data-tab="invites">🔗 ลิงก์ / Code</button>
+          <button class="side-tab" data-tab="usage">✨ การใช้งาน</button>
+        </nav>
+      </aside>
+
+      <div class="admin-content">
+        <section id="tab-quick" class="tab-pane active">
+          <div class="page-title">
+            <div><span>⚡</span><div><h1>สร้างลิงก์เชิญหลังชำระเงิน</h1><p>ตรวจสลิปแล้ว → กรอกข้อมูลสั้น ๆ → กดครั้งเดียว → คัดลอกลิงก์ส่งให้ครู</p></div></div>
+          </div>
+
+          <div class="quick-invite-card">
+            <div class="flow-badges">
+              <span>1 ตรวจสลิป ✓</span><i>→</i><span>2 สร้างลิงก์</span><i>→</i><span>3 ส่งให้ครู</span><i>→</i><span>4 Active อัตโนมัติ</span>
+            </div>
+
+            <div class="quick-form">
+              <label class="full">ชื่อคุณครู / หมายเหตุ
+                <input id="qLabel" placeholder="เช่น ครูสมหญิง ใจดี">
+              </label>
+              <label>ยอดชำระ
+                <div class="money-input"><input id="qPrice" type="number" min="0" step="1" value="99"><span>บาท</span></div>
+              </label>
+              <label>ช่องทาง
+                <select id="qSource">
+                  <option>Facebook Page</option>
+                  <option>Facebook Group</option>
+                  <option>Messenger</option>
+                  <option>TikTok</option>
+                  <option>เพื่อนแนะนำ</option>
+                  <option>อื่น ๆ</option>
+                </select>
+              </label>
+              <label>โปรโมชั่น / แคมเปญ
+                <input id="qCampaign" placeholder="เช่น สมาชิกเปิดตัว 99 บาท">
+              </label>
+              <label>ลิงก์ใช้ได้
+                <select id="qDays"><option value="7">7 วัน</option><option value="14">14 วัน</option><option value="30" selected>30 วัน</option><option value="90">90 วัน</option></select>
+              </label>
+            </div>
+
+            <button id="quickCreateBtn" class="mega-create-btn"><span>🔗</span><div><b>สร้างลิงก์ Member หลังชำระเงิน</b><small>ลิงก์ใช้ได้ 1 คน • สมัครแล้ว Active อัตโนมัติ</small></div></button>
+
+            <div id="quickResult" class="quick-result" style="display:none">
+              <div class="success-head"><span>✅</span><div><b>ลิงก์พร้อมส่งแล้ว</b><small>ระบบคัดลอกลิงก์ให้อัตโนมัติ</small></div></div>
+              <div id="quickLink" class="link-box"></div>
+              <div class="result-actions">
+                <button id="copyQuickLink" class="primary-btn">📋 คัดลอกลิงก์</button>
+                <button id="newQuickInvite" class="ghost-btn">+ สร้างคนถัดไป</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-card">
+            <div class="card-head"><h2>ลิงก์ล่าสุด</h2><button id="refreshQuick" class="text-btn">↻ รีเฟรช</button></div>
+            <div id="recentInviteList"></div>
+          </div>
+        </section>
+
+        <section id="tab-dashboard" class="tab-pane">
+          <div class="page-title"><div><span>📊</span><div><h1>Dashboard</h1><p>ภาพรวมสมาชิกและยอดที่บันทึกจากลิงก์</p></div></div></div>
+          <div class="kpi-grid">
+            <article><b id="dMembers">—</b><span>สมาชิกทั้งหมด</span></article>
+            <article><b id="dActive">—</b><span>Active</span></article>
+            <article class="warn"><b id="dPending">—</b><span>รออนุมัติ</span></article>
+            <article class="money"><b id="dSales">—</b><span>ยอดบันทึก</span></article>
+          </div>
+          <div class="two-col">
+            <div class="content-card"><h2>สิ่งที่ต้องจัดการ</h2><div id="attentionList"></div></div>
+            <div class="content-card"><h2>ช่องทางสมาชิก</h2><div id="sourceList"></div></div>
+          </div>
+        </section>
+
+        <section id="tab-pending" class="tab-pane">
+          <div class="page-title split-title"><div><span>⏳</span><div><h1>รออนุมัติ</h1><p>สำหรับ Code โปรโมชั่น/คำขอที่ไม่ได้ Active อัตโนมัติ</p></div></div><button id="approveAllBtn" class="primary-btn small">✓ อนุมัติทั้งหมด</button></div>
+          <div id="pendingList" class="stack-list"></div>
+        </section>
+
+        <section id="tab-members" class="tab-pane">
+          <div class="page-title"><div><span>👥</span><div><h1>สมาชิก</h1><p>Member ทุกคนใช้ฟีเจอร์เหมือนกัน</p></div></div></div>
+          <div class="toolbar"><input id="memberSearchAdmin" placeholder="ค้นชื่อ อีเมล Code แคมเปญ"><select id="memberFilterAdmin"><option value="">ทุกสถานะ</option><option value="active">Active</option><option value="pending">Pending</option><option value="suspended">Suspended</option><option value="expired">Expired</option></select></div>
+          <div id="memberListAdmin" class="stack-list"></div>
+        </section>
+
+        <section id="tab-invites" class="tab-pane">
+          <div class="page-title split-title"><div><span>🔗</span><div><h1>ลิงก์และ Code</h1><p>ดูประวัติลิงก์ส่วนตัวและโปรโมชั่น</p></div></div><button id="goQuickBtn" class="primary-btn small">+ สร้างลิงก์ใหม่</button></div>
+          <div class="promo-box">
+            <h2>🎟️ สร้าง Code โปรโมชั่น</h2>
+            <div class="promo-form"><input id="promoName" placeholder="ชื่อแคมเปญ"><input id="promoMax" type="number" min="1" value="20" placeholder="ใช้ได้กี่คน"><input id="promoDays" type="number" min="1" value="7" placeholder="กี่วัน"><button id="createPromoBtn" class="ghost-btn">สร้าง Code</button></div>
+            <div id="promoResult"></div>
+          </div>
+          <div id="inviteHistory" class="stack-list"></div>
+        </section>
+
+        <section id="tab-usage" class="tab-pane">
+          <div class="page-title"><div><span>✨</span><div><h1>การใช้งาน</h1><p>Prompt ล่าสุดจากสมาชิก</p></div></div></div>
+          <div id="usageList" class="stack-list"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+<script src="/admin.js"></script>
+</body>
+</html>
