@@ -1,0 +1,41 @@
+KLANG PLAN V7.6.1 — RELEASE QA REPORT
+
+[PASS] JavaScript syntax
+[PASS] Curriculum count — 2155
+[PASS] No duplicate HTML IDs — []
+[PASS] All data-go views exist — []
+[PASS] All mobile nav views exist — []
+[PASS] All mobile jump targets exist — []
+[PASS] Required files present
+[PASS] Fuzzy indicator search present
+[PASS] Invite pre-validation present
+[PASS] Mobile bottom nav present
+[PASS] Prompt title rule present
+[PASS] Teacher/logo direct-to-AI guidance
+[PASS] Member-only UI
+[PASS] No visible VIP text in HTML
+[PASS] Facebook unavailable control can hide
+[PASS] Sales contact unavailable control can hide
+[PASS] No unexpected DOM refs — []
+
+Backend production checks:
+- Supabase V7.6.1 invite validation migration applied.
+- check_member_invite RPC validates codes before signup.
+- Invalid/expired/fully-used invite supplied to signup is rejected.
+- Legacy VIP roles/invites/requests normalized to Member.
+- Private paid invite auto-activation retained.
+- Public promo invite pending approval retained.
+- RLS/admin security model retained.
+
+Observed backend logs:
+- Auth token/login/profile reads have successful 200 responses.
+- Prompt history inserts have successful 201 responses.
+- Previous signup tests confirm Supabase currently requires email confirmation.
+
+External setup not enabled:
+- Facebook OAuth remains hidden until Meta App + Supabase Facebook provider are configured.
+- Contact-page button remains hidden until salesContactUrl is configured.
+
+Physical-device limitation:
+- Code/static/backend QA is complete here.
+- A final smoke test on the deployed site using a physical iPhone/Android is still required to verify real touch/Safari behavior.
