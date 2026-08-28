@@ -1,1 +1,29 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin ย้ายหน้าแล้ว</title><style>body{font-family:system-ui,sans-serif;background:#f7f9fc;color:#244b70;display:grid;place-items:center;min-height:100vh;margin:0;padding:20px}.c{background:#fff;border:1px solid #dbe6ef;border-radius:20px;padding:24px;max-width:440px;text-align:center;box-shadow:0 12px 30px #2342a111}.b{display:inline-block;margin-top:12px;background:#3158d6;color:#fff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:800}</style></head><body><div class="c"><h2>หลังบ้านย้ายไปเส้นทางใหม่</h2><p>เพื่อแก้ปัญหา Redirect Loop บน Safari</p><a class="b" href="/control/">เปิดหลังบ้าน Admin</a></div></body></html>
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>เปิดหลังบ้าน Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font-family:system-ui,-apple-system,sans-serif;background:#f6f9fc;color:#244b70}
+.card{width:min(440px,100%);background:#fff;border:1px solid #dbe6ef;border-radius:22px;padding:25px;text-align:center;box-shadow:0 16px 38px rgba(39,75,108,.10)}
+h2{margin:0 0 8px;font-size:1.45rem}p{margin:0 0 18px;color:#70859a;line-height:1.6}
+a.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#3158d6;color:#fff;text-decoration:none;border-radius:14px;font-weight:900;font-size:1.05rem;box-shadow:0 7px 0 #2544a5}
+a.btn:active{transform:translateY(2px);box-shadow:0 5px 0 #2544a5}
+small{display:block;margin-top:15px;color:#93a2b1}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>หลังบ้าน Admin</h2>
+<p>กดปุ่มด้านล่างเพื่อเปิดหน้าหลังบ้านโดยตรง</p>
+<a id="openAdminDirect" class="btn" href="/admin-panel.html">เปิดหลังบ้าน Admin</a>
+<small>เส้นทางตรง: /admin-panel.html</small>
+</div>
+<script>
+document.getElementById('openAdminDirect').addEventListener('click',function(){
+  location.href='/admin-panel.html';
+});
+</script>
+</body>
+</html>

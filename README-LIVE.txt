@@ -1,21 +1,15 @@
-KLANG PLAN V7.8.3 — CONTROL ROUTE FIX
+KLANG PLAN V7.8.4 — DIRECT ADMIN FILE
 
-แก้ Safari Redirect Loop ตอนสลับจากมุมผู้ใช้กลับหลังบ้าน
+แก้ปัญหาปุ่มเปิดหลังบ้านกดไม่ได้ / Redirect Loop แบบถาวร:
+- ไม่ใช้ /admin/ หรือ /control/ เป็นเส้นทางหลักอีก
+- หลังบ้านใช้ไฟล์ตรง /admin-panel.html
+- ไม่มี pretty URL / directory redirect
+- ปุ่ม “กลับหลังบ้าน” ในหน้า User ชี้ตรงไป /admin-panel.html
+- หน้า /admin/ เก่าเป็นเพียงหน้าปุ่มสำรองที่ชี้ตรงไปไฟล์นี้
+- _redirects ไม่มี routing rule
 
-สาเหตุ:
-ไฟล์ _redirects เก่าบน GitHub อาจยังคงอยู่ แม้ ZIP รุ่นใหม่จะไม่มีไฟล์นั้น
-เพราะการอัปโหลดไฟล์ทับ GitHub ไม่ได้ลบไฟล์เก่าอัตโนมัติ
-
-วิธีแก้:
-- เปลี่ยน Admin route ใหม่เป็น /control/
-- ใช้โฟลเดอร์จริง control/index.html
-- ใส่ _redirects ตัวใหม่เพื่อ overwrite กฎเก่าที่อาจค้าง
-- /admin/ เป็นหน้าแจ้งย้าย ไม่ auto redirect
-- ปุ่ม User → Admin ใช้ /control/
-- Session Admin เดิมยังคงอยู่
+Admin:
+https://klang-plan.pages.dev/admin-panel.html
 
 User:
 https://klang-plan.pages.dev/
-
-Admin:
-https://klang-plan.pages.dev/control/

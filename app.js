@@ -80,7 +80,7 @@ if($("mobileAccountBtn"))$("mobileAccountBtn").onclick=()=>{
   closeMobileMenus();
   if(currentUser)logout();else openAuth("login")
 };
-if($("mobileAdminBtn"))$("mobileAdminBtn").onclick=()=>{closeMobileMenus();location.href="/control/"};
+if($("mobileAdminBtn"))$("mobileAdminBtn").onclick=()=>{closeMobileMenus();location.href="/admin-panel.html"};
 document.querySelectorAll("[data-mobile-go]").forEach(btn=>btn.onclick=()=>go(btn.dataset.mobileGo));
 
 document.addEventListener("click",e=>{
@@ -127,7 +127,7 @@ const testBadge=$("adminTestBadge");if(testBadge)testBadge.style.display=current
 const isAdmin=currentProfile?.role==="admin";
 if(isAdmin){
   btn.textContent="กลับหลังบ้าน";
-  if(btn.tagName==="A"){btn.setAttribute("href","/control/");btn.onclick=null}else btn.onclick=()=>location.href="/control/";
+  if(btn.tagName==="A"){btn.setAttribute("href","/admin-panel.html");btn.onclick=null}else btn.onclick=()=>location.href="/admin-panel.html";
 }else{
   btn.textContent="ออกจากระบบ";
   if(btn.tagName==="A"){btn.setAttribute("href","#");btn.onclick=(e)=>{e.preventDefault();logout()}}else btn.onclick=logout;
