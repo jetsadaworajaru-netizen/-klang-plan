@@ -1,3 +1,5 @@
-# Klang Plan V7.8.4
-# No custom redirects.
-# Admin is a direct static file: /admin-panel.html
+# Klang Plan V7.8.5
+# No redirects.
+# Direct static routes only:
+# /teacher.html
+# /admin-panel.html

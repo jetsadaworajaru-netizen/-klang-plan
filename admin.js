@@ -47,7 +47,7 @@ $("switchToUserBtn").onclick=async()=>{
   const {data}=await sb.auth.getSession();
   if(!data?.session){toast("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");showLogin();return}
   sessionStorage.setItem("klangAdminUserView","1");
-  location.assign("/?adminview=1")
+  location.assign("/teacher.html?adminview=1")
 };
 $("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("adminLoginBtn").click()});
 

@@ -776,3 +776,16 @@ body{overscroll-behavior-y:none}
 .auth-resolving-bar{position:fixed;top:0;left:0;right:0;z-index:9999;background:#eef4ff;color:#4358b9;text-align:center;padding:5px;font-size:.7rem;font-weight:800}
 body.auth-resolving #authBtn{visibility:hidden}
 .admin-user-mode-bar a{background:linear-gradient(135deg,#3548b8,#6556e3);color:#fff!important;padding:7px 10px;border-radius:10px}
+
+/* ===== V7.8.5 EXPLICIT DIRECT ROUTES ===== */
+.admin-user-mode-bar:before{
+  content:"USER VIEW";
+  font-size:.58rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  color:#fff;
+  background:#5260cf;
+  border-radius:999px;
+  padding:3px 6px;
+  flex:0 0 auto
+}
