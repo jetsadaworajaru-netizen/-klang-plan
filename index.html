@@ -24,7 +24,7 @@
         <div><b id="profileMiniName">ผู้ใช้</b><small id="profileMiniRole">สมาชิก</small></div>
       </div>
       <span id="memberChip" class="member-chip compact-member-chip" style="display:none"></span>
-      <a id="adminBtn" class="btn btn-ghost compact-admin-btn" href="/admin" style="display:none;text-decoration:none">หลังบ้าน</a>
+      <a id="adminBtn" class="admin-mode-switch" href="/admin" style="display:none;text-decoration:none"><span>⚙️</span><b>โหมดแอดมิน</b></a>
       <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN</span>
       <a id="authBtn" class="btn btn-gold compact-auth-btn top-login-link" href="#authModal" aria-controls="authModal">เข้าสู่ระบบ</a>
       <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="เมนู">☰</button>
@@ -36,6 +36,11 @@
     <button data-app-nav="guide">คู่มือการใช้งาน</button><button data-app-nav="help">ศูนย์ช่วยเหลือ</button>
   </div>
 </header>
+<div id="adminUserModeBar" class="admin-user-mode-bar" style="display:none">
+  <div><span>👁️</span><b>คุณกำลังดูเว็บในมุมผู้ใช้งาน</b><small>บัญชีนี้เป็น Admin</small></div>
+  <a href="/admin">กลับหลังบ้านทันที →</a>
+</div>
+
 <main>
 <section id="homeView" class="view active">
 <div class="lesson-first-home">

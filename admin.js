@@ -76,22 +76,33 @@ async function createInvite(opts){
 $("quickCreateBtn").onclick=async()=>{
   const btn=$("quickCreateBtn");btn.disabled=true;
   try{
-    const days=Number($("qDays").value||30);
+    const days=Number($("qDays")?.value||30);
+    const price=$("qPrice")?.value||"";
+    const source=$("qSource")?.value||"";
+    const campaign=$("qCampaign")?.value?.trim()||"";
     const row=await createInvite({
-      label:$("qLabel").value.trim()||`Paid member ${new Date().toLocaleDateString("th-TH")}`,
-      maxUses:1,expiresAt:new Date(Date.now()+days*86400000).toISOString(),
-      autoActivate:true,inviteType:"private_paid",source:$("qSource").value,
-      campaign:$("qCampaign").value.trim(),price:$("qPrice").value,note:"ตรวจสลิปแล้ว"
+      label:`Paid member ${new Date().toLocaleString("th-TH")}`,
+      maxUses:1,
+      expiresAt:new Date(Date.now()+days*86400000).toISOString(),
+      autoActivate:true,
+      inviteType:"private_paid",
+      source,
+      campaign,
+      price,
+      note:"ตรวจสลิปแล้ว"
     });
     currentQuickLink=`${CFG.siteUrl||location.origin}/?invite=${row.code}`;
-    $("quickLink").textContent=currentQuickLink;$("quickResult").style.display="block";
+    $("quickLink").textContent=currentQuickLink;
+    $("quickResult").style.display="block";
     try{await navigator.clipboard.writeText(currentQuickLink)}catch{}
-    toast("สร้างและคัดลอกลิงก์แล้ว ✓");await loadAll()
-  }catch(e){console.error(e);toast(e.message||"สร้างลิงก์ไม่สำเร็จ")}
-  finally{btn.disabled=false}
+    toast("สร้างลิงก์และคัดลอกแล้ว ✓");
+    await loadAll()
+  }catch(e){
+    console.error(e);toast(e.message||"สร้างลิงก์ไม่สำเร็จ")
+  }finally{btn.disabled=false}
 };
 $("copyQuickLink").onclick=async()=>{if(!currentQuickLink)return;try{await navigator.clipboard.writeText(currentQuickLink);toast("คัดลอกแล้ว ✓")}catch{toast("คัดลอกไม่สำเร็จ")}};
-$("newQuickInvite").onclick=()=>{$("qLabel").value="";$("quickResult").style.display="none";$("qLabel").focus()};
+$("newQuickInvite").onclick=()=>{$("quickResult").style.display="none";$("quickCreateBtn").focus()};
 $("refreshQuick").onclick=loadAll;
 
 function renderRecent(){
