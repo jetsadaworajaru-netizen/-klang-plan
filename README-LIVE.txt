@@ -1,9 +1,28 @@
-KLANG PLAN V7.0 ADMIN UX + PROMPT READABILITY
-แก้:
-- Prompt สีเข้ม อ่านชัด
-- ปุ่มคัดลอก Prompt เด่นด้านบน + ด้านล่าง
-- Copy fallback สำหรับมือถือ
-- Admin Full Access ทดสอบ Member/VIP ได้ทั้งหมด
-- Admin Quick Actions: Refresh / VIP Invite / Member Invite / Test All Tools
-- หลังบ้านใช้งานเร็วขึ้นทั้งคอมและมือถือ
-ฐาน: V6.9 Smart Continue Builder + Supabase + Curriculum 2,155 รายการ
+KLANG PLAN V7.1 — LESSON PLAN FIRST
+
+แนวคิด:
+สร้างแผนการสอนหน้าเดียวก่อน แล้วค่อยต่อยอดสื่อจากแผนเดิม
+
+ใหม่ใน V7.1
+- ตัด Step “วันนี้อยากสร้างอะไร?”
+- Lesson Plan เป็นงานหลักเริ่มต้นอัตโนมัติ
+- ค้นหาตัวชี้วัดด้วยรหัสหรือคำ + ranking + debounce
+- เพิ่ม หน่วยการเรียนรู้ และเปลี่ยนช่องเป็น “เรื่อง”
+- เพิ่มเวลาแบบกำหนดเอง / รูปแบบการเรียนรู้แบบกำหนดเอง
+- เพิ่มข้อมูลผู้สอนแบบพับ/ขยาย และจำข้อมูลในอุปกรณ์
+- เพิ่ม Style Presets 6 แบบ พร้อม CSS Preview
+- Prompt ใหม่เป็น Image-first One Page Lesson Plan Prompt
+- A4 Portrait 2:3, Canva Ready, Print Ready, Thai Typography rules
+- คง Smart Continue Builder: ใบงาน / แบบทดสอบ / ใบความรู้ / Rubric / เกม / Teaching Pack
+- คง Supabase Auth, Member/VIP/Admin, Invite, Prompt History, Curriculum 2,155 records
+- Admin Full Access ทดสอบทุกฟีเจอร์ได้
+
+ไฟล์หลัก:
+index.html
+styles.css
+app.js
+config.js
+data.json
+brand-logo.png
+favicon.png
+apple-touch-icon.png

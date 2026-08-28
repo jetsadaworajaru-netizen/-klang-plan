@@ -1,5 +1,33 @@
-const $=id=>document.getElementById(id);const CFG=window.KLANG_CONFIG||{};let DATA=[],ACTIVE_STAGE="ปฐมวัย",selectedTool=null,supabaseClient=null,currentUser=null,currentProfile=null;const grades={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};const SUBJECT_ORDER=["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนาและวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ (ภาษาอังกฤษ)","ปฐมวัย"];
+const $=id=>document.getElementById(id);const CFG=window.KLANG_CONFIG||{};let DATA=[],ACTIVE_STAGE="ปฐมวัย",selectedTool="lesson",supabaseClient=null,currentUser=null,currentProfile=null;const grades={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};const SUBJECT_ORDER=["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนาและวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ (ภาษาอังกฤษ)","ปฐมวัย"];
 const TOOLS=[{id:"lesson",icon:"📘",title:"แผนการสอนหน้าเดียว",desc:"Prompt แผนกระชับ ครบองค์ประกอบ และสอดคล้องตัวชี้วัด",tier:"guest"},{id:"worksheet",icon:"📝",title:"ใบงาน",desc:"สร้างใบงานตามตัวชี้วัด พร้อมตัวเลือกชนิดงานและเฉลย",tier:"guest"},{id:"exercise",icon:"✏️",title:"แบบฝึกหัด",desc:"แบบฝึกหลายระดับพร้อมเฉลยและเกณฑ์",tier:"member"},{id:"quiz",icon:"✅",title:"แบบทดสอบ",desc:"ก่อนเรียน/หลังเรียน พร้อมเฉลยและวิเคราะห์ตัวชี้วัด",tier:"member"},{id:"rubric",icon:"📊",title:"แบบประเมิน / Rubric",desc:"เกณฑ์ประเมินที่โยงกับพฤติกรรมตามตัวชี้วัด",tier:"vip"},{id:"knowledge",icon:"📚",title:"ใบความรู้",desc:"สรุปความรู้ที่ตรงกับเรื่องและระดับชั้น",tier:"member"},{id:"game",icon:"🎮",title:"เกม / Active Learning",desc:"กิจกรรมเล่นได้จริงในคาบเรียน",tier:"vip"},{id:"pack",icon:"🎁",title:"Teaching Pack",desc:"แผน + ใบงาน + ใบความรู้ + แบบประเมิน + แบบทดสอบ ในชุดเดียว",tier:"vip"}];
+const STYLE_PRESETS={
+  "modern-government":{
+    title:"ราชการโมเดิร์น",
+    instruction:"Modern Thai Government Education Design, clean professional editorial layout, white and soft sky-blue base, navy headings, restrained champagne-gold accents, subtle Thai-inspired geometry only as decoration, formal but contemporary, high legibility."
+  },
+  "bright-primary":{
+    title:"สดใสสำหรับประถม",
+    instruction:"Bright Primary Education Design, fresh sky blue, mint, sunny yellow and coral accents, friendly rounded cards, playful but organized educational icons, cheerful classroom mood, highly readable Thai typography."
+  },
+  "cute-kids":{
+    title:"น่ารักสำหรับเด็กเล็ก",
+    instruction:"Cute Early Childhood Education Design, warm pastel palette, soft rounded shapes, friendly child-safe illustrations, gentle playful learning atmosphere, simple hierarchy and large readable Thai text."
+  },
+  "education-infographic":{
+    title:"อินโฟกราฟิกอ่านง่าย",
+    instruction:"Modern Education Infographic Design, strong information hierarchy, modular content cards, clean icons, visual timeline for activities, balanced whitespace, concise visual summaries and excellent Thai readability."
+  },
+  "premium-academic":{
+    title:"พรีเมียมวิชาการ",
+    instruction:"Premium Academic Editorial Design, elegant navy, pearl white, refined blue gradients and subtle gold accents, polished professional composition, sophisticated educational report aesthetic, premium but not overcrowded."
+  },
+  "3d-learning":{
+    title:"3D สะดุดตา",
+    instruction:"Modern 3D Learning Design, bright clean education theme, tasteful 3D books, pencils, learning objects and soft dimensional cards, blue-violet accents, energetic but professional, decorative 3D objects must never cover text."
+  }
+};
+let selectedStyle="modern-government";
+
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}function go(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(v+"View").classList.add("active");scrollTo({top:0,behavior:"smooth"});if(v==="admin")loadAdmin()}document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));document.querySelectorAll("[data-stage-go]").forEach(b=>b.onclick=()=>{ACTIVE_STAGE=b.dataset.stageGo;go("generator");syncStageTabs();buildGrades()});
 document.querySelectorAll("[data-tool-start]").forEach(b=>b.onclick=()=>{
   selectedTool=b.dataset.toolStart;
@@ -58,15 +86,56 @@ function buildIndicators(){
   rs.forEach((r,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${r.indicator}${r.classification?` [${r.classification}]`:""} — ${r.indicator_text}`;el.appendChild(o)});
   el.disabled=false;el.onchange=syncRecord;syncRecord()
 }
-function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น ${r.domain}`:"เรื่องที่จะสอน";renderSummary()}["topic","duration","method","context"].forEach(id=>$(id).addEventListener(id==="topic"||id==="context"?"input":"change",renderSummary));function renderSummary(){const r=record();$("summary").innerHTML=`<b>ตรวจสอบก่อนสร้าง</b><br>${ACTIVE_STAGE} · ${$("grade").value||"—"} · ${$("subject").value||"—"}<br>${r.indicator||"—"} · เรื่อง ${$("topic").value||"ยังไม่ระบุ"}`}
-$("indicatorSearch").oninput=()=>{const q=$("indicatorSearch").value.trim().toLowerCase(),box=$("searchResults");if(!q){box.style.display="none";return}const found=rows().filter(r=>[r.indicator,r.indicator_text,r.domain,r.standard].join(" ").toLowerCase().includes(q)).slice(0,30);box.innerHTML=found.map(r=>`<div class="result-item" data-id="${r.dataset_id}"><b>${r.indicator}</b><small>${r.indicator_text}</small></div>`).join("")||'<div class="result-item">ไม่พบข้อมูล</div>';box.style.display="block";box.querySelectorAll("[data-id]").forEach(x=>x.onclick=()=>{const i=rows().findIndex(r=>r.dataset_id===x.dataset.id);$("indicator").value=i;box.style.display="none";$("indicatorSearch").value="";syncRecord()})};
+function record(){return rows()[Number($("indicator").value||0)]||{}}function syncRecord(){const r=record();$("indicatorBox").innerHTML=r.indicator?`<b>${r.indicator}</b>${r.classification?` · ${r.classification}`:""}<br>${r.indicator_text}`:"ไม่มีข้อมูล";$("topic").placeholder=r.domain?`เช่น หัวข้อใน ${r.domain}`:"เช่น เรื่องที่ต้องการจัดการเรียนรู้";renderSummary()}["unitName","topic","duration","customDuration","method","customMethod","context","teacherName","teacherPosition","schoolName","organization","province","semester","academicYear","studentCount"].forEach(id=>{
+  const el=$(id);if(el)el.addEventListener(["unitName","topic","customDuration","customMethod","context","teacherName","teacherPosition","schoolName","organization","province","academicYear","studentCount"].includes(id)?"input":"change",renderSummary)
+});
+function renderSummary(){
+  const r=record()||{},c=common();
+  const unit=c.unitName||"ยังไม่ระบุ";
+  $("summary").innerHTML=`<b>ตรวจสอบก่อนสร้าง</b>
+    <div class="review-grid">
+      <span><small>หลักสูตร</small>${ACTIVE_STAGE} • ${c.grade||"—"} • ${c.subject||"—"}</span>
+      <span><small>ตัวชี้วัด</small>${r.indicator||"—"}${r.classification?` • ${r.classification}`:""}</span>
+      <span><small>หน่วยการเรียนรู้</small>${unit}</span>
+      <span><small>เรื่อง</small>${c.topic||"ยังไม่ระบุ"}</span>
+      <span><small>เวลา / รูปแบบ</small>${c.duration} • ${c.method}</span>
+      <span><small>สไตล์</small>${c.styleTitle}</span>
+    </div>`
+}
+let searchTimer=null;
+$("indicatorSearch").oninput=()=>{
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    const raw=$("indicatorSearch").value.trim(),q=raw.toLowerCase(),box=$("searchResults");
+    if(!q){box.style.display="none";return}
+    const score=r=>{
+      const ind=(r.indicator||"").toLowerCase(),txt=(r.indicator_text||"").toLowerCase(),
+            rest=[r.domain,r.standard,r.subject].join(" ").toLowerCase();
+      if(ind===q)return 100;
+      if(ind.startsWith(q))return 80;
+      if(ind.includes(q))return 60;
+      if(txt.includes(q))return 40;
+      if(rest.includes(q))return 20;
+      return 0
+    };
+    const found=rows().map(r=>({r,s:score(r)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,30).map(x=>x.r);
+    box.innerHTML=found.map(r=>`<div class="result-item rich-result" data-id="${r.dataset_id}">
+      <div><b>${r.indicator}</b>${r.classification?`<span class="result-tag">${r.classification}</span>`:""}</div>
+      <small>${r.indicator_text}</small>
+      <em>${r.subject||""} • ${$("grade").value||""}</em>
+    </div>`).join("")||'<div class="result-item empty-result"><b>ไม่พบตัวชี้วัดที่ตรงกับคำค้น</b><small>ลองใช้รหัสหรือคำที่สั้นลง</small></div>';
+    box.style.display="block";
+    box.querySelectorAll("[data-id]").forEach(x=>x.onclick=()=>{
+      const i=rows().findIndex(r=>r.dataset_id===x.dataset.id);
+      $("indicator").value=i;box.style.display="none";$("indicatorSearch").value="";syncRecord()
+    })
+  },180)
+};
 function tierRank(t){return {guest:0,member:1,vip:2,admin:3}[t]??0}function userTier(){if(currentProfile?.role==="admin")return"admin";if(currentProfile?.status!=="active")return"guest";if(currentProfile?.role==="vip")return"vip";return"member"}function revealFlowAfterTool(scrollIt=false){
-  const has=!!selectedTool;
-  $("flowDetailsStep").style.display=has?"block":"none";
-  $("flowOptionsStep").style.display=has?"block":"none";
-  $("flowFinalStep").style.display=has?"block":"none";
-  document.querySelectorAll(".flow-dot").forEach((x,i)=>x.classList.toggle("active",has&&i<=3));
-  if(scrollIt&&has)setTimeout(()=>$("flowDetailsStep").scrollIntoView({behavior:"smooth",block:"start"}),120);
+  selectedTool="lesson";
+  ["flowDetailsStep","flowOptionsStep","teacherSection","styleSection","flowFinalStep"].forEach(id=>{const el=$(id);if(el)el.style.display="block"});
+  document.querySelectorAll(".flow-dot").forEach(x=>x.classList.add("active"));
+  if(scrollIt&&$("flowDetailsStep"))setTimeout(()=>$("flowDetailsStep").scrollIntoView({behavior:"smooth",block:"start"}),100)
 }
 function renderTools(){
   $("tools").innerHTML=TOOLS.map(t=>`<article class="tool simple-tool-card ${selectedTool===t.id?"selected":""}" data-tool="${t.id}">
@@ -81,7 +150,7 @@ function renderTools(){
   renderOptions();revealFlowAfterTool(false);
 }
 function renderOptions(){
-  const t=TOOLS.find(x=>x.id===selectedTool);
+  selectedTool=selectedTool||"lesson";const t=TOOLS.find(x=>x.id===selectedTool);
   if(!t){$("toolOptions").innerHTML='<div class="option-placeholder">เลือกประเภทงานก่อน</div>';return}
   let h='<div class="option-grid">';
   if(t.id==="worksheet")h+='<div class="field"><label>ชนิดใบงาน</label><select id="optType"><option>เติมคำ</option><option>จับคู่</option><option>เขียนตอบ</option><option>วิเคราะห์</option><option>ระบายสี/สร้างสรรค์</option><option>ปฏิบัติ</option></select></div><div class="field"><label>จำนวนข้อ</label><select id="optCount"><option>5</option><option selected>10</option><option>15</option></select></div><div class="field"><label>เฉลย</label><select id="optAnswer"><option>มีเฉลย</option><option>ไม่มีเฉลย</option></select></div><div class="field"><label>สไตล์</label><select id="optStyle"><option>A4 ขาวดำประหยัดหมึก</option><option>สีสวย Canva Ready</option><option>น่ารักเหมาะกับเด็ก</option><option>ทางการเรียบง่าย</option></select></div>';
@@ -96,6 +165,24 @@ function optionValue(id,fallback=""){
   const el=$(id);
   return el&&typeof el.value==="string"&&el.value.trim()?el.value.trim():fallback
 }
+function teacherData(){
+  return {
+    name:$("teacherName")?.value?.trim()||"",
+    position:$("teacherPosition")?.value?.trim()||"",
+    school:$("schoolName")?.value?.trim()||"",
+    organization:$("organization")?.value?.trim()||"",
+    province:$("province")?.value?.trim()||"",
+    semester:$("semester")?.value||"",
+    academicYear:$("academicYear")?.value?.trim()||"",
+    studentCount:$("studentCount")?.value?.trim()||""
+  }
+}
+function resolvedDuration(){
+  return $("duration")?.value==="กำหนดเอง" ? ($("customDuration")?.value?.trim()||"กำหนดเอง") : ($("duration")?.value||"1 คาบ (50–60 นาที)")
+}
+function resolvedMethod(){
+  return $("method")?.value==="อื่น ๆ" ? ($("customMethod")?.value?.trim()||"อื่น ๆ") : ($("method")?.value||"Active Learning")
+}
 function common(){
   const r=record()||{};
   return {
@@ -103,10 +190,16 @@ function common(){
     stage:ACTIVE_STAGE,
     grade:$("grade")?.value||"",
     subject:$("subject")?.value||"",
+    unitName:$("unitName")?.value?.trim()||"",
     topic:$("topic")?.value?.trim()||"",
-    duration:$("duration")?.value||"1 คาบ (50–60 นาที)",
-    method:$("method")?.value||"Active Learning",
+    duration:resolvedDuration(),
+    method:resolvedMethod(),
+    detailLevel:$("detailLevel")?.value||"กระชับพร้อมใช้",
     context:$("context")?.value?.trim()||"",
+    teacher:teacherData(),
+    styleKey:selectedStyle,
+    styleTitle:STYLE_PRESETS[selectedStyle]?.title||"ราชการโมเดิร์น",
+    styleInstruction:STYLE_PRESETS[selectedStyle]?.instruction||"",
     curriculum:r.curriculum||r.source_curriculum||"",
     domain:r.domain||"",
     standard:r.standard||"",
@@ -115,10 +208,19 @@ function common(){
     classification:r.classification||""
   }
 }
+function teacherPromptBlock(t){
+  const items=[
+    ["ชื่อผู้สอน",t.name],["ตำแหน่ง",t.position],["โรงเรียน",t.school],
+    ["สังกัด",t.organization],["จังหวัด",t.province],["ภาคเรียน",t.semester],
+    ["ปีการศึกษา",t.academicYear],["จำนวนนักเรียน",t.studentCount?t.studentCount+" คน":""]
+  ].filter(([,v])=>v);
+  return items.length ? `\nข้อมูลผู้สอน:\n${items.map(([k,v])=>`${k}: ${v}`).join("\n")}` :
+    `\nข้อมูลผู้สอน: ไม่ได้ระบุ — ห้ามสร้างชื่อครู โรงเรียน สังกัด หรือข้อมูลส่วนบุคคลสมมติ`;
+}
 function promptHeader(c){
-  return `คุณคือผู้เชี่ยวชาญด้านการออกแบบการเรียนรู้และหลักสูตรไทย
-สร้างผลงานภาษาไทยสำหรับครู โดยยึดข้อมูลต่อไปนี้เป็นข้อมูลหลัก ห้ามเปลี่ยนรหัสหรือข้อความตัวชี้วัด
+  return `คุณคือผู้เชี่ยวชาญด้านหลักสูตรไทย Instructional Design การจัดการเรียนรู้ และ Educational Graphic Design
 
+ข้อมูลหลักสูตรและแผนที่ต้องยึดตามจริง:
 หลักสูตร: ${c.curriculum||"-"}
 ช่วงชั้น: ${c.stage||"-"}
 ระดับชั้น: ${c.grade||"-"}
@@ -128,28 +230,69 @@ function promptHeader(c){
 ตัวชี้วัด/ความสามารถ: ${c.indicator||"-"}
 ข้อความตัวชี้วัด/ความสามารถ: ${c.indicatorText||"-"}
 ประเภทตัวชี้วัด: ${c.classification||"-"}
+หน่วยการเรียนรู้: ${c.unitName||"-"}
 เรื่อง: ${c.topic||"-"}
 เวลา: ${c.duration||"-"}
-รูปแบบการเรียนรู้: ${c.method||"-"}${c.context?`\nบริบทเพิ่มเติม: ${c.context}`:""}`
+รูปแบบการเรียนรู้: ${c.method||"-"}
+ระดับรายละเอียด: ${c.detailLevel||"กระชับพร้อมใช้"}${c.context?`\nบริบทเพิ่มเติม: ${c.context}`:""}${teacherPromptBlock(c.teacher)}`
 }
 function promptFor(tool,c){
   const base=promptHeader(c);
   const detail=optionValue("optDetail","กระชับพร้อมใช้");
   if(tool==="lesson"){
-    return `${base}
+    return `${promptHeader(c)}
 
-งานที่ต้องการ: แผนการจัดการเรียนรู้หน้าเดียว
+งานที่ต้องการ:
+สร้าง “ภาพแผนการจัดการเรียนรู้หน้าเดียว” ภาษาไทย สำหรับครูไทย โดยเนื้อหาต้องถูกต้องตามตัวชี้วัดและสามารถใช้สอนได้จริง ไม่ใช่อินโฟกราฟิกตกแต่งอย่างเดียว
 
-ข้อกำหนด:
-1. จัดทำเป็น “แผนการสอนหน้าเดียว” ภาษาไทย อ่านง่าย กระชับ แต่ข้อมูลครบและนำไปใช้สอนได้จริง
-2. ประกอบด้วย สาระสำคัญ/ความคิดรวบยอด, จุดประสงค์การเรียนรู้, สาระการเรียนรู้, สมรรถนะ/คุณลักษณะที่เกี่ยวข้อง, ขั้นตอนกิจกรรมการเรียนรู้, สื่อ/แหล่งเรียนรู้ และการวัดประเมินผล
-3. กิจกรรมต้องสอดคล้องกับตัวชี้วัดและรูปแบบ ${c.method}
-4. กำหนดเวลาในแต่ละช่วงให้เหมาะกับ ${c.duration}
-5. การประเมินต้องบอก วิธีการ เครื่องมือ และเกณฑ์ผ่านอย่างชัดเจน
-6. ห้ามแต่งรหัสตัวชี้วัดใหม่ และไม่ใส่ข้อมูลที่ไม่สัมพันธ์กับระดับชั้น
-7. ระดับรายละเอียด: ${detail}
+OUTPUT:
+- A4 แนวตั้ง / Vertical One-Page Lesson Plan
+- อัตราส่วน 2:3
+- High Resolution, Print Ready, Canva Ready
+- ภาษาไทยทั้งหมด ยกเว้นชื่อรูปแบบการเรียนรู้ที่จำเป็น
+- จัดข้อมูลทั้งหมดให้อยู่ในหน้าเดียวอย่างอ่านง่าย ไม่แน่นเกินไป
 
-จัดคำตอบให้ครูสามารถคัดลอกไปใช้หรือจัดหน้าเป็นเอกสารหน้าเดียวได้ทันที`;
+เนื้อหาที่ต้องมีบนแผน:
+1. ข้อมูลหัวแผน: กลุ่มสาระ ระดับชั้น หน่วยการเรียนรู้ เรื่อง เวลา และข้อมูลผู้สอนเท่าที่ให้มา
+2. มาตรฐานการเรียนรู้ / ตัวชี้วัด โดยคงรหัสและข้อความเดิม ห้ามแต่ง ห้ามเปลี่ยน
+3. สาระสำคัญ / ความคิดรวบยอด
+4. จุดประสงค์การเรียนรู้ที่สังเกตและประเมินได้ และเชื่อมกับตัวชี้วัด
+5. สาระการเรียนรู้
+6. สมรรถนะสำคัญและคุณลักษณะที่เกี่ยวข้องเท่าที่เหมาะสม
+7. ขั้นตอนกิจกรรมการเรียนรู้ตาม “${c.method}” พร้อมแบ่งเวลาให้รวมเหมาะสมกับ ${c.duration}
+8. สื่อ / อุปกรณ์ / แหล่งเรียนรู้
+9. การวัดและประเมินผล โดยระบุ วิธีการ เครื่องมือ และเกณฑ์ผ่านให้สัมพันธ์กับจุดประสงค์และตัวชี้วัด
+
+หลักการออกแบบกิจกรรม:
+- กิจกรรมทุกขั้นต้องเหมาะกับ ${c.grade} และนำไปทำได้จริง
+- ห้ามใช้กิจกรรมกว้าง ๆ ที่ไม่สัมพันธ์กับตัวชี้วัด
+- ถ้ามีบริบทผู้เรียน ให้ปรับกิจกรรมตามบริบทนั้น
+- เขียนกระชับพอสำหรับหน้าเดียว แต่ห้ามตัดสาระสำคัญจนไม่สามารถใช้เป็นแผนจริง
+
+STYLE ที่เลือก:
+“${c.styleTitle}”
+${c.styleInstruction}
+
+DESIGN & LAYOUT RULES:
+- ใช้ Visual Hierarchy ชัดเจน: ชื่อแผน > หัวข้อ Section > เนื้อหา
+- แบ่งข้อมูลเป็นการ์ด/Section ที่มีขอบเขตชัด อ่านตามลำดับได้ทันที
+- เว้น White Space ให้เพียงพอ ห้ามยัดข้อความ
+- Activity Steps ควรมี flow หรือลำดับที่มองเห็นง่าย
+- ใช้ไอคอนการศึกษาได้อย่างพอดี แต่ห้ามไอคอนหรือวัตถุตกแต่งบังข้อความ
+- องค์ประกอบตกแต่งต้องสนับสนุนการอ่าน ไม่ใช่แย่งจุดเด่น
+- ถ้าเป็นสไตล์ 3D ให้ใช้ 3D เฉพาะองค์ประกอบประกอบฉาก/ไอคอน ไม่ทำให้เนื้อหาอ่านยาก
+- ต้องดูสวยสะดุดตา แต่ยังเป็นเอกสารทางการศึกษาที่ครูนำไปใช้จริงได้
+
+THAI TYPOGRAPHY:
+- ตัวอักษรไทยต้องคมชัด อ่านง่าย และไม่ผิดรูป
+- Body text ห้ามใช้ฟอนต์ตกแต่งที่อ่านยาก
+- ห้ามสร้างข้อความไทยมั่วหรือ placeholder
+- ให้ความสำคัญกับความถูกต้องของข้อความมากกว่าเอฟเฟกต์ภาพ
+
+สำคัญมาก:
+- คงรหัสและข้อความตัวชี้วัดตามข้อมูลที่ให้
+- ห้ามสร้างข้อมูลผู้สอน/โรงเรียนขึ้นเองหากไม่ได้ให้
+- ผลลัพธ์สุดท้ายต้องทำหน้าที่เป็น “แผนการสอนหน้าเดียวจริง” ที่สวยงาม พร้อมนำไปใช้/พิมพ์/แก้ไขต่อได้`;
   }
   if(tool==="worksheet"){
     const type=optionValue("optType","เติมคำ");
@@ -524,6 +667,7 @@ if($("smartCreateBtn"))$("smartCreateBtn").onclick=buildSmartContinuePrompt;
 
 $("generateBtn").onclick=()=>{
   try{
+    selectedTool="lesson";
     const t=TOOLS.find(x=>x.id===selectedTool);
     if(!t){toast("กรุณาเลือกสิ่งที่ต้องการสร้างก่อน");return}
     if(!$("topic").value.trim()){toast("กรุณาระบุเรื่องที่จะสอน");$("topic").focus();return}
@@ -546,7 +690,7 @@ $("generateBtn").onclick=()=>{
 $("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText($("promptText").textContent);toast("คัดลอก Prompt แล้ว ✓")}catch{toast("คัดลอกอัตโนมัติไม่ได้")}};$("savePrompt").onclick=()=>toast(currentUser?"บันทึกในประวัติแล้ว":"เข้าสู่ระบบเพื่อบันทึกประวัติ");async function logPrompt(tool,c,p){if(!supabaseClient||!currentUser||currentProfile?.status!=="active")return;const title=TOOLS.find(x=>x.id===tool)?.title||tool;const {error}=await supabaseClient.from("prompt_history").insert({user_id:currentUser.id,product_type:tool,title,grade:c.grade,subject:c.subject,indicator_code:c.r.indicator,indicator_text:c.r.indicator_text,topic:c.topic,prompt_text:p});if(error)console.error("prompt_history",error)}
 function savePrefs(){localStorage.setItem("klangPrefs",JSON.stringify({stage:ACTIVE_STAGE,grade:$("grade").value,subject:$("subject").value}))}function restorePrefs(){try{const p=JSON.parse(localStorage.getItem("klangPrefs")||"{}");if(p.stage&&grades[p.stage])ACTIVE_STAGE=p.stage}catch{}}
 // ADMIN
-function requireAdmin(){return currentProfile?.role==="admin"&&currentProfile?.status==="active"}
+function requireAdmin(){return currentProfile?.role==="admin"}
 document.querySelectorAll("[data-admin]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".admin-pane").forEach(x=>x.classList.toggle("active",x.id==="admin-"+b.dataset.admin))});
 async function loadAdmin(){if(!backendReady()){$("backendWarning").style.display="block";return}if(!requireAdmin()){$("backendWarning").style.display="block";$("backendWarning").textContent="กรุณาเข้าสู่ระบบด้วยบัญชี Admin ที่เปิดใช้งานแล้ว";return}$("backendWarning").style.display="none";const [{data:profiles,error:pe},{data:requests,error:re},{count:phCount},{data:invites,error:ie},{data:usage,error:ue}]=await Promise.all([supabaseClient.from("profiles").select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,membership_started_at,membership_expires_at,created_at").order("created_at",{ascending:false}),supabaseClient.from("membership_requests").select("id,user_id,requested_role,status,invite_code,note,payment_reference,created_at,reviewed_at").order("created_at",{ascending:false}),supabaseClient.from("prompt_history").select("id",{count:"exact",head:true}),supabaseClient.from("invite_codes").select("id,code,label,target_role,is_active,max_uses,used_count,expires_at,created_at").order("created_at",{ascending:false}),supabaseClient.from("prompt_history").select("created_at,product_type,title,grade,subject,indicator_code,user_id").order("created_at",{ascending:false}).limit(100)]);if(pe||re||ie||ue)console.error("admin load",pe||re||ie||ue);const pendingByUser={};(requests||[]).filter(r=>r.status==="pending").forEach(r=>{if(!pendingByUser[r.user_id])pendingByUser[r.user_id]=r});renderMembers(profiles||[],pendingByUser);renderInvites(invites||[]);renderUsage(usage||[]);$("kAll").textContent=profiles?.length||0;$("kPending").textContent=(profiles||[]).filter(x=>x.status==="pending").length;$("kVip").textContent=(profiles||[]).filter(x=>x.role==="vip"&&x.status==="active").length;$("kPrompts").textContent=phCount||0}
 function renderMembers(a,pendingByUser=window._pendingByUser||{}){window._profilesAll=a;window._pendingByUser=pendingByUser;const q=$("memberSearch").value?.toLowerCase()||"",view=a.filter(x=>!q||[x.full_name,x.email,x.school_name,x.phone,x.facebook_name].join(" ").toLowerCase().includes(q));$("memberRows").innerHTML=view.map(x=>{const req=pendingByUser[x.id],requested=req?.requested_role||x.requested_role||"member",expiry=x.membership_expires_at?new Date(x.membership_expires_at).toLocaleDateString("th-TH"):"—";return `<tr><td><b>${x.full_name||"-"}</b><br>${x.email||"-"}<br><small>${x.phone||""}</small></td><td>${x.school_name||"-"}</td><td><span class="status ${x.status}">${x.status}</span></td><td>${x.role}${x.status==="pending"?`<br><small>ขอ: ${requested.toUpperCase()}</small>`:""}</td><td>${expiry}</td><td><div class="admin-actions">${x.status==="pending"?`<button class="btn btn-blue mini" onclick="approveMember('${x.id}','member','${req?.id||""}')">อนุมัติ Member</button><button class="btn btn-gold mini" onclick="approveMember('${x.id}','vip','${req?.id||""}')">อนุมัติ VIP</button>`:""}<button class="btn btn-ghost mini" onclick="setMemberStatus('${x.id}','active','${x.role}','${req?.id||""}')">Active</button><button class="btn btn-red mini" onclick="setMemberStatus('${x.id}','suspended','${x.role}','${req?.id||""}')">ระงับ</button></div></td></tr>`}).join("")}
@@ -557,8 +701,51 @@ $("createInvite").onclick=async()=>{if(!requireAdmin()){toast("ต้องเ�
 function renderInvites(a){$("inviteRows").innerHTML=a.map(x=>{const link=`${CFG.siteUrl||location.origin}/?invite=${x.code}`;return `<tr><td><b>${x.code}</b>${x.label?`<br><small>${x.label}</small>`:""}</td><td>${x.target_role}</td><td>${x.used_count||0}/${x.max_uses??"∞"}</td><td>${x.expires_at?new Date(x.expires_at).toLocaleDateString("th-TH"):"—"}</td><td><button class="btn btn-ghost mini" onclick="navigator.clipboard.writeText('${link}');toast('คัดลอกแล้ว')">คัดลอก</button></td></tr>`}).join("")}
 function renderUsage(a){$("usageRows").innerHTML=a.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString("th-TH")}</td><td>${x.user_id.slice(0,8)}…</td><td>${x.product_type}</td><td>${x.grade} / ${x.subject}</td><td>${x.indicator_code||"—"}</td></tr>`).join("")}
 
+
+function updateConditionalFields(){
+  if($("customDuration"))$("customDuration").style.display=$("duration")?.value==="กำหนดเอง"?"block":"none";
+  if($("customMethod"))$("customMethod").style.display=$("method")?.value==="อื่น ๆ"?"block":"none";
+  renderSummary()
+}
+if($("duration"))$("duration").addEventListener("change",updateConditionalFields);
+if($("method"))$("method").addEventListener("change",updateConditionalFields);
+
+document.querySelectorAll("[data-detail]").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll("[data-detail]").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");$("detailLevel").value=btn.dataset.detail;renderSummary()
+});
+document.querySelectorAll("[data-style]").forEach(card=>card.onclick=()=>{
+  selectedStyle=card.dataset.style;
+  document.querySelectorAll("[data-style]").forEach(x=>{
+    x.classList.toggle("selected",x===card);
+    const e=x.querySelector(".style-info em");if(e)e.textContent=x===card?"✓ เลือกแล้ว":"เลือกสไตล์นี้"
+  });
+  renderSummary()
+});
+
+function readTeacherProfile(){
+  try{
+    const p=JSON.parse(localStorage.getItem("klangTeacherProfile")||"{}");
+    const map={teacherName:"name",teacherPosition:"position",schoolName:"school",organization:"organization",province:"province",semester:"semester",academicYear:"academicYear",studentCount:"studentCount"};
+    Object.entries(map).forEach(([id,key])=>{if($(id)&&p[key]!=null)$(id).value=p[key]});
+    if(Object.keys(p).length&&$("rememberTeacher"))$("rememberTeacher").checked=true
+  }catch(e){console.error("teacher profile",e)}
+}
+function persistTeacherProfile(){
+  if(!$("rememberTeacher"))return;
+  if(!$("rememberTeacher").checked){localStorage.removeItem("klangTeacherProfile");return}
+  localStorage.setItem("klangTeacherProfile",JSON.stringify(teacherData()))
+}
+if($("rememberTeacher"))$("rememberTeacher").addEventListener("change",persistTeacherProfile);
+["teacherName","teacherPosition","schoolName","organization","province","semester","academicYear","studentCount"].forEach(id=>{
+  const el=$(id);if(el)el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{if($("rememberTeacher")?.checked)persistTeacherProfile()})
+});
+readTeacherProfile();
+updateConditionalFields();
+revealFlowAfterTool(false);
+
 if($("adminRefresh"))$("adminRefresh").onclick=()=>loadAdmin();
-if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="lesson";go("generator");renderTools();renderOptions();revealFlowAfterTool(true);toast("Admin Test Mode: ใช้งานเครื่องมือทุกระดับได้")};
+if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="lesson";go("generator");renderTools();renderOptions();revealFlowAfterTool(true);toast("Admin Test Mode: ทดสอบ Lesson Plan และเครื่องมือต่อยอดได้ทุกระดับ")};
 if($("adminCreateVipInvite"))$("adminCreateVipInvite").onclick=async()=>{
   if(!requireAdmin()){toast("ต้องเป็น Admin");return}
   const expires=new Date(Date.now()+30*86400000).toISOString();
