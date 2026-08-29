@@ -81,34 +81,33 @@ async function createInvite(opts){
   if(error)throw error;
   return Array.isArray(data)?data[0]:data
 }
-$("quickCreateBtn").onclick=async()=>{
-  const btn=$("quickCreateBtn");btn.disabled=true;
+async function createOneTapInvite(btn){
+  if(btn)btn.disabled=true;
   try{
     const days=Number($("qDays")?.value||30);
-    const price=$("qPrice")?.value||"";
-    const source=$("qSource")?.value||"";
-    const campaign=$("qCampaign")?.value?.trim()||"";
     const row=await createInvite({
-      label:`Paid member ${new Date().toLocaleString("th-TH")}`,
+      label:`Member invite ${new Date().toLocaleString("th-TH")}`,
       maxUses:1,
       expiresAt:new Date(Date.now()+days*86400000).toISOString(),
       autoActivate:true,
       inviteType:"private_paid",
-      source,
-      campaign,
-      price,
-      note:"ตรวจสลิปแล้ว"
+      source:$("qSource")?.value||"",
+      campaign:$("qCampaign")?.value?.trim()||"",
+      price:$("qPrice")?.value||"",
+      note:"Admin generated invite"
     });
-    currentQuickLink=`${CFG.siteUrl||location.origin}/?invite=${row.code}`;
+    currentQuickLink=`${CFG.siteUrl||location.origin}/teacher.html?invite=${encodeURIComponent(row.code)}`;
     $("quickLink").textContent=currentQuickLink;
     $("quickResult").style.display="block";
     try{await navigator.clipboard.writeText(currentQuickLink)}catch{}
-    toast("สร้างลิงก์และคัดลอกแล้ว ✓");
+    openTab("quick");
+    toast("สร้างลิงก์เชิญและคัดลอกแล้ว ✓");
     await loadAll()
-  }catch(e){
-    console.error(e);toast(e.message||"สร้างลิงก์ไม่สำเร็จ")
-  }finally{btn.disabled=false}
-};
+  }catch(e){console.error(e);toast(e.message||"สร้างลิงก์เชิญไม่สำเร็จ")}
+  finally{if(btn)btn.disabled=false}
+}
+$("quickCreateBtn").onclick=()=>createOneTapInvite($("quickCreateBtn"));
+$("topQuickInviteBtn")?.addEventListener("click",()=>createOneTapInvite($("topQuickInviteBtn")));
 $("copyQuickLink").onclick=async()=>{if(!currentQuickLink)return;try{await navigator.clipboard.writeText(currentQuickLink);toast("คัดลอกแล้ว ✓")}catch{toast("คัดลอกไม่สำเร็จ")}};
 $("newQuickInvite").onclick=()=>{$("quickResult").style.display="none";$("quickCreateBtn").focus()};
 $("refreshQuick").onclick=loadAll;
@@ -116,7 +115,7 @@ $("refreshQuick").onclick=loadAll;
 function renderRecent(){
   const a=invites.filter(x=>x.invite_type==="private_paid").slice(0,8);
   $("recentInviteList").innerHTML=a.map(x=>{
-    const link=`${CFG.siteUrl||location.origin}/?invite=${x.code}`;
+    const link=`${CFG.siteUrl||location.origin}/teacher.html?invite=${x.code}`;
     return `<div class="invite-row"><div class="row-main"><b>${esc(x.label||x.code)}</b><small>${esc(x.code)} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้แล้ว ${x.used_count||0}/${x.max_uses??"∞"} • หมดอายุ ${d(x.expires_at)}</em></div><div class="row-actions"><button class="mini-btn" data-copy="${esc(link)}">คัดลอก</button></div></div>`
   }).join("")||'<div class="invite-row"><div class="row-main"><small>ยังไม่มีลิงก์</small></div></div>';
   $("recentInviteList").querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.copy);toast("คัดลอกแล้ว ✓")})
@@ -177,7 +176,7 @@ $("createPromoBtn").onclick=async()=>{
 };
 function renderInvites(){
   $("inviteHistory").innerHTML=invites.map(x=>{
-    const link=`${CFG.siteUrl||location.origin}/?invite=${x.code}`;
+    const link=`${CFG.siteUrl||location.origin}/teacher.html?invite=${x.code}`;
     const type=x.invite_type==="private_paid"?"💳 หลังชำระเงิน":x.invite_type==="public_promo"?"🎟️ โปรโมชั่น":x.invite_type||"—";
     return `<div class="invite-row"><div class="row-main"><b>${type} • ${esc(x.code)}</b><small>${esc(x.label||"—")} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้ ${x.used_count||0}/${x.max_uses??"∞"} • หมดอายุ ${d(x.expires_at)} • ${x.auto_activate?"Auto Active":"Pending"}</em></div><button class="mini-btn" data-hcopy="${esc(link)}">คัดลอก</button></div>`
   }).join("")||'<div class="invite-row">ยังไม่มีลิงก์</div>';

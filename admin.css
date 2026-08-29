@@ -21,3 +21,8 @@
 
 .mode-switch-user{font:inherit;cursor:pointer}
 .mode-switch-user:active{transform:translateY(1px)}
+
+.admin-invite-quick-bar{position:sticky;top:68px;z-index:18;background:linear-gradient(135deg,#0b7cff,#6537ff);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 20px rgba(50,65,170,.2)}
+.admin-invite-quick-bar>div{display:flex;align-items:center;gap:8px}.admin-invite-quick-bar b,.admin-invite-quick-bar small{display:block}.admin-invite-quick-bar small{font-size:.66rem;opacity:.85}
+.admin-invite-quick-bar button{border:0;background:linear-gradient(135deg,#ffe45b,#ff9b18);color:#3d3200;border-radius:12px;min-height:44px;padding:9px 14px;font-weight:950;box-shadow:0 4px 0 #d6750e;cursor:pointer}
+@media(max-width:850px){.admin-invite-quick-bar{padding:8px 10px}.admin-invite-quick-bar small{display:none}.admin-invite-quick-bar button{font-size:.72rem;padding:7px 10px}}
