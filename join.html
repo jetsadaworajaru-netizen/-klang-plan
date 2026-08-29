@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f6f9ff">
+  <title>สมัครสมาชิก Klang Plan</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/join.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+</head>
+<body>
+<header class="join-top">
+  <img src="/brand-logo.png" alt="Klang Plan">
+  <div><b>Klang Plan</b><small>คลังแผนการสอนหน้าเดียว</small></div>
+</header>
+
+<main class="join-wrap">
+  <section class="join-card">
+    <div class="join-badge">🎟️ ลิงก์เชิญสมาชิก</div>
+    <h1>สมัครสมาชิก Klang Plan</h1>
+    <p class="lead">กรอกข้อมูลของคุณครูเอง ใช้เวลาไม่ถึง 1 นาที</p>
+
+    <div id="inviteState" class="invite-state checking">
+      <span>🔎</span>
+      <div><b>กำลังตรวจลิงก์เชิญ</b><small>กรุณารอสักครู่</small></div>
+    </div>
+
+    <form id="joinForm" style="display:none">
+      <input id="inviteCode" type="hidden">
+
+      <label>ชื่อคุณครู
+        <input id="fullName" autocomplete="name" placeholder="ชื่อ-นามสกุล" required>
+      </label>
+
+      <label>อีเมล
+        <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="teacher@example.com" required>
+      </label>
+
+      <label>ตั้งรหัสผ่าน
+        <input id="password" type="password" autocomplete="new-password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" required>
+      </label>
+
+      <label>ยืนยันรหัสผ่าน
+        <input id="password2" type="password" autocomplete="new-password" minlength="6" placeholder="กรอกรหัสผ่านอีกครั้ง" required>
+      </label>
+
+      <button id="joinBtn" class="join-btn" type="submit">
+        <span>✨</span><div><b>สมัครและเปิดใช้งาน Member</b><small>สำหรับลิงก์เชิญนี้</small></div>
+      </button>
+    </form>
+
+    <div id="joinMsg"></div>
+
+    <div id="successBox" class="success-box" style="display:none">
+      <div class="success-icon">✅</div>
+      <h2>สมัครสำเร็จ</h2>
+      <p id="successText">บัญชีพร้อมใช้งานแล้ว</p>
+      <a class="open-app-btn" href="/teacher.html">เปิด Klang Plan</a>
+    </div>
+
+    <div class="security-note">🔒 ลิงก์นี้สร้างโดย Admin และใช้สำหรับสมัครสมาชิก Klang Plan เท่านั้น</div>
+  </section>
+</main>
+<script src="/join.js"></script>
+</body>
+</html>

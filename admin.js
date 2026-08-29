@@ -96,7 +96,7 @@ async function createOneTapInvite(btn){
       price:$("qPrice")?.value||"",
       note:"Admin generated invite"
     });
-    currentQuickLink=`${CFG.siteUrl||location.origin}/teacher.html?invite=${encodeURIComponent(row.code)}`;
+    currentQuickLink=`${CFG.siteUrl||location.origin}/join.html?invite=${encodeURIComponent(row.code)}`;
     $("quickLink").textContent=currentQuickLink;
     $("quickResult").style.display="block";
     try{await navigator.clipboard.writeText(currentQuickLink)}catch{}
@@ -115,7 +115,7 @@ $("refreshQuick").onclick=loadAll;
 function renderRecent(){
   const a=invites.filter(x=>x.invite_type==="private_paid").slice(0,8);
   $("recentInviteList").innerHTML=a.map(x=>{
-    const link=`${CFG.siteUrl||location.origin}/teacher.html?invite=${x.code}`;
+    const link=`${CFG.siteUrl||location.origin}/join.html?invite=${x.code}`;
     return `<div class="invite-row"><div class="row-main"><b>${esc(x.label||x.code)}</b><small>${esc(x.code)} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้แล้ว ${x.used_count||0}/${x.max_uses??"∞"} • หมดอายุ ${d(x.expires_at)}</em></div><div class="row-actions"><button class="mini-btn" data-copy="${esc(link)}">คัดลอก</button></div></div>`
   }).join("")||'<div class="invite-row"><div class="row-main"><small>ยังไม่มีลิงก์</small></div></div>';
   $("recentInviteList").querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.copy);toast("คัดลอกแล้ว ✓")})
@@ -176,7 +176,7 @@ $("createPromoBtn").onclick=async()=>{
 };
 function renderInvites(){
   $("inviteHistory").innerHTML=invites.map(x=>{
-    const link=`${CFG.siteUrl||location.origin}/teacher.html?invite=${x.code}`;
+    const link=`${CFG.siteUrl||location.origin}/join.html?invite=${x.code}`;
     const type=x.invite_type==="private_paid"?"💳 หลังชำระเงิน":x.invite_type==="public_promo"?"🎟️ โปรโมชั่น":x.invite_type||"—";
     return `<div class="invite-row"><div class="row-main"><b>${type} • ${esc(x.code)}</b><small>${esc(x.label||"—")} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้ ${x.used_count||0}/${x.max_uses??"∞"} • หมดอายุ ${d(x.expires_at)} • ${x.auto_activate?"Auto Active":"Pending"}</em></div><button class="mini-btn" data-hcopy="${esc(link)}">คัดลอก</button></div>`
   }).join("")||'<div class="invite-row">ยังไม่มีลิงก์</div>';
