@@ -1,28 +1,26 @@
-KLANG PLAN V8.5.1 — INTERACTION HOTFIX
+KLANG PLAN V8.6 — FAILSAFE MEMBER CORE
 
-อาการ:
-- หน้า “สร้างแผน” เปิดได้ แต่กดช่วงชั้น/ระดับชั้น/ตัวชี้วัด/ปุ่มต่าง ๆ ไม่ได้
-- ช่องข้อมูลค้างที่ “กำลังโหลดข้อมูล...”
+ปัญหาที่แก้:
+หน้า Member เปิดได้ แต่ปุ่มช่วงชั้น/ระดับชั้น/ตัวชี้วัด/สร้าง Prompt ไม่ตอบสนอง
 
-สาเหตุ:
-V8.4/V8.5 ลบหน้า Login และ Admin เก่าออกจาก member-app.html แล้ว
-แต่ app.js ยังมี event handler เก่าบางส่วนที่อ้าง element เหล่านั้นโดยตรง
-JavaScript จึงหยุดทำงานก่อนเริ่มโหลด data.json และก่อนผูก event ของตัวเลือกหลักสูตร
+แนวทาง V8.6:
+- เพิ่ม member-core.js เป็นแกนใช้งานอิสระจาก app.js เดิม
+- แม้ app.js เดิมมี runtime error สคริปต์ใหม่ยังทำงานต่อได้
+- member-core.js ดูแลโดยตรง:
+  1. ปฐมวัย / ประถม / มัธยม
+  2. ระดับชั้น
+  3. กลุ่มสาระ / ด้าน
+  4. ค้นหา + เลือกตัวชี้วัด
+  5. รายละเอียดแผน
+  6. สไตล์ / โทนสี
+  7. สร้าง Prompt
+  8. คัดลอก Prompt
+  9. สร้างต่อ: ใบงาน / แบบทดสอบ / ใบความรู้ / Rubric / เกม / Teaching Pack
+  10. แท็บด้านบน
+  11. เปิด ChatGPT / Gemini / Claude / Canva
+- data.json ใช้ cache bust v=860
+- เพิ่ม no-cache ให้ member-core.js / app.js / styles.css / data.json
+- เพิ่ม touch-action และ pointer-events สำหรับ Safari/Messenger
 
-แก้ไข:
-- ทำ compatibility guard สำหรับ legacy element ที่ไม่ใช้แล้ว เพื่อไม่ให้ JS crash
-- ตรวจ direct element references ใน member-app.html แล้ว
-- เพิ่ม cache bust app.js/styles.css เป็น v=851
-- data.json no-cache
-- เพิ่มข้อความ fallback หากโหลด curriculum ไม่สำเร็จ
-- app.js/admin.js/join.js ผ่าน node --check
-
-หลัง Deploy:
-1. ปิดหน้า Messenger/Safari เดิม
-2. เปิด teacher.html ใหม่
-3. Login
-4. ทดสอบ ปฐมวัย > ระดับชั้น > กลุ่มสาระ > ตัวชี้วัด
-5. ทดสอบสร้าง Prompt
-
-Teacher:
+หลัง Deploy ต้องปิดหน้าเดิมแล้วเปิดใหม่:
 https://klang-plan.pages.dev/teacher.html
