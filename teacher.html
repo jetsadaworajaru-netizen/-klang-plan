@@ -17,6 +17,10 @@
   .member-login-title{font-size:1.7rem;margin:8px 0 5px}.member-login-sub{margin:0 0 18px;color:#7d8d9c}
   .member-login-card label{display:grid;gap:6px;font-weight:800;margin:12px 0;color:#355c7f}
   .member-login-card input{min-height:52px;border:1px solid #ccdbe7;border-radius:14px;padding:0 14px;font:inherit;font-size:16px}
+  .member-id-input-wrap{display:flex;align-items:center;min-height:52px;border:1px solid #ccdbe7;border-radius:14px;background:#fff;overflow:hidden}
+  .member-id-prefix{height:52px;display:flex;align-items:center;padding:0 13px;background:#eef4fb;color:#3d6487;font-weight:900;border-right:1px solid #d4e1ec;flex:0 0 auto}
+  .member-id-input-wrap input{border:0!important;border-radius:0!important;min-width:0;flex:1;outline:none!important;box-shadow:none!important}
+
   .member-login-btn{width:100%;min-height:54px;border:0;border-radius:15px;margin-top:10px;background:linear-gradient(135deg,#1da0ff,#6155ed);color:#fff;font:inherit;font-weight:900;font-size:1.02rem}
   .member-login-note{margin-top:14px;padding:10px 12px;border-radius:12px;background:#f4f7fb;color:#6f8193;font-size:.72rem;text-align:center}
   .member-login-msg{margin-top:10px}.member-login-msg .warn{padding:10px 12px;border-radius:11px;background:#fff0f0;color:#a64e4e}
@@ -36,7 +40,11 @@
     <p class="member-login-sub">ใช้ Member ID และรหัสผ่าน 6 หลัก</p>
 
     <label>Member ID
-      <input id="memberId" type="text" inputmode="text" autocapitalize="characters" autocomplete="username" placeholder="เช่น KP-M482910">
+      <div class="member-id-input-wrap">
+        <span class="member-id-prefix">KP-M</span>
+        <input id="memberId" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="550939" aria-label="เลขสมาชิก 6 หลัก">
+      </div>
+      <small style="font-weight:500;color:#8a99a8">กรอกเฉพาะเลขสมาชิก 6 หลัก ระบบใส่ KP-M ให้แล้ว</small>
     </label>
 
     <label>รหัสผ่าน 6 หลัก
@@ -55,8 +63,9 @@
 <script>
 (()=>{
   const $=id=>document.getElementById(id);
-  const key=window.KLANG_PLAN_CONFIG?.supabasePublishableKey||window.KLANG_PLAN_CONFIG?.supabaseAnonKey||"";
-  const url=window.KLANG_PLAN_CONFIG?.supabaseUrl||"";
+  const CFG=window.KLANG_CONFIG||{};
+  const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey||"";
+  const url=CFG.supabaseUrl||"";
   if(!window.supabase||!url||!key){
     $("memberLoginMsg").innerHTML='<div class="warn">ระบบสมาชิกยังไม่พร้อม กรุณาติดต่อ Admin</div>';
     return;
@@ -65,7 +74,10 @@
   const show=(text,ok=false)=>$("memberLoginMsg").innerHTML=`<div class="${ok?"ok":"warn"}">${text}</div>`;
 
   const remembered=localStorage.getItem("klangRememberMemberId");
-  if(remembered)$("memberId").value=remembered;
+  if(remembered){
+    const m=String(remembered).toUpperCase().match(/KP-M(\d{6})/);
+    $("memberId").value=m?m[1]:String(remembered).replace(/\D/g,"").slice(-6);
+  }
 
   async function checkExisting(){
     const {data}=await sb.auth.getSession();
@@ -80,10 +92,12 @@
   }
 
   $("memberLoginBtn").onclick=async()=>{
-    const memberId=$("memberId").value.trim().toUpperCase();
+    const rawMember=$("memberId").value.trim().toUpperCase();
     const pin=$("memberPin").value.trim();
-    if(!/^KP-M\d{6}$/.test(memberId)){show("กรุณากรอก Member ID ให้ถูกต้อง เช่น KP-M482910");return}
+    const digits=(rawMember.match(/KP-M(\d{6})/)||rawMember.match(/^(\d{6})$/))?.[1]||"";
+    if(!digits){show("กรุณากรอกเลขสมาชิก 6 หลักหลัง KP-M เช่น 550939");return}
     if(!/^\d{6}$/.test(pin)){show("รหัสผ่านต้องเป็นตัวเลข 6 หลัก");return}
+    const memberId=`KP-M${digits}`;
     $("memberLoginBtn").disabled=true;
     show("กำลังเข้าสู่ระบบ...",true);
     const email=`${memberId.toLowerCase()}@members.klangplan.app`;
