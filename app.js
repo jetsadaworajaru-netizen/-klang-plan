@@ -122,7 +122,7 @@ if($("mobileAccountBtn"))$("mobileAccountBtn").onclick=()=>{
   closeMobileMenus();
   if(currentUser)logout();else openAuth("login")
 };
-if($("mobileAdminBtn"))$("mobileAdminBtn").onclick=()=>{closeMobileMenus();location.href="/admin-panel.html"};
+location.href="/admin-panel.html"};
 document.querySelectorAll("[data-mobile-go]").forEach(btn=>btn.onclick=()=>go(btn.dataset.mobileGo));
 
 document.addEventListener("click",e=>{
@@ -156,33 +156,81 @@ function makeTapSafe(root=document){
   })
 }
 makeTapSafe();
-function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||CFG.supabaseAnonKey)&&window.supabase)}function initBackend(){if(!backendReady()){$("backendWarning").style.display="block";return}const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey;supabaseClient=window.supabase.createClient(CFG.supabaseUrl,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});supabaseClient.auth.getSession().then(({data})=>applySession(data.session));supabaseClient.auth.onAuthStateChange((_e,s)=>applySession(s))}async function applySession(session){currentUser=session?.user||null;currentProfile=null;if(currentUser){const {data,error}=await supabaseClient.from("profiles").select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,member_id,membership_started_at,membership_expires_at,approved_at,created_at").eq("id",currentUser.id).maybeSingle();if(error)console.error(error);currentProfile=data||null;
-    const pendingInvite=localStorage.getItem("klangPendingInvite");
-    if(pendingInvite&&currentProfile&&!currentProfile.invite_code){
-      const {data:claimed,error:claimError}=await supabaseClient.rpc("claim_member_invite",{p_code:pendingInvite});
-      if(!claimError&&claimed){currentProfile=Array.isArray(claimed)?claimed[0]:claimed;localStorage.removeItem("klangPendingInvite")}
-      else if(claimError)console.error("claim invite",claimError)
+function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||CFG.supabaseAnonKey)&&window.supabase)}function initBackend(){if(!backendReady()){$("backendWarning").style.display="block";return}const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey;supabaseClient=window.supabase.createClient(CFG.supabaseUrl,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-member-auth"}});supabaseClient.auth.getSession().then(({data})=>applySession(data.session));supabaseClient.auth.onAuthStateChange((_e,s)=>applySession(s))}async function applySession(session){
+  currentUser=session?.user||null;
+  currentProfile=null;
+
+  if(currentUser){
+    const {data,error}=await supabaseClient.from("profiles")
+      .select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,member_id,membership_started_at,membership_expires_at,approved_at,created_at")
+      .eq("id",currentUser.id).maybeSingle();
+
+    if(error){console.error("profile",error)}
+    currentProfile=data||null;
+
+    // Teacher site accepts active Member only. Admin session must never bleed into this UI.
+    if(!currentProfile || currentProfile.role==="admin" || currentProfile.status!=="active"){
+      await supabaseClient.auth.signOut();
+      currentUser=null;currentProfile=null;
+      renderAuthState();
+      lockMemberApp();
+      return;
     }
-  }
-  if(currentUser&&currentProfile?.role!=="admin"){
+
     const ok=await enforceDeviceLimit();
-    if(!ok)return;
+    if(!ok){lockMemberApp();return}
   }
-  renderAuthState()}
-function renderAuthState(){const chip=$("memberChip"),admin=$("adminBtn"),btn=$("authBtn");if(!btn)return;if(!currentUser){if(chip)chip.style.display="none";if(admin)admin.style.display="none";if($("adminUserModeBar"))$("adminUserModeBar").style.display="none";btn.textContent="เข้าสู่ระบบ";if(btn.tagName==="A"){btn.setAttribute("href","#authModal");btn.onclick=null}else btn.onclick=()=>openAuth("login");if($("mobileAdminBtn"))$("mobileAdminBtn").style.display="none";document.body.classList.remove("auth-resolving");$("authResolvingBar")?.remove();return}if(chip)chip.style.display="inline-block";const role=currentProfile?.role||"member",status=currentProfile?.status||"pending";if(chip)chip.textContent=currentProfile?`${currentProfile.full_name||currentProfile.member_id||"สมาชิก"}${status!=="active"?` · ${status}`:""}`:currentUser.email;if(admin)admin.style.display=(currentProfile?.role==="admin")?"inline-flex":"none";if($("adminUserModeBar"))$("adminUserModeBar").style.display=currentProfile?.role==="admin"?"flex":"none";
-const testBadge=$("adminTestBadge");if(testBadge)testBadge.style.display=currentProfile?.role==="admin"?"inline-flex":"none";
-const isAdmin=currentProfile?.role==="admin";
-if(isAdmin){
-  btn.textContent="กลับหลังบ้าน";
-  if(btn.tagName==="A"){btn.setAttribute("href","/admin-panel.html");btn.onclick=null}else btn.onclick=()=>location.href="/admin-panel.html";
-}else{
-  btn.textContent="ออกจากระบบ";
-  if(btn.tagName==="A"){btn.setAttribute("href","#");btn.onclick=(e)=>{e.preventDefault();logout()}}else btn.onclick=logout;
+
+  renderAuthState();
+
+  if(currentUser&&currentProfile?.role==="member"&&currentProfile?.status==="active"){
+    unlockMemberApp()
+  }else{
+    lockMemberApp()
+  }
 }
-if($("mobileAdminBtn"))$("mobileAdminBtn").style.display=isAdmin?"flex":"none";
-document.body.classList.remove("auth-resolving");$("authResolvingBar")?.remove()
+function lockMemberApp(){
+  document.body.classList.add("member-auth-locked");
+  document.body.classList.remove("member-auth-ready","member-auth-pending");
+  setTimeout(()=>openAuth("login"),0)
 }
-async function logout(){if(supabaseClient)await supabaseClient.auth.signOut();currentUser=null;currentProfile=null;renderAuthState();go("home")}
+function unlockMemberApp(){
+  document.body.classList.remove("member-auth-locked","member-auth-pending");
+  document.body.classList.add("member-auth-ready");
+  if(window.KlangAuthFallback)window.KlangAuthFallback.close();
+  else $("authModal")?.classList.remove("open")
+}
+function renderAuthState(){
+  const chip=$("memberChip"),btn=$("authBtn");
+  const logged=!!(currentUser&&currentProfile?.role==="member"&&currentProfile?.status==="active");
+
+  if(!logged){
+    if(chip)chip.style.display="none";
+    if(btn){
+      btn.textContent="เข้าสู่ระบบ";
+      if(btn.tagName==="A"){btn.setAttribute("href","#authModal");btn.onclick=null}
+      else btn.onclick=()=>openAuth("login")
+    }
+    return
+  }
+
+  if(chip){
+    chip.style.display="inline-block";
+    chip.textContent=currentProfile?.full_name||currentProfile?.member_id||"สมาชิก"
+  }
+  if(btn){
+    btn.textContent="ออกจากระบบ";
+    if(btn.tagName==="A"){
+      btn.setAttribute("href","#");
+      btn.onclick=e=>{e.preventDefault();logout()}
+    }else btn.onclick=logout
+  }
+}
+async function logout(){
+  if(supabaseClient)await supabaseClient.auth.signOut();
+  currentUser=null;currentProfile=null;
+  renderAuthState();go("home");lockMemberApp()
+}
 function openAuth(tab="login"){
   if(window.KlangAuthFallback){window.KlangAuthFallback.open(tab);return}
   const m=$("authModal");if(!m)return;m.classList.add("open");m.style.display="flex";switchAuth(tab)
@@ -218,22 +266,14 @@ $("loginBtn").onclick=async()=>{
   if(error){msg("loginMsg","Member ID หรือรหัสผ่านไม่ถูกต้อง","warn");return}
   localStorage.setItem("klangRememberMemberId",loginId);
   await applySession(data.session);
-  const p=currentProfile;
-  if(["suspended","expired"].includes(p?.status))msg("loginMsg","บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อแอดมิน","warn");
-  else if(p?.status==="active"){
-    if(window.KlangAuthFallback)window.KlangAuthFallback.close();else $("authModal")?.classList.remove("open");
-    toast("เข้าสู่ระบบสำเร็จ")
-  }else msg("loginMsg","กำลังตรวจสอบสถานะสมาชิก กรุณาลองใหม่อีกครั้ง","warn")
+  if(currentUser&&currentProfile?.role==="member"&&currentProfile?.status==="active"){
+    toast("เข้าสู่ระบบสำเร็จ ✓")
+  }else{
+    msg("loginMsg","บัญชีนี้ไม่สามารถเข้าใช้งานเว็บครูได้ กรุณาติดต่อ Admin","warn")
+  }
 };
-$("registerBtn").onclick=async()=>{if(!backendReady()){msg("registerMsg","ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์","warn");return}const email=$("regEmail").value.trim(),password=$("regPassword").value,inviteCode=$("regInvite").value.trim(),teacherName=$("regName").value.trim();if(!email||!password||!teacherName||!inviteCode){msg("registerMsg","กรุณากรอกชื่อคุณครู อีเมล รหัสเข้ากลุ่ม และรหัสผ่านให้ครบ","warn");return}if(password.length<6){msg("registerMsg","รหัสผ่านควรมีอย่างน้อย 6 ตัวอักษร","warn");return}const meta={full_name:teacherName,school_name:"",phone:"",facebook_name:"",invite_code:inviteCode};const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:meta,emailRedirectTo:CFG.siteUrl||location.origin}});if(error){msg("registerMsg",error.message,"warn");return}if(data.session){
-  await applySession(data.session);
-  if(currentProfile?.status==="active"){msg("registerMsg","สมัครสำเร็จ ✓ เปิดสิทธิ์ Member แล้ว เข้าใช้งานได้ทันที","ok");setTimeout(()=>$("authModal").classList.remove("open"),900)}
-  else msg("registerMsg","สมัครสำเร็จ ✓ คำขออยู่ระหว่างรอแอดมินอนุมัติ","ok")
-}else msg("registerMsg","สมัครสำเร็จ ✓ หากได้รับอีเมลยืนยัน ให้กด 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ","ok")};function msg(id,t,type){$(id).innerHTML=`<div class="alert ${type}">${t}</div>`}
-const adminViewMode=new URLSearchParams(location.search).get("adminview")==="1";
-if(adminViewMode)sessionStorage.setItem("klangAdminUserView","1");
 const rememberedMemberId=localStorage.getItem("klangRememberMemberId");if(rememberedMemberId&&$("loginEmail"))$("loginEmail").value=rememberedMemberId;
-const invite=new URLSearchParams(location.search).get("invite");if(invite){$("regInvite").value=invite;setTimeout(()=>openAuth("register"),500)}
+const invite=new URLSearchParams(location.search).get("invite");
 function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=null);
 document.addEventListener("click",e=>{
   const b=e.target.closest(".stage-tab");
@@ -1453,6 +1493,7 @@ if($("adminOpenGenerator"))$("adminOpenGenerator").onclick=()=>{selectedTool="le
 
 
 
+initBackend();
 fetch("data.json",{cache:"no-store"})
 .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
 .then(d=>{
@@ -1462,7 +1503,7 @@ fetch("data.json",{cache:"no-store"})
   const p=JSON.parse(localStorage.getItem("klangPrefs")||"{}");
   if(p.grade&&[...$("grade").options].some(o=>o.value===p.grade)){$("grade").value=p.grade;buildSubjects()}
   if(p.subject&&[...$("subject").options].some(o=>o.value===p.subject)){$("subject").value=p.subject;buildIndicators()}
-  renderTools();renderSummary();initBackend()
+  renderTools();renderSummary()
 })
 .catch(e=>{
   console.error(e);

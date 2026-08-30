@@ -19,7 +19,7 @@ async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
     setState("bad","ระบบยังไม่พร้อม","ไม่สามารถเชื่อมระบบสมาชิกได้","⚠️");return
   }
-  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}});
   setState("ok","ลิงก์เชิญพร้อมใช้งาน",`รหัส ${invite} • คุณครูกรอกข้อมูลด้านล่างได้เลย`,"✅");
   $("joinForm").style.display="block"
 }

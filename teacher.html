@@ -3,7 +3,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="canonical" href="/teacher.html"><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="canonical" href="/teacher.html"><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body class="member-auth-pending">
 <header class="topbar v72-topbar v73-topbar">
   <div class="wrap nav v72-nav v73-nav">
     <button class="brand v73-brand" data-go="home" aria-label="หน้าหลัก">
@@ -21,8 +21,8 @@
         <div><b id="profileMiniName">ผู้ใช้</b><small id="profileMiniRole">สมาชิก</small></div>
       </div>
       <span id="memberChip" class="member-chip compact-member-chip" style="display:none"></span>
-      <a id="adminBtn" class="admin-mode-switch" href="/admin-panel.html" style="display:none;text-decoration:none"><span>⚙️</span><b>โหมดแอดมิน</b></a>
-      <span id="adminTestBadge" class="admin-test-badge" style="display:none">ADMIN</span>
+      
+      
       <a id="authBtn" class="btn btn-gold compact-auth-btn top-login-link" href="#authModal" aria-controls="authModal">เข้าสู่ระบบ</a>
       <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="เมนู">☰</button>
     </div>
@@ -33,53 +33,7 @@
     <button data-app-nav="guide">คู่มือการใช้งาน</button><button data-app-nav="help">ศูนย์ช่วยเหลือ</button>
   </div>
 </header>
-<div id="adminUserModeBar" class="admin-user-mode-bar" style="display:none">
-  <div><span>👁️</span><b>คุณกำลังดูเว็บในมุมผู้ใช้งาน</b><small>บัญชีนี้เป็น Admin</small></div>
-  <a href="/admin-panel.html">กลับหลังบ้านทันที →</a>
-</div>
-
-<main>
-<section id="homeView" class="view active">
-<div class="lesson-first-home">
-  <div class="wrap">
-    
-<div class="home-utility-strip" id="homeUtilityStrip">
-  <button class="utility-card" data-quick="recent">
-    <span class="utility-icon blue">🕘</span>
-    <div><small>งานล่าสุด</small><b id="homeRecentText">ยังไม่มีงานล่าสุด</b><em>เปิดงานต่อ →</em></div>
-  </button>
-  <button class="utility-card" data-quick="profile">
-    <span class="utility-icon green">👩‍🏫</span>
-    <div><small>โปรไฟล์ครู</small><b id="homeProfileText">ยังไม่ได้บันทึกข้อมูล</b><em>จัดการข้อมูล →</em></div>
-  </button>
-  <button class="utility-card" data-quick="style">
-    <span class="utility-icon purple">🎨</span>
-    <div><small>สไตล์ที่เลือก</small><b id="homeStyleText">ราชการโมเดิร์น</b><em>เปลี่ยนสไตล์ →</em></div>
-  </button>
-  <button class="utility-card" data-quick="continue">
-    <span class="utility-icon orange">🧩</span>
-    <div><small>พร้อมสร้างต่อ</small><b id="homeContinueText">สร้างแผนก่อน 1 ครั้ง</b><em>ไปที่ชุดสื่อ →</em></div>
-  </button>
-</div>
-<div class="lf-hero">
-      <div class="lf-brand-art">
-        <img src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว">
-      </div>
-      <div class="lf-hero-copy">
-        <span class="lf-badge">✨ AI Teaching Workflow สำหรับครูไทย</span>
-        <h1>สร้างแผนการสอนหน้าเดียว<br><span>ง่าย • สวย • ตรงตัวชี้วัด</span></h1>
-        <p>ค้นหาตัวชี้วัดด้วยรหัสหรือคำ กรอกรายละเอียด เลือกสไตล์ แล้วรับ Prompt พร้อมสร้างภาพแผนการสอนหน้าเดียว จากนั้นต่อยอดเป็นใบงาน แบบทดสอบ ใบความรู้ Rubric เกม และ Teaching Pack ได้ทันที</p>
-        <div class="lf-hero-points">
-          <span>🔎 ค้นตัวชี้วัดง่าย</span>
-          <span>🎨 เลือกสไตล์ก่อนสร้าง</span>
-          <span>📋 Prompt พร้อมคัดลอก</span>
-          <span>🔁 ต่อเป็นสื่อทั้งชุด</span>
-        </div>
-        <button class="btn lf-start-btn" data-go="generator">🚀 เริ่มสร้างแผนการสอนหน้าเดียว</button>
-      </div>
-    </div>
-  
-    <section class="home-guide-panel" id="homeGuidePanel">
+<section class="home-guide-panel" id="homeGuidePanel">
       <div class="guide-head"><div><span>📖</span><div><h2>ใช้งานง่ายใน 4 ขั้นตอน</h2><p>สร้างแผนก่อน แล้วต่อยอดสื่อจากข้อมูลเดิม</p></div></div></div>
       <div class="guide-steps">
         <article><b>1</b><strong>เลือกข้อมูลหลักสูตร</strong><small>เลือกชั้น วิชา หน่วย เรื่อง และเวลา</small></article>
@@ -494,7 +448,7 @@
 
   <div id="admin-settings" class="admin-pane">
     <div class="settings-grid">
-      <section class="admin-dashboard-card"><h3>👥 รูปแบบสมาชิก</h3><p><b>Member Only</b> — สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด ไม่มี VIP ในช่วงเริ่มต้น</p></section>
+      <section class="admin-dashboard-card"><h3>👥 รูปแบบสมาชิก</h3><p><b>Member Only</b> — เข้าสู่ระบบด้วย Member ID และรหัสผ่าน 6 หลัก ไม่มี VIP ในช่วงเริ่มต้น</p></section>
       <section class="admin-dashboard-card"><h3>💳 การชำระเงิน</h3><p>รับชำระโดยโอนเข้าบัญชีและตรวจสลิปผ่านเพจ จากนั้นสร้าง Private Invite ให้ลูกค้า</p></section>
       <section class="admin-dashboard-card"><h3>🔵 Facebook Login</h3><p id="facebookAdminStatus">โครงสร้างรองรับแล้ว แต่ต้องเชื่อม Meta App กับ Supabase จึงจะเปิดใช้งานจริง</p></section>
       <section class="admin-dashboard-card"><h3>💬 ลิงก์เพจ</h3><p>ตั้งค่า <code>salesContactUrl</code> ใน config.js เพื่อให้ปุ่ม “ติดต่อเพจ” เปิด Messenger/เพจโดยตรง</p></section>
@@ -530,19 +484,18 @@
 <div id="authModal" class="modal easy-access-modal">
   <div class="modal-card easy-access-card v75-auth-card">
     <div class="modal-head">
-      <div><h3>สมาชิก Klang Plan</h3><p>สมาชิกทุกคนใช้ฟีเจอร์เหมือนกันทั้งหมด</p></div>
+      <div><h3>สมาชิก Klang Plan</h3><p>เข้าสู่ระบบด้วย Member ID และรหัสผ่าน 6 หลัก</p></div>
       <a class="close" id="closeAuth" href="#" aria-label="ปิด" onclick="window.KlangAuthFallback&&window.KlangAuthFallback.close()">×</a>
     </div>
 
     <div class="tabs easy-access-tabs">
       <button class="auth-tab active" data-auth="login">เข้าสู่ระบบ</button>
-      <button class="auth-tab" data-auth="register">เข้ากลุ่มครั้งแรก</button>
+      <button class="auth-tab" data-auth="register">สมัครครั้งแรก</button>
     </div>
 
     <div id="auth-login" class="auth-pane active">
-      <div class="easy-auth-intro"><span>👋</span><div><b>ยินดีต้อนรับกลับ</b><small>ครั้งต่อไปใช้เพียงอีเมลและรหัสผ่าน</small></div></div>
-      <button id="facebookLoginBtn" type="button" class="facebook-login-btn">f&nbsp;&nbsp;ดำเนินการต่อด้วย Facebook <small id="facebookStatusText">เตรียมระบบไว้แล้ว</small></button>
-      <div class="social-auth-divider"><span>เข้าสู่ระบบสมาชิก</span></div>
+      <div class="easy-auth-intro"><span>👋</span><div><b>ยินดีต้อนรับกลับ</b><small>ใช้ Member ID ที่ได้รับตอนสมัคร และรหัสผ่าน 6 หลัก</small></div></div>
+<div class="social-auth-divider"><span>เข้าสู่ระบบสมาชิก</span></div>
       <div class="field"><label>Member ID</label><input id="loginEmail" type="text" autocomplete="username" autocapitalize="characters" placeholder="เช่น KP-M482910"></div>
       <div class="field"><label>รหัสผ่าน 6 หลัก</label><input id="loginPassword" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="••••••"></div>
       <button id="loginBtn" class="btn btn-gold easy-auth-main">เข้าสู่ระบบ</button>
@@ -555,7 +508,7 @@
         <span>รับลิงก์เชิญส่วนตัวจาก Admin → กรอกชื่อ → ตั้งรหัสผ่าน 6 หลัก → Active ทันที</span>
       </div>
       <div class="easy-auth-intro"><span>🔗</span><div><b>ต้องมีลิงก์เชิญจาก Admin</b><small>ลิงก์หนึ่งใช้สมัครได้ 1 บัญชีเท่านั้น</small></div></div>
-      <div class="alert warn">หากยังไม่มีลิงก์เชิญ กรุณาติดต่อผู้ดูแลระบบ</div>
+      <div class="alert warn">หากยังไม่มีลิงก์เชิญ กรุณารับลิงก์จาก Admin ก่อนสมัคร</div>
     </div>
   </div>
 </div>

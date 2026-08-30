@@ -818,3 +818,56 @@ h1,h2,h3,h4,.flow-head h2,.continue-head h3,.final-generate{font-family:"Noto Sa
   .stage-tabs{display:flex!important;gap:8px!important;padding-bottom:4px!important}
   .stage-tab{min-width:124px!important}
 }
+
+/* ===== V8.2 MEMBER AUTH GATE + MOBILE INTERACTION ===== */
+body.member-auth-pending main,
+body.member-auth-pending footer,
+body.member-auth-locked main,
+body.member-auth-locked footer,
+body.member-auth-pending .mobile-bottom-nav,
+body.member-auth-locked .mobile-bottom-nav{
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+body.member-auth-pending .topbar,
+body.member-auth-locked .topbar{
+  visibility:hidden!important;
+}
+body.member-auth-pending #authModal,
+body.member-auth-locked #authModal{
+  display:flex!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  z-index:99999!important;
+  background:#f4f8fc!important;
+}
+body.member-auth-pending #authModal .modal-card,
+body.member-auth-locked #authModal .modal-card{
+  transform:none!important;
+  opacity:1!important;
+}
+body.member-auth-locked #closeAuth,
+body.member-auth-pending #closeAuth{
+  display:none!important;
+}
+body.member-auth-ready main,
+body.member-auth-ready footer{
+  visibility:visible!important;
+}
+#generatorView button,
+#generatorView select,
+#generatorView input,
+#generatorView textarea,
+.stage-tab,.grade-card{
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+}
+.generator-flow,.flow-step,.stage-tabs,.grade-cards{
+  position:relative;
+  z-index:2;
+}
+@media(max-width:980px){
+  #authModal.easy-access-modal{padding:12px!important}
+  #authModal .easy-access-card{max-height:calc(100dvh - 24px)!important;overflow:auto!important}
+}

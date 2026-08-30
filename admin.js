@@ -13,7 +13,7 @@ async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
     $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อม Supabase</div>';return
   }
-  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-admin-auth"}});
   const {data}=await sb.auth.getSession();
   if(data.session)await useSession(data.session);
   sb.auth.onAuthStateChange(async(_e,s)=>{if(s)await useSession(s);else showLogin()})
@@ -44,11 +44,7 @@ $("adminLoginBtn").onclick=async()=>{
 $("logoutBtn").onclick=async()=>{await sb.auth.signOut();showLogin()};
 
 $("switchToUserBtn").onclick=async()=>{
-  // Do NOT sign out. Verify current session and move to teacher-facing UI.
-  const {data}=await sb.auth.getSession();
-  if(!data?.session){toast("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");showLogin();return}
-  sessionStorage.setItem("klangAdminUserView","1");
-  location.assign("/teacher.html?adminview=1")
+  location.assign("/teacher.html")
 };
 $("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("adminLoginBtn").click()});
 
