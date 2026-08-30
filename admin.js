@@ -71,7 +71,7 @@ async function loadAll(){
   renderAll()
 }
 function renderAll(){
-  const jobs=[renderRecent,renderDashboard,renderDashboardMembers,renderPending,renderMembers,renderInvites,renderUsage];
+  const jobs=[renderRecent,renderDashboard,renderDashboardMembers,renderMemberNames,renderPending,renderMembers,renderInvites,renderUsage];
   jobs.forEach(fn=>{try{fn()}catch(e){console.error("render error",fn.name,e)}})
 }
 
@@ -188,10 +188,37 @@ function renderDashboard(){
   }
 }
 function pendingReq(userId){return requests.find(r=>r.user_id===userId&&r.status==="pending")}
+function renderMemberNames(){
+  const el=$("memberNamesList");
+  if(!el)return;
+
+  const q=($("memberNamesSearch")?.value||"").trim().toLowerCase();
+  const members=(profiles||[])
+    .filter(x=>x&&x.role!=="admin")
+    .filter(x=>{
+      if(!q)return true;
+      return [x.full_name,x.member_id,x.status].join(" ").toLowerCase().includes(q)
+    })
+    .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+  if($("memberNamesCount"))$("memberNamesCount").textContent=`${members.length} คน`;
+
+  el.innerHTML=members.map((x,i)=>`
+    <div class="member-name-row">
+      <div class="member-name-no">${i+1}</div>
+      <div class="member-name-main">
+        <b>${esc(x.full_name||"ไม่ระบุชื่อ")}</b>
+        <small>${esc(x.member_id||"ยังไม่มี Member ID")}</small>
+      </div>
+      <span class="status ${esc(x.status||"")}">${esc(x.status||"—")}</span>
+    </div>
+  `).join("")||'<div class="dashboard-member-empty">ไม่พบสมาชิก</div>';
+}
+
 function renderDashboardMembers(){
   const el=$("dashboardMemberList");if(!el)return;
-  const members=profiles
-    .filter(x=>x.role!=="admin")
+  const members=(profiles||[])
+    .filter(x=>x&&x.role!=="admin")
     .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
   if($("dashboardMemberCount"))$("dashboardMemberCount").textContent=`${members.length} คน`;
@@ -200,8 +227,8 @@ function renderDashboardMembers(){
     <div class="dashboard-member-row">
       <div class="member-order">${i+1}</div>
       <div class="dashboard-member-info">
-        <b>${esc(x.full_name||"—")}</b>
-        <small>${esc(x.member_id||"—")} • สมัคร ${esc(fmtDateTime(x.created_at))} น.</small>
+        <b>${esc(x.full_name||"ไม่ระบุชื่อ")}</b>
+        <small>${esc(x.member_id||"ยังไม่มี Member ID")}</small>
       </div>
       <span class="status ${esc(x.status||"")}">${esc(x.status||"—")}</span>
     </div>
@@ -390,4 +417,16 @@ if($("refreshMembersDashboard"))$("refreshMembersDashboard").onclick=async()=>{
   $("refreshMembersDashboard").disabled=true;
   try{await loadAll();toast("อัปเดตรายชื่อสมาชิกแล้ว ✓")}
   finally{$("refreshMembersDashboard").disabled=false}
+};
+
+if($("memberNamesSearch"))$("memberNamesSearch").oninput=renderMemberNames;
+if($("memberNamesRefresh"))$("memberNamesRefresh").onclick=async()=>{
+  $("memberNamesRefresh").disabled=true;
+  try{
+    await loadAll();
+    renderMemberNames();
+    toast("อัปเดตรายชื่อสมาชิกแล้ว ✓")
+  }finally{
+    $("memberNamesRefresh").disabled=false
+  }
 };

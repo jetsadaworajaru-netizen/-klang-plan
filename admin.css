@@ -210,3 +210,49 @@ body>main,main,#adminApp,.admin-app{
 }
 
 .dash-member-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ===== V8.1 MEMBER NAMES TAB ===== */
+.member-names-card{padding:14px}
+.member-names-toolbar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:10px
+}
+.member-names-toolbar input{
+  width:100%;
+  min-height:42px;
+  border:1px solid #dbe4ec;
+  border-radius:11px;
+  padding:9px 11px;
+  background:#fff
+}
+.member-names-list{display:grid;gap:7px}
+.member-name-row{
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:10px 11px;
+  border:1px solid #e0e8f0;
+  border-radius:12px;
+  background:#fff
+}
+.member-name-no{
+  width:28px;height:28px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#edf4fb;color:#466783;
+  font-size:.68rem;font-weight:900
+}
+.member-name-main{min-width:0}
+.member-name-main b,.member-name-main small{display:block}
+.member-name-main b{font-size:.86rem;color:#294f73}
+.member-name-main small{
+  margin-top:2px;color:#7c8d9d;font-size:.67rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+@media(max-width:680px){
+  .member-names-toolbar{grid-template-columns:1fr auto}
+  .member-names-toolbar .member-count-badge{grid-column:1/-1;justify-self:start}
+}

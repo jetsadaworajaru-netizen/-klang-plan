@@ -50,6 +50,7 @@
           <button class="side-tab" data-tab="dashboard">📊 Dashboard</button>
           <button class="side-tab" data-tab="pending">⏳ รออนุมัติ <span id="sidePendingCount">0</span></button>
           <button class="side-tab" data-tab="members">👥 สมาชิก</button>
+          <button class="side-tab" data-tab="membernames">📋 รายชื่อสมาชิก</button>
           <button class="side-tab" data-tab="invites">🔗 ลิงก์ / Code</button>
           <button class="side-tab" data-tab="usage">✨ การใช้งาน</button>
         </nav>
@@ -168,7 +169,27 @@
           <div id="memberListAdmin" class="stack-list"></div>
         </section>
 
-        <section id="tab-invites" class="tab-pane">
+        <section id="tab-membernames" class="tab-pane">
+  <div class="page-title">
+    <div><span>📋</span><div>
+      <h1>รายชื่อสมาชิกทั้งหมด</h1>
+      <p>แสดงชื่อสมาชิกทั้งหมดจากฐานข้อมูลโดยตรง พร้อม Member ID และสถานะ</p>
+    </div></div>
+  </div>
+
+  <div class="content-card member-names-card">
+    <div class="member-names-toolbar">
+      <input id="memberNamesSearch" type="search" placeholder="ค้นชื่อ หรือ Member ID">
+      <button id="memberNamesRefresh" type="button" class="mini-btn">รีเฟรช</button>
+      <span id="memberNamesCount" class="member-count-badge">0 คน</span>
+    </div>
+    <div id="memberNamesList" class="member-names-list">
+      <div class="dashboard-member-empty">กำลังโหลดรายชื่อสมาชิก...</div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-invites" class="tab-pane">
           <div class="page-title split-title"><div><span>🔗</span><div><h1>ลิงก์และ Code</h1><p>ดูประวัติลิงก์ส่วนตัวและโปรโมชั่น</p></div></div><button id="goQuickBtn" class="primary-btn small">+ สร้างลิงก์ใหม่</button></div>
           <div class="promo-box">
             <h2>🎟️ สร้าง Code โปรโมชั่น</h2>
