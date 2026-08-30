@@ -27,6 +27,7 @@ async function init(){
 $("joinForm").addEventListener("submit",async e=>{
   e.preventDefault();clearMsg();
   const fullName=$("fullName").value.trim(),email=$("email").value.trim();
+localStorage.setItem("klangRememberEmail",email);localStorage.setItem("klangRememberName",fullName);
   const password=$("password").value,password2=$("password2").value;
   if(!fullName||!email||!password){msg("กรุณากรอกข้อมูลให้ครบ");return}
   if(password.length<6){msg("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");return}
@@ -43,9 +44,9 @@ $("joinForm").addEventListener("submit",async e=>{
     $("inviteState").style.display="none";
     $("successBox").style.display="block";
     if(data.session){
-      $("successText").textContent="เปิดสิทธิ์ Member แล้ว กดปุ่มด้านล่างเพื่อเริ่มใช้งานได้ทันที";
+      $("successText").textContent="สมัครสำเร็จและเปิดสิทธิ์ Member แล้ว กดปุ่มด้านล่างเพื่อเริ่มใช้งานได้ทันที";
     }else{
-      $("successText").textContent="สมัครสำเร็จ หากระบบส่งอีเมลยืนยัน กรุณากดยืนยันอีเมล 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ";
+      $("successText").textContent="สมัครสำเร็จ หากได้รับอีเมลยืนยัน กรุณากดยืนยัน 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ";
     }
   }catch(err){
     console.error(err);

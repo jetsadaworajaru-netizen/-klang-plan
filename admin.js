@@ -101,7 +101,7 @@ async function createOneTapInvite(btn){
     $("quickResult").style.display="block";
     try{await navigator.clipboard.writeText(currentQuickLink)}catch{}
     openTab("quick");
-    toast("สร้างลิงก์เชิญและคัดลอกแล้ว ✓");
+    toast("สร้างลิงก์เชิญแล้ว • ครูสมัครแล้ว Active ทันที ✓");
     await loadAll()
   }catch(e){console.error(e);toast(e.message||"สร้างลิงก์เชิญไม่สำเร็จ")}
   finally{if(btn)btn.disabled=false}
@@ -186,3 +186,4 @@ function renderUsage(){
   $("usageList").innerHTML=usage.map(x=>`<div class="usage-row"><div class="row-main"><b>${esc(x.product_type||"Prompt")} • ${esc(x.grade||"—")} ${esc(x.subject||"")}</b><small>${esc(x.indicator_code||"—")}</small><em>${new Date(x.created_at).toLocaleString("th-TH")}</em></div></div>`).join("")||'<div class="usage-row">ยังไม่มีข้อมูล</div>'
 }
 init();
+setInterval(()=>{if(user&&profile?.role==="admin")loadAll()},30000);

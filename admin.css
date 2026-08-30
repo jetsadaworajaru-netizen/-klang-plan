@@ -26,3 +26,5 @@
 .admin-invite-quick-bar>div{display:flex;align-items:center;gap:8px}.admin-invite-quick-bar b,.admin-invite-quick-bar small{display:block}.admin-invite-quick-bar small{font-size:.66rem;opacity:.85}
 .admin-invite-quick-bar button{border:0;background:linear-gradient(135deg,#ffe45b,#ff9b18);color:#3d3200;border-radius:12px;min-height:44px;padding:9px 14px;font-weight:950;box-shadow:0 4px 0 #d6750e;cursor:pointer}
 @media(max-width:850px){.admin-invite-quick-bar{padding:8px 10px}.admin-invite-quick-bar small{display:none}.admin-invite-quick-bar button{font-size:.72rem;padding:7px 10px}}
+
+html,body,button,input,select{font-family:"Noto Sans Thai",sans-serif!important}

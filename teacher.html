@@ -3,7 +3,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="canonical" href="/teacher.html"><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"><title>คลังแผนการสอนหน้าเดียว</title><link rel="canonical" href="/teacher.html"><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
 <header class="topbar v72-topbar v73-topbar">
   <div class="wrap nav v72-nav v73-nav">
     <button class="brand v73-brand" data-go="home" aria-label="หน้าหลัก">
@@ -11,13 +11,10 @@
       <div class="brand-copy"><b>คลังแผน</b><small>การสอนหน้าเดียว</small></div>
     </button>
     <nav class="workspace-nav v73-workspace-nav" aria-label="เมนูหลัก">
-      <button class="workspace-nav-btn active" data-app-nav="home">หน้าหลัก</button>
-      <button class="workspace-nav-btn" data-app-nav="plans">แผนของฉัน</button>
-      <button class="workspace-nav-btn" data-app-nav="indicators">คลังตัวชี้วัด</button>
-      <button class="workspace-nav-btn" data-app-nav="styles">สไตล์</button>
-      <button class="workspace-nav-btn" data-app-nav="guide">คู่มือ</button>
-      <button class="workspace-nav-btn" data-app-nav="help">ช่วยเหลือ</button>
-    </nav>
+<button class="workspace-nav-btn active" data-app-nav="home">หน้าหลัก</button>
+<button class="workspace-nav-btn" data-app-nav="generator">สร้างแผน</button>
+<button class="workspace-nav-btn" data-app-nav="plans">งานของฉัน</button>
+</nav>
     <div class="nav-actions v73-nav-actions">
       <div id="profileMini" class="profile-mini" style="display:none">
         <img id="profileMiniAvatar" alt="รูปผู้ใช้">
@@ -509,12 +506,10 @@
 <button id="mobileGenerateShortcut" class="mobile-generate-shortcut" type="button"><span>✨</span> ไปสร้าง Prompt</button>
 
 
-<nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="เมนูมือถือ">
-  <button type="button" data-mobile-go="home" class="active"><span>🏠</span><b>หน้าหลัก</b></button>
-  <button type="button" data-mobile-go="generator" class="primary"><span>✨</span><b>สร้างแผน</b></button>
-  <button type="button" data-mobile-go="indicators"><span>🎯</span><b>ตัวชี้วัด</b></button>
-  <button type="button" data-mobile-go="plans"><span>📁</span><b>แผนของฉัน</b></button>
-  <button type="button" id="mobileMoreBtn"><span>☰</span><b>เพิ่มเติม</b></button>
+<nav id="mobileBottomNav" class="mobile-bottom-nav simple-3-nav" aria-label="เมนูมือถือ">
+<button type="button" data-mobile-go="home" class="active"><span>🏠</span><b>หน้าหลัก</b></button>
+<button type="button" data-mobile-go="generator" class="primary"><span>✨</span><b>สร้างแผน</b></button>
+<button type="button" data-mobile-go="plans"><span>📁</span><b>งานของฉัน</b></button>
 </nav>
 
 <div id="mobileMoreSheet" class="mobile-sheet" aria-hidden="true">

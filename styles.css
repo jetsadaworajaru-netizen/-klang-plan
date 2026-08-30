@@ -789,3 +789,7 @@ body.auth-resolving #authBtn{visibility:hidden}
   padding:3px 6px;
   flex:0 0 auto
 }
+
+html,body,button,input,select,textarea{font-family:"Noto Sans Thai",sans-serif!important}
+h1,h2,h3,h4,.flow-head h2,.continue-head h3,.final-generate{font-family:"Noto Sans Thai",sans-serif!important}
+.simple-3-nav{grid-template-columns:repeat(3,1fr)!important}
