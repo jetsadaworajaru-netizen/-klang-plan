@@ -427,3 +427,16 @@ if($("memberNamesRefresh"))$("memberNamesRefresh").onclick=async()=>{
     $("memberNamesRefresh").disabled=false
   }
 };
+
+async function renderAdminSupport(){
+  const wrap=$("adminSupportList");if(!wrap)return;
+  wrap.innerHTML='<div class="loading-note">กำลังโหลดข้อความ...</div>';
+  const {data,error}=await sb.from("member_support_messages").select("id,user_id,message_type,subject,message,status,created_at").order("created_at",{ascending:false}).limit(100);
+  if(error){wrap.innerHTML=`<div class="loading-note">โหลดไม่ได้: ${esc(error.message)}</div>`;return}
+  const profileMap=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
+  const names={question:"❓ คำถาม",suggestion:"💡 คำแนะนำ",contact:"💬 ติดต่อกลับ"};
+  wrap.innerHTML=(data||[]).map(x=>{const p=profileMap[x.user_id]||{};return `<article class="support-admin-row"><div><b>${names[x.message_type]||"ข้อความ"} · ${esc(p.full_name||p.member_id||"สมาชิก")}</b><small>${esc(p.member_id||"")} · ${new Date(x.created_at).toLocaleString("th-TH")}</small><h4>${esc(x.subject||"ไม่มีหัวข้อ")}</h4><p>${esc(x.message)}</p></div><div>${x.status==="resolved"?'<span class="status active">ตอบแล้ว</span>':`<button class="mini-btn" data-resolve-support="${x.id}">ทำเครื่องหมายว่าจัดการแล้ว</button>`}</div></article>`}).join("")||'<div class="loading-note">ยังไม่มีข้อความจากสมาชิก</div>';
+  wrap.querySelectorAll("[data-resolve-support]").forEach(btn=>btn.onclick=async()=>{const {error}=await sb.from("member_support_messages").update({status:"resolved",resolved_at:new Date().toISOString()}).eq("id",btn.dataset.resolveSupport);if(error)toast(error.message);else renderAdminSupport()})
+}
+if($("refreshAdminSupport"))$("refreshAdminSupport").onclick=renderAdminSupport;
+document.querySelectorAll('[data-tab="support"]').forEach(btn=>btn.addEventListener("click",()=>setTimeout(renderAdminSupport,50)));

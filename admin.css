@@ -265,3 +265,5 @@ body>main,main,#adminApp,.admin-app{
   .member-name-row{grid-template-columns:30px minmax(0,1fr)!important}
   .member-name-actions{grid-column:2;justify-content:space-between}
 }
+
+.support-admin-row{display:flex;justify-content:space-between;gap:16px;padding:16px;border-bottom:1px solid #e5edf3}.support-admin-row:last-child{border-bottom:0}.support-admin-row div:first-child{display:grid;gap:4px}.support-admin-row small{color:#8091a2}.support-admin-row h4{margin:5px 0 0}.support-admin-row p{margin:0;color:#49657c;white-space:pre-wrap}@media(max-width:700px){.support-admin-row{display:grid}}

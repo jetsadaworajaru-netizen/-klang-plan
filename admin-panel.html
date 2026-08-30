@@ -53,7 +53,7 @@
           <button class="side-tab" data-tab="membernames">📋 รายชื่อสมาชิก</button>
           <button class="side-tab" data-tab="invites">🔗 ลิงก์ / Code</button>
           <button class="side-tab" data-tab="usage">✨ การใช้งาน</button>
-        </nav>
+        <button class="admin-tab" data-tab="support">💬 ช่วยเหลือ</button></nav>
       </aside>
 
       <div class="admin-content">
@@ -206,6 +206,11 @@
       </div>
     </div>
   </section>
+
+<section id="tab-support" class="admin-section" style="display:none">
+  <div class="section-title-row"><div><h2>💬 ข้อความจากสมาชิก</h2><p>คำถาม · คำแนะนำ · ขอให้ Admin ติดต่อกลับ</p></div><button id="refreshAdminSupport" class="btn secondary">↻ รีเฟรช</button></div>
+  <div id="adminSupportList" class="member-list-card"><div class="loading-note">กำลังโหลดข้อความ...</div></div>
+</section>
 </main>
 
 <div id="toast" class="toast"></div>

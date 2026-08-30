@@ -163,7 +163,7 @@ function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||
   if(!currentUser){lockMemberApp();return}
 
   const {data,error}=await supabaseClient.from("profiles")
-    .select("id,email,full_name,role,status,member_id,invite_code,created_at")
+    .select("id,email,full_name,school_name,avatar_url,role,status,member_id,invite_code,created_at")
     .eq("id",currentUser.id).maybeSingle();
 
   if(error||!data||data.role!=="member"||data.status!=="active"){
@@ -179,31 +179,22 @@ function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||
   renderAuthState();
   unlockMemberApp()
 }
+function memberAvatarMarkup(value){
+  if(!value)return "👤";
+  const presets={"avatar:teacher":"👩‍🏫","avatar:teacher_male":"👨‍🏫","avatar:book":"📚","avatar:star":"⭐"};
+  if(presets[value])return presets[value];
+  if(value.startsWith("data:image/"))return `<img src="${value}" alt="รูปโปรไฟล์">`;
+  return "👤"
+}
 function renderAuthState(){
-  const chip=$("memberChip"),btn=$("authBtn");
-  const logged=!!(currentUser&&currentProfile?.role==="member"&&currentProfile?.status==="active");
-
-  if(!logged){
-    if(chip)chip.style.display="none";
-    if(btn){
-      btn.textContent="เข้าสู่ระบบ";
-      if(btn.tagName==="A"){btn.setAttribute("href","#authModal");btn.onclick=null}
-      else btn.onclick=()=>openAuth("login")
-    }
-    return
-  }
-
-  if(chip){
-    chip.style.display="inline-block";
-    chip.textContent=currentProfile?.full_name||currentProfile?.member_id||"สมาชิก"
-  }
-  if(btn){
-    btn.textContent="ออกจากระบบ";
-    if(btn.tagName==="A"){
-      btn.setAttribute("href","#");
-      btn.onclick=e=>{e.preventDefault();logout()}
-    }else btn.onclick=logout
-  }
+  const btn=$("authBtn");
+  if(!currentUser||currentProfile?.role!=="member"||currentProfile?.status!=="active"){lockMemberApp();return}
+  if($("memberChip"))$("memberChip").style.display="none";
+  if($("topProfileAvatar"))$("topProfileAvatar").innerHTML=memberAvatarMarkup(currentProfile?.avatar_url||"");
+  if($("topProfileName"))$("topProfileName").textContent=currentProfile?.full_name||"โปรไฟล์";
+  if($("topProfileMemberId"))$("topProfileMemberId").textContent=currentProfile?.member_id||"สมาชิก";
+  if(btn)btn.onclick=openMemberProfile;
+  refreshProfileMini()
 }
 async function logout(){
   if(supabaseClient)await supabaseClient.auth.signOut();
@@ -214,7 +205,7 @@ function openAuth(tab="login"){
   if(window.KlangAuthFallback){window.KlangAuthFallback.open(tab);return}
   const m=$("authModal");if(!m)return;m.classList.add("open");m.style.display="flex";switchAuth(tab)
 }
-if($("authBtn"))$("authBtn").onclick=openAuth;
+
 if($("facebookLoginBtn"))if($("facebookLoginBtn"))$("facebookLoginBtn").onclick=async()=>{
   if(!CFG.facebookOAuthEnabled){toast("Facebook Login เตรียมไว้แล้ว แต่ยังต้องเชื่อม Meta App กับ Supabase");return}
   if(!backendReady()){toast("ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์");return}
@@ -1336,10 +1327,10 @@ function refreshProfileMini(){
   const t=teacherData(),has=t.name||currentProfile?.full_name||currentUser;
   if(!has){box.style.display="none";return}
   box.style.display="flex";
-  $("profileMiniName").textContent=t.name||currentProfile?.full_name||"ผู้ใช้";
-  $("profileMiniRole").textContent=currentProfile?.role==="admin"?"ADMIN":currentProfile?.role==="vip"?"VIP":"ครูผู้ใช้งาน";
+  $("profileMiniName").textContent=currentProfile?.full_name||t.name||"ผู้ใช้";
+  $("profileMiniRole").textContent="สมาชิก Klang Plan";
   const img=$("profileMiniAvatar");
-  if(teacherPhotoData){img.src=teacherPhotoData;img.style.display="block"}
+  if(currentProfile?.avatar_url?.startsWith("data:image/")){img.src=currentProfile.avatar_url;img.style.display="block"}
   else{img.removeAttribute("src");img.style.display="none"}
 }
 function refreshHomeUtilities(){
@@ -1356,6 +1347,67 @@ document.querySelectorAll("[data-quick]").forEach(btn=>btn.onclick=()=>{
   if(q==="profile"){go("generator");setTimeout(()=>$("teacherSection")?.scrollIntoView({behavior:"smooth"}),100)}
   if(q==="style"){go("generator");setTimeout(()=>$("styleSection")?.scrollIntoView({behavior:"smooth"}),100)}
 });
+
+function profilePreview(value){
+  const box=$("profileAvatarPreview");if(!box)return;
+  box.innerHTML=memberAvatarMarkup(value||"")
+}
+function openMemberProfile(){
+  if(!currentProfile)return;
+  $("profileDisplayName").value=currentProfile.full_name||"";
+  $("profileSchoolName").value=currentProfile.school_name||"";
+  $("profileMemberIdText").textContent=currentProfile.member_id||"สมาชิก Klang Plan";
+  profilePreview(currentProfile.avatar_url||"");
+  const m=$("memberProfileModal");m?.classList.add("open");m?.setAttribute("aria-hidden","false")
+}
+function closeMemberProfile(){const m=$("memberProfileModal");m?.classList.remove("open");m?.setAttribute("aria-hidden","true")}
+if($("closeProfileModal"))$("closeProfileModal").onclick=closeMemberProfile;
+if($("profileBackdrop"))$("profileBackdrop").onclick=closeMemberProfile;
+if($("profileLogoutBtn"))$("profileLogoutBtn").onclick=logout;
+
+document.querySelectorAll("[data-avatar]").forEach(btn=>btn.onclick=()=>{
+  if(!currentProfile)return;currentProfile.avatar_url=btn.dataset.avatar;profilePreview(currentProfile.avatar_url)
+});
+
+async function compressProfilePhoto(file){
+  return await new Promise((resolve,reject)=>{
+    const img=new Image(),reader=new FileReader();
+    reader.onload=()=>img.src=reader.result;reader.onerror=reject;
+    img.onload=()=>{const size=256,c=document.createElement("canvas");c.width=size;c.height=size;const ctx=c.getContext("2d");
+      const s=Math.min(img.width,img.height),sx=(img.width-s)/2,sy=(img.height-s)/2;ctx.drawImage(img,sx,sy,s,s,0,0,size,size);resolve(c.toDataURL("image/jpeg",.78))};
+    img.onerror=reject;reader.readAsDataURL(file)
+  })
+}
+if($("profilePhotoInput"))$("profilePhotoInput").onchange=async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  try{currentProfile.avatar_url=await compressProfilePhoto(file);profilePreview(currentProfile.avatar_url)}catch{toast("ไม่สามารถอ่านรูปนี้ได้")}
+};
+if($("saveMemberProfileBtn"))$("saveMemberProfileBtn").onclick=async()=>{
+  const full_name=$("profileDisplayName").value.trim();if(!full_name){$("profileSaveMsg").innerHTML='<div class="alert warn">กรุณากรอกชื่อที่แสดง</div>';return}
+  const payload={full_name,school_name:$("profileSchoolName").value.trim()||null,avatar_url:currentProfile.avatar_url||null};
+  const {error}=await supabaseClient.from("profiles").update(payload).eq("id",currentUser.id);
+  if(error){$("profileSaveMsg").innerHTML=`<div class="alert warn">${error.message}</div>`;return}
+  Object.assign(currentProfile,payload);renderAuthState();$("profileSaveMsg").innerHTML='<div class="alert success">บันทึกโปรไฟล์แล้ว ✓</div>';toast("บันทึกโปรไฟล์แล้ว")
+};
+
+const supportTitles={question:"ฝากคำถาม",suggestion:"ส่งคำแนะนำ",contact:"ติดต่อ Admin"};
+document.querySelectorAll("[data-help-type]").forEach(btn=>btn.onclick=()=>{
+  const t=btn.dataset.helpType;$("supportType").value=t;$("supportFormTitle").textContent=supportTitles[t]||"ส่งข้อความ";$("supportSubject").focus()
+});
+async function loadMySupport(){
+  if(!supabaseClient||!currentUser||!$("mySupportList"))return;
+  const {data,error}=await supabaseClient.from("member_support_messages").select("id,message_type,subject,message,status,created_at").eq("user_id",currentUser.id).order("created_at",{ascending:false}).limit(10);
+  if(error){$("mySupportList").innerHTML='<div class="empty-card">ไม่สามารถโหลดข้อความได้</div>';return}
+  $("mySupportList").innerHTML=(data||[]).map(x=>`<article class="support-item"><div><b>${supportTitles[x.message_type]||"ข้อความ"}${x.subject?` · ${escapeHtml(x.subject)}`:""}</b><p>${escapeHtml(x.message)}</p><small>${new Date(x.created_at).toLocaleString("th-TH")}</small></div><span class="support-status ${x.status}">${x.status==="resolved"?"ตอบแล้ว":"รอตอบ"}</span></article>`).join("")||'<div class="empty-card">ยังไม่มีข้อความ</div>'
+}
+if($("sendSupportBtn"))$("sendSupportBtn").onclick=async()=>{
+  const message=$("supportMessage").value.trim();if(!message){$("supportMsg").innerHTML='<div class="alert warn">กรุณาพิมพ์รายละเอียด</div>';return}
+  const payload={user_id:currentUser.id,message_type:$("supportType").value||"question",subject:$("supportSubject").value.trim()||null,message};
+  const {error}=await supabaseClient.from("member_support_messages").insert(payload);
+  if(error){$("supportMsg").innerHTML=`<div class="alert warn">ส่งไม่สำเร็จ: ${error.message}</div>`;return}
+  $("supportSubject").value="";$("supportMessage").value="";$("supportMsg").innerHTML='<div class="alert success">ส่งถึง Admin แล้ว ✓</div>';toast("ส่งข้อความถึง Admin แล้ว");loadMySupport()
+};
+if($("refreshSupportBtn"))$("refreshSupportBtn").onclick=loadMySupport;
 function appNav(target){
   document.querySelectorAll("[data-app-nav]").forEach(x=>x.classList.toggle("active",x.dataset.appNav===target));
   if(target==="home"){go("home");return}
@@ -1363,7 +1415,7 @@ function appNav(target){
   if(target==="indicators"){renderIndicatorLibrary();go("indicators");return}
   if(target==="styles"){renderStylesLibrary();go("styles");return}
   if(target==="guide"){go("guide");return}
-  if(target==="help"){go("help");return}
+  if(target==="help"){go("help");loadMySupport();return}
 }
 document.querySelectorAll("[data-app-nav]").forEach(btn=>btn.onclick=()=>appNav(btn.dataset.appNav));
 
