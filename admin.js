@@ -123,13 +123,66 @@ function renderRecent(){
 }
 function renderDashboard(){
   const members=profiles.filter(x=>x.role!=="admin");
-  $("dMembers").textContent=members.length;$("dActive").textContent=members.filter(x=>x.status==="active").length;
-  const pend=members.filter(x=>x.status==="pending").length;$("dPending").textContent=pend;$("sidePendingCount").textContent=pend;
-  $("dSales").textContent=money(active.length*MEMBER_PRICE);
-  $("attentionList").innerHTML=pend?`<div class="pending-row"><div class="row-main"><b>${pend} คนรออนุมัติ</b><small>กดไปที่เมนูรออนุมัติ</small></div><button class="mini-btn good" id="attnPending">ดูเลย</button></div>`:'<div class="pending-row"><div class="row-main"><b>✓ ไม่มีคำขอค้าง</b></div></div>';
+  const active=members.filter(x=>x.status==="active");
+  const pending=members.filter(x=>x.status==="pending");
+
+  // รายได้ = จำนวนสมาชิกที่สมัครเข้าระบบทั้งหมด x 169 บาท
+  const revenue=members.length*MEMBER_PRICE;
+
+  const now=new Date();
+  const bangkokParts=new Intl.DateTimeFormat("en-CA",{
+    timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"
+  }).formatToParts(now);
+  const bp=Object.fromEntries(bangkokParts.map(x=>[x.type,x.value]));
+  const todayKey=`${bp.year}-${bp.month}-${bp.day}`;
+  const monthKey=`${bp.year}-${bp.month}`;
+
+  const memberDateKey=v=>{
+    if(!v)return "";
+    const parts=new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"
+    }).formatToParts(new Date(v));
+    const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+    return `${p.year}-${p.month}-${p.day}`
+  };
+
+  const newToday=members.filter(x=>memberDateKey(x.created_at)===todayKey).length;
+  const newMonth=members.filter(x=>memberDateKey(x.created_at).startsWith(monthKey)).length;
+  const promptCount=usage.length;
+  const usersWithPrompt=new Set(usage.map(x=>x.user_id).filter(Boolean)).size;
+  const avgPrompts=members.length?Math.round((promptCount/members.length)*10)/10:0;
+
+  $("dMembers").textContent=members.length;
+  $("dActive").textContent=active.length;
+  $("dPending").textContent=pending.length;
+  $("sidePendingCount").textContent=pending.length;
+  $("dSales").textContent=money(revenue);
+
+  if($("dToday"))$("dToday").textContent=newToday;
+  if($("dMonth"))$("dMonth").textContent=newMonth;
+  if($("dPrompts"))$("dPrompts").textContent=promptCount;
+  if($("dPromptUsers"))$("dPromptUsers").textContent=usersWithPrompt;
+  if($("dAvgPrompts"))$("dAvgPrompts").textContent=avgPrompts;
+
+  $("attentionList").innerHTML=pending.length
+    ? `<div class="pending-row"><div class="row-main"><b>${pending.length} คนรออนุมัติ</b><small>กดไปที่เมนูรออนุมัติ</small></div><button class="mini-btn good" id="attnPending">ดูเลย</button></div>`
+    : '<div class="pending-row"><div class="row-main"><b>✓ ไม่มีคำขอค้าง</b><small>ระบบสมาชิกทำงานปกติ</small></div></div>';
+
   $("attnPending")?.addEventListener("click",()=>openTab("pending"));
-  const c={};members.forEach(x=>{const k=x.sales_source||x.auth_provider||"ไม่ระบุ";c[k]=(c[k]||0)+1});
-  $("sourceList").innerHTML=Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="invite-row"><div class="row-main"><b>${esc(k)}</b></div><b>${v}</b></div>`).join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>'
+
+  const c={};
+  members.forEach(x=>{
+    const k=x.sales_source||x.auth_provider||"ลิงก์ Admin";
+    c[k]=(c[k]||0)+1
+  });
+  $("sourceList").innerHTML=Object.entries(c)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="invite-row"><div class="row-main"><b>${esc(k)}</b><small>${v} สมาชิก</small></div><b>${v}</b></div>`)
+    .join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>';
+
+  if($("dashboardRevenueFormula")){
+    $("dashboardRevenueFormula").textContent=`${members.length} สมาชิก × ${MEMBER_PRICE} บาท = ${money(revenue)}`
+  }
 }
 function pendingReq(userId){return requests.find(r=>r.user_id===userId&&r.status==="pending")}
 function renderDashboardMembers(){
@@ -137,9 +190,13 @@ function renderDashboardMembers(){
   const members=profiles
     .filter(x=>x.role!=="admin")
     .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-  el.innerHTML=members.map(x=>`
+
+  if($("dashboardMemberCount"))$("dashboardMemberCount").textContent=`${members.length} คน`;
+
+  el.innerHTML=members.map((x,i)=>`
     <div class="dashboard-member-row">
-      <div>
+      <div class="member-order">${i+1}</div>
+      <div class="dashboard-member-info">
         <b>${esc(x.full_name||"—")}</b>
         <small>${esc(x.member_id||"—")} • สมัคร ${esc(fmtDateTime(x.created_at))} น.</small>
       </div>
@@ -177,7 +234,7 @@ function renderMembers(){
     })
     .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
-  if($("memberResultCount"))$("memberResultCount").textContent=`พบ ${a.length} สมาชิก`;
+  if($("memberResultCount"))$("memberResultCount").textContent=`สมาชิกทั้งหมด ${a.length} คน`;
 
   $("memberListAdmin").innerHTML=a.map(x=>{
     const req=pendingReq(x.id);

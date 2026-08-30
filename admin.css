@@ -160,3 +160,51 @@ body>main,main,#adminApp,.admin-app{
   .dashboard-member-head{align-items:flex-start}
   .dashboard-member-row{padding:9px}
 }
+
+/* ===== V7.9.9 EASY ADMIN DASHBOARD ===== */
+.revenue-summary-card{
+  margin:12px 0;
+  padding:14px 16px;
+  border:1px solid #cfe5d6;
+  border-radius:16px;
+  background:linear-gradient(135deg,#effaf2,#f7fcf8);
+}
+.revenue-summary-card>div{
+  display:flex;align-items:center;justify-content:space-between;gap:12px
+}
+.revenue-summary-card span{font-weight:900;color:#3d7650}
+.revenue-summary-card b{font-size:1.15rem;color:#2f6d45}
+.revenue-summary-card small{display:block;margin-top:4px;color:#718376;font-size:.68rem}
+.mini-stat-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+  margin-bottom:12px
+}
+.mini-stat-grid article{
+  border:1px solid #e0e8f0;border-radius:14px;background:#fff;padding:12px
+}
+.mini-stat-grid b{display:block;font-size:1.25rem;color:#315a7d}
+.mini-stat-grid span{display:block;margin-top:3px;color:#8190a0;font-size:.67rem}
+.member-count-badge{
+  display:inline-flex;vertical-align:middle;margin-left:5px;padding:3px 8px;
+  border-radius:999px;background:#eef4fb;color:#52708c;font-size:.62rem
+}
+.dashboard-member-row{
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr) auto!important
+}
+.member-order{
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:#eef4fb;color:#52708c;font-size:.68rem;font-weight:900
+}
+.dashboard-member-info{min-width:0}
+.dashboard-member-list{max-height:none!important;overflow:visible!important}
+
+@media(max-width:680px){
+  .kpi-grid{grid-template-columns:1fr 1fr!important}
+  .mini-stat-grid{grid-template-columns:1fr 1fr}
+  .revenue-summary-card>div{display:block}
+  .revenue-summary-card b{display:block;margin-top:4px}
+  .dashboard-member-row{grid-template-columns:28px minmax(0,1fr) auto!important}
+}

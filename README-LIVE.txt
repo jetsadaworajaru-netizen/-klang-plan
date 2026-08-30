@@ -1,19 +1,29 @@
-KLANG PLAN V7.9.8 — STAGE SWITCH FIX + DASHBOARD MEMBER LIST
+KLANG PLAN V7.9.9 — ADMIN DASHBOARD STATS + MEMBER LIST FIX
 
-แก้:
-1) กดเปลี่ยนช่วงชั้น/ระดับไม่ได้บนมือถือ/Messenger
-- เปลี่ยนเป็น delegated click handler
-- เพิ่ม capture mode กัน event ถูก element อื่นบัง
-- เพิ่ม z-index / pointer-events / touch-action
-- stage tabs เลื่อนแนวนอนได้บนมือถือ
+แก้บั๊กสำคัญ:
+- Dashboard เดิมมีตัวแปร active ไม่ถูกประกาศ ทำให้ JavaScript หยุดกลางทาง
+- ส่งผลให้หน้า “สมาชิก” ไม่แสดงรายชื่อ
+- แก้แล้ว รายชื่อสมาชิกทั้งหมดจะแสดงทันที
 
-2) Dashboard Admin
-- เพิ่มช่อง “รายชื่อสมาชิกทั้งหมด”
-- แสดง ชื่อ / Member ID / วันที่เวลา / สถานะ
-- มีปุ่มไปหน้า “จัดการสมาชิก”
-- หน้า Members เดิมยังค้นหา กรอง รีเซ็ต PIN รีเซ็ตอุปกรณ์ ระงับ และลบสมาชิกได้
+Dashboard ใหม่:
+- สมาชิกทั้งหมด
+- Active
+- รายได้รวม = สมาชิกทั้งหมด × 169 บาท
+- สมัครวันนี้
+- สมาชิกใหม่เดือนนี้
+- Prompt ล่าสุดที่บันทึก
+- จำนวนสมาชิกที่สร้าง Prompt
+- Prompt เฉลี่ยต่อสมาชิก
+- รายชื่อสมาชิกทั้งหมด + สถานะ + Member ID + วันเวลาสมัคร
+- เรียงสมาชิกใหม่ล่าสุดก่อน
+
+หน้า สมาชิก:
+- แสดงทั้งหมดทันที
+- ค้นหา / กรองสถานะ / ช่วงวันที่
+- รีเซ็ตอุปกรณ์
+- รีเซ็ต PIN
+- ระงับ
+- ลบสมาชิก
 
 Admin:
 https://klang-plan.pages.dev/admin-panel.html
-Teacher:
-https://klang-plan.pages.dev/teacher.html

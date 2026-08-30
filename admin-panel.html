@@ -111,16 +111,29 @@
           <div class="kpi-grid">
             <article><b id="dMembers">—</b><span>สมาชิกทั้งหมด</span></article>
             <article><b id="dActive">—</b><span>Active</span></article>
-            <article class="warn"><b id="dPending">—</b><span>รออนุมัติ</span></article>
-            <article class="money"><b id="dSales">—</b><span>รายได้สมาชิก</span></article>
+            <article class="money"><b id="dSales">—</b><span>รายได้รวม</span></article>
+            <article><b id="dToday">—</b><span>สมัครวันนี้</span></article>
           </div>
+
+          <div class="revenue-summary-card">
+            <div><span>💰 รายได้โปรเจค</span><b id="dashboardRevenueFormula">กำลังคำนวณ...</b></div>
+            <small>คำนวณอัตโนมัติจากสมาชิกที่สมัครเข้าระบบ คนละ 169 บาท</small>
+          </div>
+
+          <div class="mini-stat-grid">
+            <article><b id="dMonth">—</b><span>สมาชิกใหม่เดือนนี้</span></article>
+            <article><b id="dPrompts">—</b><span>Prompt ล่าสุดที่บันทึก</span></article>
+            <article><b id="dPromptUsers">—</b><span>สมาชิกที่สร้าง Prompt</span></article>
+            <article><b id="dAvgPrompts">—</b><span>Prompt เฉลี่ย/สมาชิก</span></article>
+          </div>
+
           <div class="two-col">
             <div class="content-card"><h2>สิ่งที่ต้องจัดการ</h2><div id="attentionList"></div></div>
             <div class="content-card"><h2>ช่องทางสมาชิก</h2><div id="sourceList"></div></div>
           </div>
           <div class="content-card dashboard-member-card">
             <div class="dashboard-member-head">
-              <div><h2>👥 รายชื่อสมาชิกทั้งหมด</h2><p>ดูสมาชิกและสถานะล่าสุดได้จากหน้า Dashboard</p></div>
+              <div><h2>👥 รายชื่อสมาชิกทั้งหมด <span id="dashboardMemberCount" class="member-count-badge">0 คน</span></h2><p>แสดงรายชื่อทั้งหมดทันที เรียงจากสมัครล่าสุด</p></div>
               <button type="button" class="mini-btn" data-tab-jump="members">จัดการสมาชิก</button>
             </div>
             <div id="dashboardMemberList" class="dashboard-member-list"></div>
@@ -133,7 +146,7 @@
         </section>
 
         <section id="tab-members" class="tab-pane">
-          <div class="page-title"><div><span>👥</span><div><h1>สมาชิก</h1><p>Member ทุกคนใช้ฟีเจอร์เหมือนกัน</p></div></div></div>
+          <div class="page-title"><div><span>👥</span><div><h1>สมาชิกทั้งหมด</h1><p>รายชื่อสมาชิกจะแสดงทั้งหมดทันที ใช้ช่องค้นหาเมื่อต้องการหาเฉพาะคน</p></div></div></div>
           <div class="member-search-tools">
   <div class="member-search-main">
     <input id="memberSearchAdmin" type="search" placeholder="ค้นชื่อ / Member ID / Invite Code">
