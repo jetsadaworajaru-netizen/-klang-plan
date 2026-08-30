@@ -10,10 +10,12 @@
       <img class="brand-logo" src="brand-logo.png" alt="คลังแผนการสอนหน้าเดียว">
       <div class="brand-copy"><b>คลังแผน</b><small>การสอนหน้าเดียว</small></div>
     </button>
-    <nav class="workspace-nav v73-workspace-nav" aria-label="เมนูหลัก">
-<button class="workspace-nav-btn active" data-app-nav="home">หน้าหลัก</button>
-<button class="workspace-nav-btn" data-app-nav="generator">สร้างแผน</button>
-<button class="workspace-nav-btn" data-app-nav="plans">งานของฉัน</button>
+    <nav class="workspace-nav v73-workspace-nav top-workspace-tabs" aria-label="เมนูหลัก">
+<button class="workspace-nav-btn active" data-app-nav="generator">✨ สร้างแผน</button>
+<button class="workspace-nav-btn" data-app-nav="plans">📁 งานของฉัน</button>
+<button class="workspace-nav-btn" data-app-nav="indicators">🎯 ตัวชี้วัด</button>
+<button class="workspace-nav-btn" data-app-nav="styles">🎨 สไตล์</button>
+<button class="workspace-nav-btn" data-app-nav="help">💬 ช่วยเหลือ</button>
 </nav>
     <div class="nav-actions v73-nav-actions">
       <div id="profileMini" class="profile-mini" style="display:none">
@@ -31,25 +33,15 @@
     </div>
   </div>
   <div id="mobileWorkspaceMenu" class="mobile-workspace-menu">
-    <button data-app-nav="home">หน้าหลัก</button><button data-app-nav="plans">แผนของฉัน</button>
-    <button data-app-nav="indicators">คลังตัวชี้วัด</button><button data-app-nav="styles">สไตล์และเทมเพลต</button>
-    <button data-app-nav="guide">คู่มือการใช้งาน</button><button data-app-nav="help">ศูนย์ช่วยเหลือ</button>
+    <button data-app-nav="generator">✨ สร้างแผน</button>
+    <button data-app-nav="plans">📁 งานของฉัน</button>
+    <button data-app-nav="indicators">🎯 คลังตัวชี้วัด</button>
+    <button data-app-nav="styles">🎨 สไตล์</button>
+    <button data-app-nav="guide">📖 คู่มือ</button>
+    <button data-app-nav="help">💬 ศูนย์ช่วยเหลือ</button>
   </div>
 </header>
-<section class="home-guide-panel" id="homeGuidePanel">
-      <div class="guide-head"><div><span>📖</span><div><h2>ใช้งานง่ายใน 4 ขั้นตอน</h2><p>สร้างแผนก่อน แล้วต่อยอดสื่อจากข้อมูลเดิม</p></div></div></div>
-      <div class="guide-steps">
-        <article><b>1</b><strong>เลือกข้อมูลหลักสูตร</strong><small>เลือกชั้น วิชา หน่วย เรื่อง และเวลา</small></article>
-        <article><b>2</b><strong>เลือกตัวชี้วัด</strong><small>ค้นด้วยรหัส/คีย์เวิร์ด หรือกดการ์ด</small></article>
-        <article><b>3</b><strong>เลือกสไตล์ + โทนสี</strong><small>ดูตัวอย่างแล้วเลือกคู่สีที่เหมาะกับงาน</small></article>
-        <article><b>4</b><strong>คัดลอก Prompt</strong><small>แนบรูปครู/โลโก้ แล้วสร้างภาพด้วย AI ที่ต้องการ</small></article>
-      </div>
-    </section>
-
-  </div>
-</div>
-</section>
-<section id="generatorView" class="view">
+<section id="generatorView" class="view active">
   <div class="mobile-builder-bar">
     <button type="button" data-jump-flow="flowDetailsStep"><span>1</span>หลักสูตร</button>
     <button type="button" data-jump-flow="flowOptionsStep"><span>2</span>รายละเอียด</button>
@@ -59,7 +51,7 @@
   </div>
 <div class="wrap simple-generator lesson-first-generator">
   <div class="generator-top lf-generator-top">
-    <button class="back-home" data-go="home">← หน้าแรก</button>
+    
     <div class="flow-progress lf-progress">
       <div class="flow-dot active"><span>1</span><b>หลักสูตร</b></div>
       <div class="flow-line"></div>
@@ -265,37 +257,58 @@
     </div>
 
     
-<div class="ai-use-guide" id="aiUseGuide">
-  <div class="section-inline-title">🚀 นำ Prompt ไปใช้ต่อ</div>
-  <p>กดปุ่ม ระบบจะคัดลอก Prompt ก่อน แล้วเปิดแพลตฟอร์มที่เลือก หากต้องการให้ภาพมีรูปครูหรือโลโก้โรงเรียน ให้แนบไฟล์จริงกับ AI ตอนสร้างภาพ</p>
-  <div class="ai-platform-cards">
-    <button type="button" class="ai-platform" data-ai-launch="chatgpt"><span class="ai-logo chatgpt-logo">◎</span><div><b>ChatGPT</b><small>สร้างภาพ/ปรับ Prompt</small></div></button>
-    <button type="button" class="ai-platform" data-ai-launch="gemini"><span class="ai-logo gemini-logo">✦</span><div><b>Gemini</b><small>สร้างภาพและตรวจข้อความ</small></div></button>
-    <button type="button" class="ai-platform" data-ai-launch="claude"><span class="ai-logo claude-logo">✳</span><div><b>Claude</b><small>ช่วยตรวจ/ปรับเนื้อหา</small></div></button>
-    <button type="button" class="ai-platform" data-ai-launch="canva"><span class="ai-logo canva-logo">C</span><div><b>Canva</b><small>จัดหน้า/แก้ไขงานต่อ</small></div></button>
-  </div>
-  <div class="asset-reminder" id="assetReminder">📎 Klang Plan ไม่จำเป็นต้องรับรูปครู/โลโก้สำหรับสร้างแผน — ให้แนบไฟล์กับ AI ที่คุณเลือกโดยตรงเมื่อต้องการใช้ภาพจริง</div>
-</div>
 
-    <div id="continuePanel" class="continue-panel" style="display:none">
-      <div class="continue-head">
-        <span class="continue-spark">✨</span>
-        <div>
-          <h3 id="continueTitle">สร้างอะไรต่อจากแผนนี้?</h3>
-          <p>ใช้ชั้น วิชา ตัวชี้วัด หน่วย เรื่อง และบริบทเดิมให้ทันที ไม่ต้องกรอกใหม่</p>
+    <div id="afterPromptActions" class="after-prompt-actions" style="display:none">
+      <section class="after-prompt-section">
+        <div class="after-prompt-title">
+          <span>✨</span>
+          <div><h3>สร้างอะไรต่อจากแผนนี้?</h3><p>ใช้ข้อมูลเดิมต่อได้ทันที ไม่ต้องกรอกชั้น วิชา ตัวชี้วัด หน่วย และเรื่องใหม่</p></div>
         </div>
-      </div>
-      <div id="continueTools" class="continue-tools"></div>
-      <div id="smartContinueConfig" class="smart-continue-config" style="display:none">
-        <div class="smart-config-head">
-          <div><span id="smartConfigIcon">📝</span><div><b id="smartConfigTitle">ตั้งค่าการสร้าง</b><small>เลือกเฉพาะสิ่งที่ต้องการ แล้วค่อยสร้าง Prompt</small></div></div>
-          <button id="closeSmartConfig" class="smart-close" type="button">✕</button>
+        <div id="continuePanel" class="continue-panel final-continue-panel" style="display:block">
+          <div id="continueTools" class="continue-tools"></div>
+          <div id="smartContinueConfig" class="smart-continue-config" style="display:none">
+            <div class="smart-config-head">
+              <div><span id="smartConfigIcon">📝</span><div><b id="smartConfigTitle">ตั้งค่าการสร้าง</b><small>เลือกเฉพาะสิ่งที่ต้องการ แล้วค่อยสร้าง Prompt</small></div></div>
+              <button id="closeSmartConfig" class="smart-close" type="button">✕</button>
+            </div>
+            <div id="smartConfigBody" class="smart-config-body"></div>
+            <button id="smartCreateBtn" class="btn smart-create-btn" type="button">✨ สร้าง Prompt</button>
+            <button id="openGamePlatformBtn" class="btn open-platform-btn" type="button" style="display:none">🔗 เปิดแพลตฟอร์มเกม</button>
+          </div>
         </div>
-        <div id="smartConfigBody" class="smart-config-body"></div>
-        <button id="smartCreateBtn" class="btn smart-create-btn" type="button">✨ สร้าง Prompt</button><button id="openGamePlatformBtn" class="btn open-platform-btn" type="button" style="display:none">🔗 เปิดแพลตฟอร์มเกม</button>
-      </div>
-      <div class="continue-note">ทุกตัวเลือกใช้ข้อมูลหลักสูตรและตัวชี้วัดเดิมอัตโนมัติ</div>
+      </section>
+
+      <section class="after-prompt-section">
+        <div class="after-prompt-title">
+          <span>🚀</span>
+          <div><h3>นำ Prompt ไปใช้ต่อ</h3><p>เลือก AI หรือโปรแกรมที่ต้องการ ระบบจะคัดลอก Prompt ให้ก่อน</p></div>
+        </div>
+
+        <div class="destination-tabs">
+          <button type="button" class="destination-tab active" data-destination-tab="ai">🤖 AI</button>
+          <button type="button" class="destination-tab" data-destination-tab="document">📄 เอกสาร</button>
+        </div>
+
+        <div id="destinationAI" class="destination-panel active">
+          <div class="ai-platform-cards">
+            <button type="button" class="ai-platform" data-ai-launch="chatgpt"><span class="ai-logo chatgpt-logo">◎</span><div><b>ChatGPT</b><small>สร้างภาพ / ปรับ Prompt</small></div></button>
+            <button type="button" class="ai-platform" data-ai-launch="gemini"><span class="ai-logo gemini-logo">✦</span><div><b>Gemini</b><small>สร้างภาพ / ตรวจข้อความ</small></div></button>
+            <button type="button" class="ai-platform" data-ai-launch="claude"><span class="ai-logo claude-logo">✳</span><div><b>Claude</b><small>ช่วยตรวจ / ปรับเนื้อหา</small></div></button>
+            <button type="button" class="ai-platform" data-ai-launch="canva"><span class="ai-logo canva-logo">C</span><div><b>Canva</b><small>จัดหน้า / แก้ไขงานต่อ</small></div></button>
+          </div>
+        </div>
+
+        <div id="destinationDocument" class="destination-panel">
+          <div class="ai-platform-cards document-platform-cards">
+            <button type="button" class="ai-platform" data-document-action="word"><span class="ai-logo word-logo">W</span><div><b>Microsoft Word</b><small>คัดลอก Prompt แล้วเปิด Word</small></div></button>
+            <button type="button" class="ai-platform" data-document-action="pdf"><span class="ai-logo pdf-logo">PDF</span><div><b>PDF</b><small>เปิดหน้าพิมพ์เพื่อบันทึก Prompt เป็น PDF</small></div></button>
+          </div>
+        </div>
+
+        <div class="asset-reminder">📎 หากต้องการใช้รูปครูหรือโลโก้จริง ให้แนบไฟล์กับ AI ที่เลือกตอนสร้างงาน</div>
+      </section>
     </div>
+
   </section>
 </div>
 </section>

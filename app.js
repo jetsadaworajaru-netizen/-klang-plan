@@ -74,7 +74,6 @@ function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");set
   const reduce=window.matchMedia("(max-width: 980px)").matches;
   window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});
   if($("mobileGenerateShortcut"))$("mobileGenerateShortcut").classList.toggle("show",v==="generator");
-  if(v==="admin")loadAdmin();
   if(v==="plans")renderMyPlans?.();
   if(v==="indicators")renderIndicatorLibrary?.();
   if(v==="styles")renderStylesLibrary?.()
@@ -792,6 +791,7 @@ function renderContinuePanel(sourceTool){
     </button>`
   }).join("");
   panel.style.display="block";
+  const after=$("afterPromptActions");if(after)after.style.display="grid";
   document.querySelectorAll("[data-continue-tool]").forEach(btn=>btn.onclick=()=>openSmartContinue(btn.dataset.continueTool));
 }
 
@@ -1031,7 +1031,9 @@ $("generateBtn").onclick=()=>{
       h.unshift({topic:c.topic,grade:c.grade,subject:c.subject,indicator:c.indicator,createdAt:new Date().toISOString()});
       localStorage.setItem("klangLocalHistory",JSON.stringify(h.slice(0,12)))
     }catch{}
-    renderContinuePanel(t.id);if(window.matchMedia("(max-width:600px)").matches)setTimeout(()=>$("promptBox")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
+    renderContinuePanel(t.id);
+    if($("afterPromptActions"))$("afterPromptActions").style.display="grid";
+    if(window.matchMedia("(max-width:600px)").matches)setTimeout(()=>$("promptBox")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
     $("promptBox").scrollIntoView({behavior:"smooth",block:"start"});
     toast("สร้าง Prompt สำเร็จ ✓")
   }catch(err){
@@ -1410,7 +1412,8 @@ if($("sendSupportBtn"))$("sendSupportBtn").onclick=async()=>{
 if($("refreshSupportBtn"))$("refreshSupportBtn").onclick=loadMySupport;
 function appNav(target){
   document.querySelectorAll("[data-app-nav]").forEach(x=>x.classList.toggle("active",x.dataset.appNav===target));
-  if(target==="home"){go("home");return}
+  if(target==="home"){go("generator");return}
+  if(target==="generator"){go("generator");return}
   if(target==="plans"){renderMyPlans();go("plans");return}
   if(target==="indicators"){renderIndicatorLibrary();go("indicators");return}
   if(target==="styles"){renderStylesLibrary();go("styles");return}
@@ -1492,6 +1495,31 @@ document.querySelectorAll("[data-ai-launch]").forEach(btn=>btn.onclick=async()=>
   await copyCurrentPrompt();window.open(AI_LINKS[btn.dataset.aiLaunch],"_blank","noopener")
 });
 
+
+document.querySelectorAll("[data-destination-tab]").forEach(btn=>btn.onclick=()=>{
+  const tab=btn.dataset.destinationTab;
+  document.querySelectorAll("[data-destination-tab]").forEach(x=>x.classList.toggle("active",x===btn));
+  $("destinationAI")?.classList.toggle("active",tab==="ai");
+  $("destinationDocument")?.classList.toggle("active",tab==="document");
+});
+
+document.querySelectorAll("[data-document-action]").forEach(btn=>btn.onclick=async()=>{
+  const action=btn.dataset.documentAction;
+  const prompt=$("promptText")?.textContent||"";
+  if(!prompt){toast("กรุณาสร้าง Prompt ก่อน");return}
+  if(action==="word"){
+    try{await navigator.clipboard.writeText(prompt);toast("คัดลอก Prompt แล้ว กำลังเปิด Word ✓")}catch{}
+    window.open("https://www.office.com/launch/word","_blank","noopener");
+    return
+  }
+  if(action==="pdf"){
+    const safe=prompt.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const w=window.open("","_blank");
+    if(!w){toast("เบราว์เซอร์ปิดกั้นหน้าต่าง PDF");return}
+    w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Klang Plan Prompt</title><style>body{font-family:Arial,sans-serif;padding:32px;line-height:1.6;color:#173b5b}h1{font-size:22px}pre{white-space:pre-wrap;font:14px/1.7 Arial,sans-serif;border:1px solid #ddd;padding:18px;border-radius:12px}</style></head><body><h1>Klang Plan — Prompt</h1><pre>${safe}</pre><script>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+    w.document.close()
+  }
+});
 const GAME_LINKS={
   "Canva":"https://www.canva.com/",
   "Wordwall":"https://wordwall.net/",

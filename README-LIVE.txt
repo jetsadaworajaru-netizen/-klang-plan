@@ -1,19 +1,35 @@
-KLANG PLAN V8.4 — MEMBER PROFILE + REAL HELP CENTER + CLEAN MEMBER APP
+KLANG PLAN V8.5 — FINAL ACTIONS + TOP TABS
 
-แก้ตามภาพล่าสุด:
-1. ลบ “ระบบหลังบ้าน” ออกจาก member-app.html ทั้ง Section — สมาชิกจะไม่เห็นอีก
-2. ปุ่ม “เข้าสู่ระบบ” ในแอปสมาชิกเปลี่ยนเป็นปุ่มโปรไฟล์สมาชิก
-3. โปรไฟล์สมาชิกแก้ชื่อ/โรงเรียน และเลือกอวตารหรืออัปโหลดรูปจริงได้
-4. รูปจริงถูกย่อเป็น 256x256 ก่อนบันทึกในโปรไฟล์ เพื่อลดขนาดข้อมูล
-5. ศูนย์ช่วยเหลือใช้งานจริง:
-   - ฝากคำถาม
-   - ส่งคำแนะนำ
-   - ขอให้ Admin ติดต่อกลับ
-   - ดูสถานะข้อความของตัวเอง
-6. เพิ่มแท็บ “💬 ช่วยเหลือ” ใน Admin เพื่ออ่านข้อความและทำเครื่องหมายว่าจัดการแล้ว
-7. FAQ เดิมที่พูดถึงอีเมล/รออนุมัติ ถูกแก้ให้ตรงกับ Member ID + รหัสผ่าน 6 หลัก
+ปรับตาม UX ใหม่:
+1) “สร้าง Prompt” เป็นช่วงท้ายสุดของหน้าสร้างแผน
+2) หลังสร้าง Prompt จึงแสดง:
+   - สร้างใบงาน
+   - แบบทดสอบ
+   - ใบความรู้
+   - Rubric
+   - เกม
+   - Teaching Pack
+3) ถัดลงมาคือ “นำ Prompt ไปใช้ต่อ”
+   AI:
+   - ChatGPT
+   - Gemini
+   - Claude
+   - Canva
+   เอกสาร:
+   - Microsoft Word
+   - PDF
+4) Word: คัดลอก Prompt แล้วเปิด Word Online
+5) PDF: เปิดหน้าพิมพ์เพื่อ Save / Print เป็น PDF
+6) เมนูอื่นย้ายเป็นแท็บด้านบน:
+   - สร้างแผน
+   - งานของฉัน
+   - ตัวชี้วัด
+   - สไตล์
+   - ช่วยเหลือ
+7) บังคับ .view ให้แสดงเฉพาะแท็บ active เพื่อไม่ให้เนื้อหาของแท็บอื่นไหลต่อใต้หน้าสร้างแผน
+8) generator เป็นหน้าเริ่มต้นของ Member App
 
-Backend migration applied: v84_member_support_center
-Teacher Login: https://klang-plan.pages.dev/teacher.html
-Member App: https://klang-plan.pages.dev/member-app.html
-Admin: https://klang-plan.pages.dev/admin-panel.html
+Teacher Login:
+https://klang-plan.pages.dev/teacher.html
+Member App:
+https://klang-plan.pages.dev/member-app.html

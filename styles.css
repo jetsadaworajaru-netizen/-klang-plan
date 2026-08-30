@@ -883,3 +883,116 @@ body.member-auth-ready footer{
 .help-action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.help-action-card{border:1px solid #d8e5ef;background:#fff;border-radius:18px;padding:18px;text-align:left;display:grid;gap:6px;font:inherit;color:#244f77;cursor:pointer}.help-action-card span{font-size:28px}.help-action-card b{font-size:1rem}.help-action-card small{color:#8191a0}
 .support-form-card,.my-support-card{background:#fff;border:1px solid #d9e5ee;border-radius:20px;padding:18px;margin:14px 0}.support-form-head,.support-list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.support-form-head div,.support-list-head div{display:grid}.support-form-head small,.support-list-head small{color:#8494a3}.support-form-card label{display:grid;gap:6px;font-weight:700;margin:10px 0}.support-form-card input,.support-form-card textarea{border:1px solid #d4e1eb;border-radius:13px;padding:11px 12px;font:inherit;font-size:16px;resize:vertical}.my-support-list{display:grid;gap:8px}.support-item{border:1px solid #e0e8ef;border-radius:14px;padding:12px;display:flex;justify-content:space-between;gap:12px}.support-item p{margin:5px 0;color:#536c81}.support-item small{color:#8b9aa7}.support-status{white-space:nowrap;height:max-content;border-radius:999px;padding:5px 9px;font-size:.68rem;font-weight:800;background:#fff4df;color:#966624}.support-status.resolved{background:#e8f8ef;color:#377558}.member-faq-list{margin-top:16px}
 @media(max-width:700px){.top-profile-copy{display:none}.member-profile-button{padding:5px}.help-action-grid{grid-template-columns:1fr}.support-item{display:grid}.member-profile-card{padding-bottom:calc(24px + env(safe-area-inset-bottom))}}
+
+/* ===== V8.5 FINAL ACTIONS + TOP TABS ===== */
+.view{display:none!important}
+.view.active{display:block!important}
+
+.top-workspace-tabs{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.top-workspace-tabs::-webkit-scrollbar{display:none}
+.top-workspace-tabs .workspace-nav-btn{
+  white-space:nowrap;
+  flex:0 0 auto;
+}
+
+.after-prompt-actions{
+  display:grid;
+  gap:16px;
+  margin-top:18px;
+}
+.after-prompt-section{
+  background:#fff;
+  border:1px solid #d9e5ef;
+  border-radius:20px;
+  padding:18px;
+}
+.after-prompt-title{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  margin-bottom:14px;
+}
+.after-prompt-title>span{font-size:26px}
+.after-prompt-title h3{margin:0 0 3px;color:#19486f}
+.after-prompt-title p{margin:0;color:#7b8d9f}
+.final-continue-panel{
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.final-continue-panel .continue-head,
+.final-continue-panel .continue-note{display:none!important}
+.continue-tools{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.continue-tool{
+  min-height:88px;
+}
+.destination-tabs{
+  display:flex;
+  gap:8px;
+  margin:0 0 12px;
+}
+.destination-tab{
+  border:1px solid #d4e1ec;
+  background:#f6f9fc;
+  color:#4d6d88;
+  border-radius:999px;
+  padding:9px 14px;
+  font:inherit;
+  font-weight:800;
+}
+.destination-tab.active{
+  background:#eaf2ff;
+  color:#2858cf;
+  border-color:#b9cdfa;
+}
+.destination-panel{display:none}
+.destination-panel.active{display:block}
+.document-platform-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+.word-logo{
+  background:#eaf2ff!important;
+  color:#185abd!important;
+  font-weight:900!important;
+}
+.pdf-logo{
+  background:#fff0f0!important;
+  color:#c63838!important;
+  font-weight:900!important;
+  font-size:.62rem!important;
+}
+#flowFinalStep{margin-bottom:24px}
+#plansView,#indicatorsView,#stylesView,#guideView,#helpView{
+  min-height:calc(100dvh - 90px);
+}
+
+@media(max-width:980px){
+  .v73-workspace-nav.top-workspace-tabs{
+    display:flex!important;
+    order:3;
+    width:100%;
+    padding:6px 0 2px;
+  }
+  .v73-nav{flex-wrap:wrap}
+  .top-workspace-tabs .workspace-nav-btn{
+    min-height:38px;
+    padding:7px 11px;
+    font-size:.72rem;
+  }
+}
+@media(max-width:600px){
+  .continue-tools{grid-template-columns:1fr 1fr}
+  .continue-tool{padding:12px 10px;min-height:96px}
+  .continue-copy small{font-size:.64rem}
+  .document-platform-cards{grid-template-columns:1fr}
+  .after-prompt-section{padding:14px;border-radius:18px}
+}
