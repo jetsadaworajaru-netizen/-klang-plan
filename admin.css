@@ -256,3 +256,12 @@ body>main,main,#adminApp,.admin-app{
   .member-names-toolbar{grid-template-columns:1fr auto}
   .member-names-toolbar .member-count-badge{grid-column:1/-1;justify-self:start}
 }
+
+/* ===== V8.1.1 DELETE BUTTON IN MEMBER NAMES TAB ===== */
+.member-name-row{grid-template-columns:32px minmax(0,1fr) auto!important}
+.member-name-actions{display:flex;align-items:center;gap:6px}
+.member-name-actions .delete-member{min-height:34px;padding:6px 9px}
+@media(max-width:520px){
+  .member-name-row{grid-template-columns:30px minmax(0,1fr)!important}
+  .member-name-actions{grid-column:2;justify-content:space-between}
+}

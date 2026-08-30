@@ -210,7 +210,10 @@ function renderMemberNames(){
         <b>${esc(x.full_name||"ไม่ระบุชื่อ")}</b>
         <small>${esc(x.member_id||"ยังไม่มี Member ID")}</small>
       </div>
-      <span class="status ${esc(x.status||"")}">${esc(x.status||"—")}</span>
+      <div class="member-name-actions">
+        <span class="status ${esc(x.status||"")}">${esc(x.status||"—")}</span>
+        <button class="mini-btn danger delete-member" data-delete-member="${x.id}" data-member="${esc(x.member_id||"")}" data-name="${esc(x.full_name||"สมาชิก")}">ลบ</button>
+      </div>
     </div>
   `).join("")||'<div class="dashboard-member-empty">ไม่พบสมาชิก</div>';
 }
