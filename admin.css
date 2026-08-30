@@ -208,3 +208,5 @@ body>main,main,#adminApp,.admin-app{
   .revenue-summary-card b{display:block;margin-top:4px}
   .dashboard-member-row{grid-template-columns:28px minmax(0,1fr) auto!important}
 }
+
+.dash-member-actions{display:flex;gap:6px;flex-wrap:wrap}

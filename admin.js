@@ -70,7 +70,10 @@ async function loadAll(){
   profiles=p.data||[];requests=r.data||[];invites=i.data||[];usage=u.data||[];
   renderAll()
 }
-function renderAll(){renderRecent();renderDashboard();renderDashboardMembers();renderPending();renderMembers();renderInvites();renderUsage()}
+function renderAll(){
+  const jobs=[renderRecent,renderDashboard,renderDashboardMembers,renderPending,renderMembers,renderInvites,renderUsage];
+  jobs.forEach(fn=>{try{fn()}catch(e){console.error("render error",fn.name,e)}})
+}
 
 async function createInvite(opts){
   const {data,error}=await sb.rpc("admin_create_member_invite",{
@@ -152,11 +155,11 @@ function renderDashboard(){
   const usersWithPrompt=new Set(usage.map(x=>x.user_id).filter(Boolean)).size;
   const avgPrompts=members.length?Math.round((promptCount/members.length)*10)/10:0;
 
-  $("dMembers").textContent=members.length;
-  $("dActive").textContent=active.length;
-  $("dPending").textContent=pending.length;
-  $("sidePendingCount").textContent=pending.length;
-  $("dSales").textContent=money(revenue);
+  if($("dMembers"))$("dMembers").textContent=members.length;
+  if($("dActive"))$("dActive").textContent=active.length;
+  if($("dPending"))$("dPending").textContent=pending.length;
+  if($("sidePendingCount"))$("sidePendingCount").textContent=pending.length;
+  if($("dSales"))$("dSales").textContent=money(revenue);
 
   if($("dToday"))$("dToday").textContent=newToday;
   if($("dMonth"))$("dMonth").textContent=newMonth;
@@ -382,3 +385,9 @@ document.addEventListener("click",e=>{
   const jump=e.target.closest("[data-tab-jump]");
   if(jump){openTab(jump.dataset.tabJump)}
 });
+
+if($("refreshMembersDashboard"))$("refreshMembersDashboard").onclick=async()=>{
+  $("refreshMembersDashboard").disabled=true;
+  try{await loadAll();toast("อัปเดตรายชื่อสมาชิกแล้ว ✓")}
+  finally{$("refreshMembersDashboard").disabled=false}
+};
