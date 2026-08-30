@@ -60,7 +60,7 @@ $("goQuickBtn").onclick=()=>openTab("quick");
 
 async function loadAll(){
   const [p,r,i,u]=await Promise.all([
-    sb.from("profiles").select("id,email,full_name,role,status,invite_code,created_at,auth_provider,sales_source,campaign_name,price_paid,payment_status,avatar_url").order("created_at",{ascending:false}),
+    sb.from("profiles").select("id,email,full_name,role,status,invite_code,member_id,created_at,auth_provider,sales_source,campaign_name,price_paid,payment_status,avatar_url").order("created_at",{ascending:false}),
     sb.from("membership_requests").select("id,user_id,status,invite_code,created_at").order("created_at",{ascending:false}),
     sb.from("invite_codes").select("id,code,label,is_active,max_uses,used_count,expires_at,created_at,invite_type,auto_activate,sales_source,campaign_name,price_paid,payment_note").order("created_at",{ascending:false}).limit(150),
     sb.from("prompt_history").select("created_at,product_type,title,grade,subject,indicator_code,user_id").order("created_at",{ascending:false}).limit(100)
@@ -140,15 +140,96 @@ function renderPending(){
   wireMemberButtons($("pendingList"))
 }
 function renderMembers(){
-  const q=$("memberSearchAdmin").value.trim().toLowerCase(),f=$("memberFilterAdmin").value;
-  const a=profiles.filter(x=>x.role!=="admin").filter(x=>(!f||x.status===f)&&(!q||[x.full_name,x.email,x.invite_code,x.campaign_name,x.sales_source].join(" ").toLowerCase().includes(q)));
+  const q=$("memberSearchAdmin").value.trim().toLowerCase();
+  const f=$("memberFilterAdmin").value;
+  const dateFrom=$("memberDateFrom")?.value||"";
+  const dateTo=$("memberDateTo")?.value||"";
+
+  const fromTs=dateFrom?new Date(`${dateFrom}T00:00:00+07:00`).getTime():null;
+  const toTs=dateTo?new Date(`${dateTo}T23:59:59+07:00`).getTime():null;
+
+  const a=profiles
+    .filter(x=>x.role!=="admin")
+    .filter(x=>{
+      if(f&&x.status!==f)return false;
+      const text=[x.full_name,x.member_id,x.invite_code,x.campaign_name,x.sales_source].join(" ").toLowerCase();
+      if(q&&!text.includes(q))return false;
+      const ts=x.created_at?new Date(x.created_at).getTime():null;
+      if(fromTs&&(!ts||ts<fromTs))return false;
+      if(toTs&&(!ts||ts>toTs))return false;
+      return true;
+    })
+    .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+  if($("memberResultCount"))$("memberResultCount").textContent=`พบ ${a.length} สมาชิก`;
+
   $("memberListAdmin").innerHTML=a.map(x=>{
     const req=pendingReq(x.id);
-    return `<div class="member-row"><div class="row-main"><b>${esc(x.full_name||"—")} <span class="status ${esc(x.status)}">${esc(x.status)}</span></b><small>${esc(x.email||"—")} • ${esc(x.auth_provider||"email")}</small><em>Code ${esc(x.invite_code||"—")} • ${esc(x.campaign_name||x.sales_source||"—")} • ${money(x.price_paid)}</em></div><div class="row-actions">${x.status==="pending"?`<button class="mini-btn good" data-approve="${x.id}" data-req="${req?.id||""}">อนุมัติ</button>`:""}<button class="mini-btn" data-active="${x.id}" data-req="${req?.id||""}">Active</button><button class="mini-btn danger" data-suspend="${x.id}" data-req="${req?.id||""}">ระงับ</button></div></div>`
-  }).join("")||'<div class="member-row">ไม่พบสมาชิก</div>';
+    return `<div class="member-row">
+      <div class="row-main">
+        <b>${esc(x.full_name||"—")} <span class="status ${esc(x.status)}">${esc(x.status)}</span></b>
+        <small>Member ID: ${esc(x.member_id||"—")}</small>
+        <em>สมัครเมื่อ ${esc(fmtDateTime(x.created_at))} น. • Code ${esc(x.invite_code||"—")}</em>
+      </div>
+      <div class="row-actions">
+        ${x.status==="pending"?`<button class="mini-btn good" data-approve="${x.id}" data-req="${req?.id||""}">อนุมัติ</button>`:""}
+        <button class="mini-btn" data-active="${x.id}" data-req="${req?.id||""}">Active</button>
+        <button class="mini-btn recovery" data-reset-devices="${x.id}" data-member="${esc(x.member_id||"")}">รีเซ็ตอุปกรณ์</button>
+        <button class="mini-btn recovery-pin" data-reset-pin="${x.id}" data-member="${esc(x.member_id||"")}" data-name="${esc(x.full_name||"สมาชิก")}">รีเซ็ต PIN</button>
+        <button class="mini-btn danger" data-suspend="${x.id}" data-req="${req?.id||""}">ระงับ</button>
+      </div>
+    </div>`
+  }).join("")||'<div class="member-row empty-member">ไม่พบสมาชิกตามเงื่อนไขที่ค้นหา</div>';
+
   wireMemberButtons($("memberListAdmin"))
 }
-$("memberSearchAdmin").oninput=renderMembers;$("memberFilterAdmin").onchange=renderMembers;
+$("memberSearchAdmin").oninput=renderMembers;
+if($("memberDateFrom"))$("memberDateFrom").onchange=renderMembers;
+if($("memberDateTo"))$("memberDateTo").onchange=renderMembers;
+if($("memberFilterAdmin"))$("memberFilterAdmin").onchange=renderMembers;
+if($("memberSearchReset"))$("memberSearchReset").onclick=()=>{
+  $("memberSearchAdmin").value="";
+  if($("memberFilterAdmin"))$("memberFilterAdmin").value="";
+  if($("memberDateFrom"))$("memberDateFrom").value="";
+  if($("memberDateTo"))$("memberDateTo").value="";
+  renderMembers()
+};
+$("memberFilterAdmin").onchange=renderMembers;
+
+async function resetMemberDevices(userId,memberId){
+  if(!confirm(`รีเซ็ตอุปกรณ์ของ ${memberId||"สมาชิกนี้"} ใช่หรือไม่?\n\nหลังรีเซ็ต อุปกรณ์เดิมทั้งหมดจะถูกปลด และครูสามารถเข้าใช้งานใหม่ได้สูงสุด 2 เครื่อง`))return;
+  const {data,error}=await sb.rpc("admin_reset_member_devices",{p_user_id:userId});
+  if(error){toast("รีเซ็ตอุปกรณ์ไม่สำเร็จ: "+error.message);return}
+  toast(`รีเซ็ตอุปกรณ์แล้ว ✓ ปลด ${Number(data||0)} เครื่อง`);
+  await loadAll()
+}
+
+async function resetMemberPin(userId,memberId,fullName){
+  const pin=prompt(`ตั้งรหัสผ่านใหม่ 6 หลัก\n${fullName||""}${memberId?` • ${memberId}`:""}\n\nกรอกตัวเลข 6 หลัก:`);
+  if(pin===null)return;
+  const clean=String(pin).trim();
+  if(!/^\d{6}$/.test(clean)){toast("PIN ต้องเป็นตัวเลข 6 หลัก");return}
+  const confirmPin=prompt("ยืนยัน PIN ใหม่อีกครั้ง:");
+  if(confirmPin===null)return;
+  if(String(confirmPin).trim()!==clean){toast("PIN ทั้งสองครั้งไม่ตรงกัน");return}
+
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token){toast("Session Admin หมดอายุ กรุณาเข้าสู่ระบบใหม่");return}
+
+  const resp=await fetch(`${CFG.supabaseUrl}/functions/v1/admin-reset-pin`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":CFG.supabasePublishableKey,
+      "Authorization":`Bearer ${session.access_token}`
+    },
+    body:JSON.stringify({user_id:userId,new_pin:clean})
+  });
+  const result=await resp.json().catch(()=>({}));
+  if(!resp.ok){toast("รีเซ็ต PIN ไม่สำเร็จ: "+(result.detail||result.error||"กรุณาลองใหม่"));return}
+  toast(`รีเซ็ต PIN ของ ${memberId||fullName||"สมาชิก"} สำเร็จ ✓`)
+}
+
 function wireMemberButtons(root){
   root.querySelectorAll("[data-approve]").forEach(b=>b.onclick=()=>setMember(b.dataset.approve,"active",b.dataset.req));
   root.querySelectorAll("[data-active]").forEach(b=>b.onclick=()=>setMember(b.dataset.active,"active",b.dataset.req));
@@ -187,3 +268,10 @@ function renderUsage(){
 }
 init();
 setInterval(()=>{if(user&&profile?.role==="admin")loadAll()},30000);
+
+document.addEventListener("click",e=>{
+  const d=e.target.closest("[data-reset-devices]");
+  if(d){resetMemberDevices(d.dataset.resetDevices,d.dataset.member);return}
+  const p=e.target.closest("[data-reset-pin]");
+  if(p){resetMemberPin(p.dataset.resetPin,p.dataset.member,p.dataset.name);return}
+});

@@ -26,33 +26,49 @@ async function init(){
 
 $("joinForm").addEventListener("submit",async e=>{
   e.preventDefault();clearMsg();
-  const fullName=$("fullName").value.trim(),email=$("email").value.trim();
-localStorage.setItem("klangRememberEmail",email);localStorage.setItem("klangRememberName",fullName);
-  const password=$("password").value,password2=$("password2").value;
-  if(!fullName||!email||!password){msg("กรุณากรอกข้อมูลให้ครบ");return}
-  if(password.length<6){msg("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");return}
+  const fullName=$("fullName").value.trim();
+  const password=$("password").value.trim(),password2=$("password2").value.trim();
+  if(!fullName||!password){msg("กรุณากรอกชื่อและรหัสผ่านให้ครบ");return}
+  if(!/^\d{6}$/.test(password)){msg("รหัสผ่านต้องเป็นตัวเลข 6 หลัก");return}
   if(password!==password2){msg("รหัสผ่านทั้งสองช่องไม่ตรงกัน");return}
+
   const btn=$("joinBtn");btn.disabled=true;
   try{
-    const meta={full_name:fullName,school_name:"",phone:"",facebook_name:"",invite_code:invite};
-    const {data,error}=await sb.auth.signUp({
-      email,password,
-      options:{data:meta,emailRedirectTo:(CFG.siteUrl||location.origin)+"/teacher.html"}
+    const endpoint=`${CFG.supabaseUrl}/functions/v1/join-member`;
+    const resp=await fetch(endpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":CFG.supabasePublishableKey},
+      body:JSON.stringify({password,full_name:fullName,invite_code:invite})
     });
-    if(error)throw error;
+    const result=await resp.json().catch(()=>({}));
+    if(!resp.ok){
+      if(result.error==="invalid_or_expired_invite") throw new Error("invalid_or_expired_invite");
+      throw new Error(result.detail||result.error||"สมัครไม่สำเร็จ");
+    }
+
+    const memberId=String(result.member_id||"").toUpperCase();
+    const loginEmail=result.login_email;
+    if(!memberId||!loginEmail)throw new Error("member_id_missing");
+
+    const {error:loginError}=await sb.auth.signInWithPassword({email:loginEmail,password});
+    if(loginError)throw loginError;
+
+    localStorage.setItem("klangRememberMemberId",memberId);
+    localStorage.setItem("klangRememberName",fullName);
+
     $("joinForm").style.display="none";
     $("inviteState").style.display="none";
     $("successBox").style.display="block";
-    if(data.session){
-      $("successText").textContent="สมัครสำเร็จและเปิดสิทธิ์ Member แล้ว กดปุ่มด้านล่างเพื่อเริ่มใช้งานได้ทันที";
-    }else{
-      $("successText").textContent="สมัครสำเร็จ หากได้รับอีเมลยืนยัน กรุณากดยืนยัน 1 ครั้ง แล้วกลับมาเข้าสู่ระบบ";
-    }
+    $("createdMemberId").textContent=memberId;
+    $("successText").textContent="สมัครสำเร็จและเปิดสิทธิ์ Member แล้ว เข้าใช้งานได้ทันที";
+    $("copyMemberId").onclick=async()=>{
+      try{await navigator.clipboard.writeText(memberId);msg("คัดลอก Member ID แล้ว ✓","ok")}
+      catch{msg("Member ID: "+memberId,"ok")}
+    };
   }catch(err){
     console.error(err);
     const t=(err?.message||"สมัครไม่สำเร็จ").toLowerCase();
-    if(t.includes("already")||t.includes("registered")) msg("อีเมลนี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบจากหน้าเว็บครู");
-    else if(t.includes("invite")||t.includes("code")) msg("ลิงก์เชิญนี้ใช้ไม่ได้ อาจถูกใช้แล้วหรือหมดอายุ กรุณาขอลิงก์ใหม่จาก Admin");
+    if(t.includes("invalid_or_expired_invite")||t.includes("invite")) msg("ลิงก์เชิญนี้ถูกใช้แล้ว หมดอายุ หรือไม่ถูกต้อง กรุณาขอลิงก์ใหม่จาก Admin");
     else msg("สมัครไม่สำเร็จ: "+(err?.message||"กรุณาลองอีกครั้ง"));
     btn.disabled=false
   }

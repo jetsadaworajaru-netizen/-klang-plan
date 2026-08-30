@@ -127,7 +127,24 @@
 
         <section id="tab-members" class="tab-pane">
           <div class="page-title"><div><span>👥</span><div><h1>สมาชิก</h1><p>Member ทุกคนใช้ฟีเจอร์เหมือนกัน</p></div></div></div>
-          <div class="toolbar"><input id="memberSearchAdmin" placeholder="ค้นชื่อ อีเมล Code แคมเปญ"><select id="memberFilterAdmin"><option value="">ทุกสถานะ</option><option value="active">Active</option><option value="pending">Pending</option><option value="suspended">Suspended</option><option value="expired">Expired</option></select></div>
+          <div class="member-search-tools">
+  <div class="member-search-main">
+    <input id="memberSearchAdmin" type="search" placeholder="ค้นชื่อ / Member ID / Invite Code">
+    <select id="memberFilterAdmin">
+      <option value="">ทุกสถานะ</option>
+      <option value="active">Active</option>
+      <option value="pending">Pending</option>
+      <option value="suspended">Suspended</option>
+      <option value="expired">Expired</option>
+    </select>
+  </div>
+  <div class="member-date-filter">
+    <label>สมัครตั้งแต่<input id="memberDateFrom" type="date"></label>
+    <label>ถึงวันที่<input id="memberDateTo" type="date"></label>
+    <button id="memberSearchReset" type="button" class="mini-btn">ล้างตัวกรอง</button>
+    <span id="memberResultCount" class="member-result-count">สมาชิกทั้งหมด</span>
+  </div>
+</div>
           <div id="memberListAdmin" class="stack-list"></div>
         </section>
 

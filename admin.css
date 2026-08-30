@@ -28,3 +28,115 @@
 @media(max-width:850px){.admin-invite-quick-bar{padding:8px 10px}.admin-invite-quick-bar small{display:none}.admin-invite-quick-bar button{font-size:.72rem;padding:7px 10px}}
 
 html,body,button,input,select{font-family:"Noto Sans Thai",sans-serif!important}
+
+/* ===== V7.9.2 ADMIN FULL WIDTH ===== */
+html,body{
+  width:100%!important;
+  max-width:none!important;
+  overflow-x:hidden
+}
+body>main,main,#adminApp,.admin-app{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important
+}
+.admin-top{
+  width:100%!important;
+  max-width:none!important
+}
+.admin-invite-quick-bar{
+  width:100%!important;
+  max-width:none!important;
+  box-sizing:border-box
+}
+.admin-shell{
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:230px minmax(0,1fr)!important
+}
+.admin-side{
+  width:230px!important;
+  min-width:230px
+}
+.admin-content{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important
+}
+.tab-pane{
+  width:100%!important;
+  max-width:none!important
+}
+.quick-invite-card,.recent-card,.content-card,.promo-box{
+  width:100%!important;
+  max-width:none!important
+}
+
+@media(max-width:850px){
+  .admin-top{
+    height:auto!important;
+    min-height:64px!important;
+    padding:7px 10px!important;
+    gap:8px
+  }
+  .admin-brand{min-width:0}
+  .admin-brand img{width:42px;height:42px}
+  .admin-top-actions{gap:5px;flex:0 0 auto}
+  .mode-switch-user{padding:6px 8px!important}
+  .admin-shell{
+    display:block!important;
+    width:100%!important
+  }
+  .admin-side{
+    width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    position:sticky!important;
+    top:64px!important;
+    padding:6px 8px!important;
+    overflow:hidden!important
+  }
+  .admin-side nav{
+    display:flex!important;
+    overflow-x:auto!important;
+    scrollbar-width:none
+  }
+  .admin-side nav::-webkit-scrollbar{display:none}
+  .admin-content{
+    width:100%!important;
+    padding:12px 10px 90px!important
+  }
+  .admin-invite-quick-bar{
+    top:64px!important;
+    width:100%!important;
+    padding:8px 10px!important
+  }
+}
+
+/* ===== V7.9.5 ADMIN MEMBER SEARCH + SIGNUP DATETIME ===== */
+.member-search-tools{display:grid;gap:8px;margin-bottom:10px}
+.member-search-main{display:grid;grid-template-columns:minmax(220px,1fr) 170px;gap:8px}
+.member-search-main input,.member-search-main select,.member-date-filter input{
+  width:100%;min-height:40px;border:1px solid #d9e2ec;border-radius:10px;padding:8px 10px;background:#fff
+}
+.member-date-filter{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+.member-date-filter label{display:grid;gap:3px;font-size:.68rem;color:#6c7d8e;font-weight:700}
+.member-date-filter label input{min-width:145px}
+.member-result-count{margin-left:auto;padding:7px 10px;border-radius:999px;background:#eef4fb;color:#4d6680;font-size:.7rem;font-weight:800}
+.member-row .row-main em{font-style:normal;color:#7d8d9d;font-size:.68rem}
+.empty-member{justify-content:center;color:#7b8b9a}
+@media(max-width:680px){
+  .member-search-main{grid-template-columns:1fr}
+  .member-date-filter{display:grid;grid-template-columns:1fr 1fr;align-items:end}
+  .member-date-filter .mini-btn{min-height:40px}
+  .member-result-count{margin-left:0;text-align:center}
+}
+
+/* ===== V7.9.6 ADMIN RECOVERY TOOLS ===== */
+.mini-btn.recovery{background:#eef7ff!important;border-color:#c8e2f5!important;color:#316f9d!important}
+.mini-btn.recovery-pin{background:#f4efff!important;border-color:#d9cff5!important;color:#6652a6!important}
+.member-row .row-actions{flex-wrap:wrap}
+@media(max-width:680px){
+  .member-row .row-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%}
+  .member-row .row-actions .mini-btn{min-height:38px}
+}

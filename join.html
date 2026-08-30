@@ -23,8 +23,8 @@
 <main class="join-wrap">
   <section class="join-card">
     <div class="join-badge">🎟️ ลิงก์เชิญสมาชิก</div>
-    <h1>สมัครสมาชิก Klang Plan</h1><div class="pending-note instant">สมัครผ่านลิงก์จาก Admin แล้วเปิดสิทธิ์ Member อัตโนมัติ</div>
-    <p class="lead">กรอกข้อมูลของคุณครูเอง ใช้เวลาไม่ถึง 1 นาที</p>
+    <h1>สมัครสมาชิก Klang Plan</h1><div class="pending-note instant">สมัครผ่านลิงก์จาก Admin → เปิดสิทธิ์ Member ทันที</div>
+    <p class="lead">กรอกชื่อและตั้งรหัสผ่าน 6 หลัก ใช้เวลาไม่ถึง 1 นาที</p>
 
     <div id="inviteState" class="invite-state checking">
       <span>🔎</span>
@@ -42,12 +42,12 @@
         <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="teacher@example.com" required>
       </label>
 
-      <label>ตั้งรหัสผ่าน
-        <input id="password" type="password" autocomplete="new-password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" required>
+      <label>ตั้งรหัสผ่าน 6 หลัก
+        <input id="password" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
       </label>
 
-      <label>ยืนยันรหัสผ่าน
-        <input id="password2" type="password" autocomplete="new-password" minlength="6" placeholder="กรอกรหัสผ่านอีกครั้ง" required>
+      <label>ยืนยันรหัสผ่าน 6 หลัก
+        <input id="password2" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
       </label>
 
       <button id="joinBtn" class="join-btn" type="submit">
@@ -61,10 +61,16 @@
       <div class="success-icon">✅</div>
       <h2>สมัครสำเร็จ</h2>
       <p id="successText">บัญชีพร้อมใช้งานแล้ว</p>
+      <div class="member-id-box">
+        <small>Member ID ของคุณ</small>
+        <strong id="createdMemberId">—</strong>
+        <button id="copyMemberId" type="button">📋 คัดลอก Member ID</button>
+      </div>
+      <p class="remember-id">เก็บ Member ID นี้ไว้สำหรับเข้าใช้งานครั้งต่อไปหรือเมื่อเปลี่ยนเครื่อง</p>
       <a class="open-app-btn" href="/teacher.html">เปิด Klang Plan</a>
     </div>
 
-    <div class="security-note">🔒 ลิงก์นี้สร้างโดย Admin และใช้สำหรับสมัครสมาชิก Klang Plan เท่านั้น</div>
+    <div class="instant-note">⚡ สมัครสำเร็จแล้วเข้าใช้ได้ทันที ไม่ต้องรออีเมลยืนยัน</div><div class="security-note">🔒 ลิงก์นี้สร้างโดย Admin และใช้สำหรับสมัครสมาชิก Klang Plan เท่านั้น</div>
   </section>
 </main>
 <script src="/join.js"></script>

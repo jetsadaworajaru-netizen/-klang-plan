@@ -542,28 +542,20 @@
     <div id="auth-login" class="auth-pane active">
       <div class="easy-auth-intro"><span>👋</span><div><b>ยินดีต้อนรับกลับ</b><small>ครั้งต่อไปใช้เพียงอีเมลและรหัสผ่าน</small></div></div>
       <button id="facebookLoginBtn" type="button" class="facebook-login-btn">f&nbsp;&nbsp;ดำเนินการต่อด้วย Facebook <small id="facebookStatusText">เตรียมระบบไว้แล้ว</small></button>
-      <div class="social-auth-divider"><span>หรือใช้อีเมล</span></div>
-      <div class="field"><label>อีเมล</label><input id="loginEmail" type="email" autocomplete="email" placeholder="อีเมลที่ใช้สมัคร"></div>
-      <div class="field"><label>รหัสผ่าน</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="รหัสผ่านของคุณ"></div>
+      <div class="social-auth-divider"><span>เข้าสู่ระบบสมาชิก</span></div>
+      <div class="field"><label>Member ID</label><input id="loginEmail" type="text" autocomplete="username" autocapitalize="characters" placeholder="เช่น KP-M482910"></div>
+      <div class="field"><label>รหัสผ่าน 6 หลัก</label><input id="loginPassword" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="••••••"></div>
       <button id="loginBtn" class="btn btn-gold easy-auth-main">เข้าสู่ระบบ</button>
-      <div id="loginMsg"></div>
+      <div class="device-note">🔒 1 บัญชีใช้งานได้สูงสุด 2 เครื่อง</div><div id="loginMsg"></div>
     </div>
 
     <div id="auth-register" class="auth-pane">
       <div class="member-flow-note">
-        <b>สมัครง่ายเหมือนรับลิงก์เข้ากลุ่ม</b>
-        <span>① ชำระเงินและส่งสลิปให้เพจ → ② รับลิงก์ส่วนตัวจากแอดมิน → ③ สมัครครั้งเดียว → ④ เข้าใช้งาน</span>
+        <b>สมัครสมาชิกครั้งแรก</b>
+        <span>รับลิงก์เชิญส่วนตัวจาก Admin → กรอกชื่อ → ตั้งรหัสผ่าน 6 หลัก → Active ทันที</span>
       </div>
-      <div class="easy-auth-intro"><span>🔑</span><div><b>เข้ากลุ่มด้วยลิงก์/รหัสสมาชิก</b><small>ถ้ากดลิงก์จากแอดมิน ระบบจะใส่รหัสให้อัตโนมัติ</small></div></div>
-      <div class="field"><label>ชื่อคุณครู</label><input id="regName" autocomplete="name" placeholder="ชื่อ-สกุล"></div>
-      <div class="field"><label>อีเมล <small>ใช้สำหรับเข้าใช้งานครั้งต่อไป</small></label><input id="regEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-      <div class="field"><label>รหัสสมาชิก</label><input id="regInvite" autocomplete="off" placeholder="รหัสจากลิงก์หรือแอดมิน"></div>
-      <div class="field"><label>ตั้งรหัสผ่านครั้งเดียว</label><input id="regPassword" type="password" minlength="6" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
-      <input id="regSchool" type="hidden"><input id="regPhone" type="hidden"><input id="regFacebook" type="hidden">
-      <button id="registerBtn" class="btn btn-blue easy-auth-main">สมัครสมาชิก</button>
-      <button id="contactPageBtn" type="button" class="contact-page-btn">💬 ยังไม่มีรหัส? ติดต่อเพจเพื่อสมัครสมาชิก</button>
-      <div class="easy-auth-note">ลิงก์ส่วนตัวที่แอดมินส่งหลังตรวจสลิป สามารถเปิดสิทธิ์ Member ให้อัตโนมัติได้ ไม่ต้องรออนุมัติซ้ำ</div>
-      <div id="registerMsg"></div>
+      <div class="easy-auth-intro"><span>🔗</span><div><b>ต้องมีลิงก์เชิญจาก Admin</b><small>ลิงก์หนึ่งใช้สมัครได้ 1 บัญชีเท่านั้น</small></div></div>
+      <div class="alert warn">หากยังไม่มีลิงก์เชิญ กรุณาติดต่อผู้ดูแลระบบ</div>
     </div>
   </div>
 </div>

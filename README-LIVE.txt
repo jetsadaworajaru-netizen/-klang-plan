@@ -1,21 +1,28 @@
-KLANG PLAN V7.9.1 — INSTANT ACTIVE INVITE
+KLANG PLAN V7.9.6 — ADMIN MEMBER RECOVERY TOOLS
 
-เปลี่ยน Flow สมาชิกตามล่าสุด:
-- Admin สร้างลิงก์เชิญ Member
-- ส่งลิงก์ให้ครู
-- ครูสมัครผ่าน /join.html
-- สมัครสำเร็จแล้ว Active Member อัตโนมัติทันที
-- ไม่ต้องรอ Admin อนุมัติ
-- ลิงก์ยังใช้ได้ 1 คน
-- ครูกรอกชื่อ / อีเมล / ตั้งรหัสผ่านเอง
-- ระบบจำอีเมลในเครื่อง
-- Member ไม่เห็น Admin
-- เมนูครูยังคงเรียบง่าย: หน้าหลัก / สร้างแผน / งานของฉัน
-- Flow จบที่ Prompt แล้วต่อยอด ใบงาน แบบทดสอบ ใบความรู้ Rubric เกม Teaching Pack
-- ฟอนต์ Noto Sans Thai
+เพิ่มหลังบ้าน Admin:
+1) รีเซ็ตอุปกรณ์สมาชิก
+- ปลดอุปกรณ์เดิมทั้งหมดของสมาชิก
+- หลังรีเซ็ต สมาชิกสามารถเข้าใหม่ได้สูงสุด 2 เครื่อง
+- มีหน้าต่างยืนยันก่อนดำเนินการ
+- บันทึก Admin Audit Log
+
+2) รีเซ็ตรหัสผ่าน/PIN 6 หลัก
+- Admin เลือกสมาชิกแล้วกด “รีเซ็ต PIN”
+- ตั้ง PIN ใหม่เป็นตัวเลข 6 หลัก
+- ต้องยืนยัน PIN สองครั้ง
+- เรียก Supabase Edge Function admin-reset-pin
+- Edge Function ตรวจว่า caller เป็น Active Admin ก่อน
+- Member ไม่สามารถเรียกใช้เองได้
+- บันทึก Admin Audit Log
+
+ระบบเดิมยังอยู่:
+- No email Member
+- Member ID + PIN 6 หลัก
+- 1 Invite = 1 Member
+- Active ทันที
+- 1 Member สูงสุด 2 เครื่อง
+- Admin ค้นชื่อ / Member ID / Invite Code / วันที่สมัคร
 
 Admin:
 https://klang-plan.pages.dev/admin-panel.html
-
-Teacher:
-https://klang-plan.pages.dev/teacher.html

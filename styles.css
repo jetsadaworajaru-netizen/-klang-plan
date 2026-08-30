@@ -793,3 +793,5 @@ body.auth-resolving #authBtn{visibility:hidden}
 html,body,button,input,select,textarea{font-family:"Noto Sans Thai",sans-serif!important}
 h1,h2,h3,h4,.flow-head h2,.continue-head h3,.final-generate{font-family:"Noto Sans Thai",sans-serif!important}
 .simple-3-nav{grid-template-columns:repeat(3,1fr)!important}
+
+.device-note{margin:8px 0 3px;padding:8px 10px;border-radius:10px;background:#f4f7fb;border:1px solid #dfe7ef;color:#6f8396;font-size:.7rem;text-align:center}
