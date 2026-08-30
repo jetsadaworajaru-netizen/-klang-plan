@@ -15,3 +15,6 @@
 
 /join.js
   Cache-Control: no-store, no-cache, must-revalidate
+
+/data.json
+  Cache-Control: no-store, no-cache, must-revalidate

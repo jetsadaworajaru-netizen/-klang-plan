@@ -1,35 +1,28 @@
-KLANG PLAN V8.5 — FINAL ACTIONS + TOP TABS
+KLANG PLAN V8.5.1 — INTERACTION HOTFIX
 
-ปรับตาม UX ใหม่:
-1) “สร้าง Prompt” เป็นช่วงท้ายสุดของหน้าสร้างแผน
-2) หลังสร้าง Prompt จึงแสดง:
-   - สร้างใบงาน
-   - แบบทดสอบ
-   - ใบความรู้
-   - Rubric
-   - เกม
-   - Teaching Pack
-3) ถัดลงมาคือ “นำ Prompt ไปใช้ต่อ”
-   AI:
-   - ChatGPT
-   - Gemini
-   - Claude
-   - Canva
-   เอกสาร:
-   - Microsoft Word
-   - PDF
-4) Word: คัดลอก Prompt แล้วเปิด Word Online
-5) PDF: เปิดหน้าพิมพ์เพื่อ Save / Print เป็น PDF
-6) เมนูอื่นย้ายเป็นแท็บด้านบน:
-   - สร้างแผน
-   - งานของฉัน
-   - ตัวชี้วัด
-   - สไตล์
-   - ช่วยเหลือ
-7) บังคับ .view ให้แสดงเฉพาะแท็บ active เพื่อไม่ให้เนื้อหาของแท็บอื่นไหลต่อใต้หน้าสร้างแผน
-8) generator เป็นหน้าเริ่มต้นของ Member App
+อาการ:
+- หน้า “สร้างแผน” เปิดได้ แต่กดช่วงชั้น/ระดับชั้น/ตัวชี้วัด/ปุ่มต่าง ๆ ไม่ได้
+- ช่องข้อมูลค้างที่ “กำลังโหลดข้อมูล...”
 
-Teacher Login:
+สาเหตุ:
+V8.4/V8.5 ลบหน้า Login และ Admin เก่าออกจาก member-app.html แล้ว
+แต่ app.js ยังมี event handler เก่าบางส่วนที่อ้าง element เหล่านั้นโดยตรง
+JavaScript จึงหยุดทำงานก่อนเริ่มโหลด data.json และก่อนผูก event ของตัวเลือกหลักสูตร
+
+แก้ไข:
+- ทำ compatibility guard สำหรับ legacy element ที่ไม่ใช้แล้ว เพื่อไม่ให้ JS crash
+- ตรวจ direct element references ใน member-app.html แล้ว
+- เพิ่ม cache bust app.js/styles.css เป็น v=851
+- data.json no-cache
+- เพิ่มข้อความ fallback หากโหลด curriculum ไม่สำเร็จ
+- app.js/admin.js/join.js ผ่าน node --check
+
+หลัง Deploy:
+1. ปิดหน้า Messenger/Safari เดิม
+2. เปิด teacher.html ใหม่
+3. Login
+4. ทดสอบ ปฐมวัย > ระดับชั้น > กลุ่มสาระ > ตัวชี้วัด
+5. ทดสอบสร้าง Prompt
+
+Teacher:
 https://klang-plan.pages.dev/teacher.html
-Member App:
-https://klang-plan.pages.dev/member-app.html
