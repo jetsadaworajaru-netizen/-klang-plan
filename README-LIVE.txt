@@ -1,28 +1,25 @@
-KLANG PLAN V8.2 — AUTH SEPARATION + TEACHER INTERACTION FIX
+KLANG PLAN V8.3 — HARD MEMBER / ADMIN SEPARATION
 
-แก้ปัญหาหลักจากภาพ:
+โครงสร้างใหม่:
+- /teacher.html = หน้า Login ครูเท่านั้น
+- /member-app.html = แอปสำหรับสมาชิกหลัง Login
+- /admin-panel.html = ระบบหลังบ้าน Admin เท่านั้น
+- /join.html?invite=... = สมัครครั้งแรก
+
+แก้ปัญหา:
 1) Member เห็นระบบหลังบ้าน
-- แยก Supabase session ของ Admin และ Member คนละ storage key
-- Admin: klang-admin-auth
-- Teacher/Member: klang-member-auth
-- หน้า teacher ไม่รับ Admin session และไม่มีปุ่ม/โหมดหลังบ้าน
+   - Admin และ Member ใช้ auth storage คนละ key
+   - member-app ตรวจ role=member + status=active เท่านั้น
+   - ถ้าไม่ผ่านจะเด้งกลับ /teacher.html
+2) teacher.html เปิดมาเข้าหน้าระบบเลย
+   - teacher.html ถูกเปลี่ยนเป็นหน้า Login จริงแบบ standalone
+3) ปุ่มในแอปกดไม่ได้
+   - app.js มี hard auth flow ที่สั้นลง
+   - legacy missing elements เปลี่ยนเป็น null-safe
+4) Cache
+   - เพิ่ม _headers no-store สำหรับหน้าและ JS สำคัญ
 
-2) เปิด teacher.html แล้วเข้าระบบทันทีทั้งที่ควร Login
-- ถ้าไม่มี Active Member session หน้า teacher จะล็อกและแสดง Login ก่อน
-- Login ด้วย Member ID + PIN 6 หลัก
-- เมื่อ login สำเร็จจึงเปิดหน้าใช้งาน
-- ถ้ายังมี Member session ที่ถูกต้อง ระบบเข้าได้ตามปกติ ไม่ต้อง login ซ้ำทุกครั้ง
-
-3) ปุ่มระดับชั้น/สร้าง Prompt กดไม่ได้
-- พบสาเหตุสำคัญ: app.js ยังมี $("registerBtn").onclick แต่หน้า HTML ไม่มี registerBtn แล้ว
-- JavaScript จึง crash ก่อนโหลด curriculum และก่อน bind ปุ่ม
-- ลบ registration handler เก่าออก
-- init Backend แยกจาก data loader
-- เพิ่ม touch/pointer reliability สำหรับมือถือและ Messenger WebView
-
-4) Admin และ Teacher แยก session ชัดเจน
-- ลดปัญหาบัญชี Admin ไหลไปหน้า Member และกลับกัน
-
-URLs:
-Teacher: https://klang-plan.pages.dev/teacher.html
+ลิงก์ใหม่:
+ครู Login: https://klang-plan.pages.dev/teacher.html
+แอปสมาชิก: https://klang-plan.pages.dev/member-app.html
 Admin: https://klang-plan.pages.dev/admin-panel.html

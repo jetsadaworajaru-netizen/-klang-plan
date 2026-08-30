@@ -1,0 +1,17 @@
+/teacher.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/member-app.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/admin-panel.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/app.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/admin.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/join.js
+  Cache-Control: no-store, no-cache, must-revalidate

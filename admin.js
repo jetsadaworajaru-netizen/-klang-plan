@@ -43,9 +43,7 @@ $("adminLoginBtn").onclick=async()=>{
 };
 $("logoutBtn").onclick=async()=>{await sb.auth.signOut();showLogin()};
 
-$("switchToUserBtn").onclick=async()=>{
-  location.assign("/teacher.html")
-};
+$("switchToUserBtn").onclick=()=>{location.assign("/teacher.html")};
 $("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("adminLoginBtn").click()});
 
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));

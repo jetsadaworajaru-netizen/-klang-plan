@@ -113,7 +113,7 @@ function openMobileSheet(){
   document.body.classList.add("mobile-sheet-open");
   const t=$("mobileMemberText");
   if(t)t.textContent=currentUser?(currentProfile?.full_name||currentProfile?.member_id||"สมาชิก Klang Plan"):"ยังไม่ได้เข้าสู่ระบบ";
-  if($("mobileAdminBtn"))$("mobileAdminBtn").style.display=currentProfile?.role==="admin"?"flex":"none"
+  
 }
 if($("mobileMoreBtn"))$("mobileMoreBtn").onclick=openMobileSheet;
 if($("closeMobileSheet"))$("closeMobileSheet").onclick=closeMobileMenus;
@@ -122,7 +122,7 @@ if($("mobileAccountBtn"))$("mobileAccountBtn").onclick=()=>{
   closeMobileMenus();
   if(currentUser)logout();else openAuth("login")
 };
-location.href="/admin-panel.html"};
+
 document.querySelectorAll("[data-mobile-go]").forEach(btn=>btn.onclick=()=>go(btn.dataset.mobileGo));
 
 document.addEventListener("click",e=>{
@@ -160,45 +160,24 @@ function backendReady(){return !!(CFG.supabaseUrl&&(CFG.supabasePublishableKey||
   currentUser=session?.user||null;
   currentProfile=null;
 
-  if(currentUser){
-    const {data,error}=await supabaseClient.from("profiles")
-      .select("id,email,full_name,school_name,facebook_name,phone,role,status,requested_role,invite_code,member_id,membership_started_at,membership_expires_at,approved_at,created_at")
-      .eq("id",currentUser.id).maybeSingle();
+  if(!currentUser){lockMemberApp();return}
 
-    if(error){console.error("profile",error)}
-    currentProfile=data||null;
+  const {data,error}=await supabaseClient.from("profiles")
+    .select("id,email,full_name,role,status,member_id,invite_code,created_at")
+    .eq("id",currentUser.id).maybeSingle();
 
-    // Teacher site accepts active Member only. Admin session must never bleed into this UI.
-    if(!currentProfile || currentProfile.role==="admin" || currentProfile.status!=="active"){
-      await supabaseClient.auth.signOut();
-      currentUser=null;currentProfile=null;
-      renderAuthState();
-      lockMemberApp();
-      return;
-    }
-
-    const ok=await enforceDeviceLimit();
-    if(!ok){lockMemberApp();return}
+  if(error||!data||data.role!=="member"||data.status!=="active"){
+    try{await supabaseClient.auth.signOut()}catch{}
+    currentUser=null;currentProfile=null;
+    lockMemberApp();return
   }
+
+  currentProfile=data;
+  const ok=await enforceDeviceLimit();
+  if(!ok){lockMemberApp();return}
 
   renderAuthState();
-
-  if(currentUser&&currentProfile?.role==="member"&&currentProfile?.status==="active"){
-    unlockMemberApp()
-  }else{
-    lockMemberApp()
-  }
-}
-function lockMemberApp(){
-  document.body.classList.add("member-auth-locked");
-  document.body.classList.remove("member-auth-ready","member-auth-pending");
-  setTimeout(()=>openAuth("login"),0)
-}
-function unlockMemberApp(){
-  document.body.classList.remove("member-auth-locked","member-auth-pending");
-  document.body.classList.add("member-auth-ready");
-  if(window.KlangAuthFallback)window.KlangAuthFallback.close();
-  else $("authModal")?.classList.remove("open")
+  unlockMemberApp()
 }
 function renderAuthState(){
   const chip=$("memberChip"),btn=$("authBtn");
@@ -228,15 +207,15 @@ function renderAuthState(){
 }
 async function logout(){
   if(supabaseClient)await supabaseClient.auth.signOut();
-  currentUser=null;currentProfile=null;
-  renderAuthState();go("home");lockMemberApp()
+  localStorage.removeItem("klangRememberMemberId");
+  location.replace("/teacher.html")
 }
 function openAuth(tab="login"){
   if(window.KlangAuthFallback){window.KlangAuthFallback.open(tab);return}
   const m=$("authModal");if(!m)return;m.classList.add("open");m.style.display="flex";switchAuth(tab)
 }
 if($("authBtn"))$("authBtn").onclick=openAuth;
-if($("facebookLoginBtn"))$("facebookLoginBtn").onclick=async()=>{
+if($("facebookLoginBtn"))if($("facebookLoginBtn"))$("facebookLoginBtn").onclick=async()=>{
   if(!CFG.facebookOAuthEnabled){toast("Facebook Login เตรียมไว้แล้ว แต่ยังต้องเชื่อม Meta App กับ Supabase");return}
   if(!backendReady()){toast("ระบบสมาชิกยังเชื่อมต่อไม่สมบูรณ์");return}
   const code=$("regInvite")?.value?.trim()||new URLSearchParams(location.search).get("invite")||"";
@@ -244,11 +223,11 @@ if($("facebookLoginBtn"))$("facebookLoginBtn").onclick=async()=>{
   const {error}=await supabaseClient.auth.signInWithOAuth({provider:"facebook",options:{redirectTo:CFG.siteUrl||location.origin}});
   if(error)toast(error.message)
 };
-if($("contactPageBtn"))$("contactPageBtn").onclick=()=>{
+if($("contactPageBtn"))if($("contactPageBtn"))$("contactPageBtn").onclick=()=>{
   if(CFG.salesContactUrl)window.open(CFG.salesContactUrl,"_blank","noopener");
   else toast("ยังไม่ได้ตั้งค่าลิงก์เพจใน config.js")
 };
-if($("joinNow"))$("joinNow").onclick=()=>openAuth("register");
+if($("joinNow"))if($("joinNow"))$("joinNow").onclick=()=>openAuth("register");
 if($("closeAuth"))$("closeAuth").onclick=()=>{
   const m=$("authModal");if(!m)return;m.classList.remove("open");m.style.display=""
 };document.querySelectorAll("[data-auth]").forEach(b=>b.onclick=()=>switchAuth(b.dataset.auth));function switchAuth(t){document.querySelectorAll(".auth-tab").forEach(x=>x.classList.toggle("active",x.dataset.auth===t));document.querySelectorAll(".auth-pane").forEach(x=>x.classList.toggle("active",x.id==="auth-"+t))}
@@ -1330,7 +1309,7 @@ async function handleAssetInput(input,type){
     refreshProfileMini();toast("เพิ่มรูปเรียบร้อย ✓")
   }catch(e){console.error(e);toast("ไม่สามารถอ่านรูปได้")}
 }
-if($("teacherPhotoInput"))$("teacherPhotoInput").onchange=e=>handleAssetInput(e.target,"teacher");
+if($("teacherPhotoInput"))if($("teacherPhotoInput"))$("teacherPhotoInput").onchange=e=>handleAssetInput(e.target,"teacher");
 
 
 const oldPersistTeacherProfile=persistTeacherProfile;
