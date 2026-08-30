@@ -70,7 +70,7 @@ async function loadAll(){
   profiles=p.data||[];requests=r.data||[];invites=i.data||[];usage=u.data||[];
   renderAll()
 }
-function renderAll(){renderRecent();renderDashboard();renderPending();renderMembers();renderInvites();renderUsage()}
+function renderAll(){renderRecent();renderDashboard();renderDashboardMembers();renderPending();renderMembers();renderInvites();renderUsage()}
 
 async function createInvite(opts){
   const {data,error}=await sb.rpc("admin_create_member_invite",{
@@ -132,6 +132,21 @@ function renderDashboard(){
   $("sourceList").innerHTML=Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="invite-row"><div class="row-main"><b>${esc(k)}</b></div><b>${v}</b></div>`).join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>'
 }
 function pendingReq(userId){return requests.find(r=>r.user_id===userId&&r.status==="pending")}
+function renderDashboardMembers(){
+  const el=$("dashboardMemberList");if(!el)return;
+  const members=profiles
+    .filter(x=>x.role!=="admin")
+    .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  el.innerHTML=members.map(x=>`
+    <div class="dashboard-member-row">
+      <div>
+        <b>${esc(x.full_name||"—")}</b>
+        <small>${esc(x.member_id||"—")} • สมัคร ${esc(fmtDateTime(x.created_at))} น.</small>
+      </div>
+      <span class="status ${esc(x.status||"")}">${esc(x.status||"—")}</span>
+    </div>
+  `).join("")||'<div class="dashboard-member-empty">ยังไม่มีสมาชิก</div>';
+}
 function renderPending(){
   const a=profiles.filter(x=>x.role!=="admin"&&x.status==="pending");
   $("pendingList").innerHTML=a.map(x=>{
@@ -304,4 +319,9 @@ document.addEventListener("click",e=>{
   if(p){resetMemberPin(p.dataset.resetPin,p.dataset.member,p.dataset.name);return}
   const del=e.target.closest("[data-delete-member]");
   if(del){deleteMemberAccount(del.dataset.deleteMember,del.dataset.member,del.dataset.name);return}
+});
+
+document.addEventListener("click",e=>{
+  const jump=e.target.closest("[data-tab-jump]");
+  if(jump){openTab(jump.dataset.tabJump)}
 });

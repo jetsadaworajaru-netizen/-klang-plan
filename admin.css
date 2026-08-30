@@ -144,3 +144,19 @@ body>main,main,#adminApp,.admin-app{
 /* ===== V7.9.7 MEMBER REVENUE + DELETE ===== */
 .revenue-note{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:7px 10px;border-radius:999px;background:#ecf8ef;border:1px solid #cfe7d4;color:#3f7650;font-size:.7rem;font-weight:800}
 .mini-btn.delete-member{background:#fff0f0!important;border-color:#efc3c3!important;color:#ad4545!important}
+
+/* ===== V7.9.8 DASHBOARD MEMBER LIST ===== */
+.dashboard-member-card{margin-top:12px}
+.dashboard-member-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.dashboard-member-head h2{margin:0}.dashboard-member-head p{margin:2px 0 0;color:#7c8c9c;font-size:.7rem}
+.dashboard-member-list{display:grid;gap:7px}
+.dashboard-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid #e1e9f1;border-radius:12px;background:#fff}
+.dashboard-member-row div{min-width:0}
+.dashboard-member-row b,.dashboard-member-row small{display:block}
+.dashboard-member-row b{color:#294f73}
+.dashboard-member-row small{margin-top:2px;color:#7d8d9c;font-size:.66rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-member-empty{padding:16px;text-align:center;color:#7d8d9c}
+@media(max-width:680px){
+  .dashboard-member-head{align-items:flex-start}
+  .dashboard-member-row{padding:9px}
+}

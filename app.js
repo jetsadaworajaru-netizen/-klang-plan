@@ -80,7 +80,16 @@ function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");set
   if(v==="styles")renderStylesLibrary?.()
 }
 function safeGoFromElement(el){const v=el?.dataset?.go;if(v)go(v)}
-document.querySelectorAll("[data-stage-go]").forEach(b=>b.onclick=()=>{ACTIVE_STAGE=b.dataset.stageGo;go("generator");syncStageTabs();buildGrades()});
+document.querySelectorAll("[data-stage-go]").forEach(b=>b.onclick=null);
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-stage-go]");
+  if(!b)return;
+  e.preventDefault();
+  ACTIVE_STAGE=b.dataset.stageGo;
+  go("generator");
+  syncStageTabs();
+  buildGrades();
+},{capture:true});
 document.querySelectorAll("[data-tool-start]").forEach(b=>b.onclick=()=>{
   selectedTool=b.dataset.toolStart;
   go("generator");
@@ -225,7 +234,18 @@ const adminViewMode=new URLSearchParams(location.search).get("adminview")==="1";
 if(adminViewMode)sessionStorage.setItem("klangAdminUserView","1");
 const rememberedMemberId=localStorage.getItem("klangRememberMemberId");if(rememberedMemberId&&$("loginEmail"))$("loginEmail").value=rememberedMemberId;
 const invite=new URLSearchParams(location.search).get("invite");if(invite){$("regInvite").value=invite;setTimeout(()=>openAuth("register"),500)}
-function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=()=>{if(!DATA.length){toast("กำลังโหลดฐานข้อมูล กรุณารอสักครู่");return}ACTIVE_STAGE=b.dataset.stage;syncStageTabs();buildGrades();savePrefs()});
+function matchGrade(r,g){return r.grade===g||(Array.isArray(r.available_grades)&&r.available_grades.includes(g))}function syncStageTabs(){document.querySelectorAll(".stage-tab").forEach(x=>x.classList.toggle("active",x.dataset.stage===ACTIVE_STAGE))}document.querySelectorAll(".stage-tab").forEach(b=>b.onclick=null);
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".stage-tab");
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  if(!DATA.length){toast("กำลังโหลดฐานข้อมูล กรุณารอสักครู่");return}
+  ACTIVE_STAGE=b.dataset.stage;
+  showAllIndicatorCards=false;
+  syncStageTabs();
+  buildGrades();
+  savePrefs();
+},{capture:true});
 function setSelectState(el,items,placeholder){
   el.innerHTML="";
   if(!items||!items.length){
