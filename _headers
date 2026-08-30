@@ -24,3 +24,12 @@
 
 /styles.css
   Cache-Control: no-store, no-cache, must-revalidate
+
+/member-app.html
+  Cache-Control: no-store, no-cache, must-revalidate
+/member-app.js
+  Cache-Control: no-store, no-cache, must-revalidate
+/member-app.css
+  Cache-Control: no-store, no-cache, must-revalidate
+/data.json
+  Cache-Control: no-store, no-cache, must-revalidate

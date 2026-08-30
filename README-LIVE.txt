@@ -1,26 +1,34 @@
-KLANG PLAN V8.6 — FAILSAFE MEMBER CORE
+KLANG PLAN V8.7 — CLEAN MEMBER APP REBUILD
 
-ปัญหาที่แก้:
-หน้า Member เปิดได้ แต่ปุ่มช่วงชั้น/ระดับชั้น/ตัวชี้วัด/สร้าง Prompt ไม่ตอบสนอง
+หยุด patch app.js เดิมสำหรับหน้าสมาชิก และสร้าง Member App ใหม่แบบ standalone
 
-แนวทาง V8.6:
-- เพิ่ม member-core.js เป็นแกนใช้งานอิสระจาก app.js เดิม
-- แม้ app.js เดิมมี runtime error สคริปต์ใหม่ยังทำงานต่อได้
-- member-core.js ดูแลโดยตรง:
-  1. ปฐมวัย / ประถม / มัธยม
-  2. ระดับชั้น
-  3. กลุ่มสาระ / ด้าน
-  4. ค้นหา + เลือกตัวชี้วัด
-  5. รายละเอียดแผน
-  6. สไตล์ / โทนสี
-  7. สร้าง Prompt
-  8. คัดลอก Prompt
-  9. สร้างต่อ: ใบงาน / แบบทดสอบ / ใบความรู้ / Rubric / เกม / Teaching Pack
-  10. แท็บด้านบน
-  11. เปิด ChatGPT / Gemini / Claude / Canva
-- data.json ใช้ cache bust v=860
-- เพิ่ม no-cache ให้ member-core.js / app.js / styles.css / data.json
-- เพิ่ม touch-action และ pointer-events สำหรับ Safari/Messenger
+ไฟล์หลักใหม่:
+- member-app.html
+- member-app.css
+- member-app.js
 
-หลัง Deploy ต้องปิดหน้าเดิมแล้วเปิดใหม่:
+ไม่มี app.js เดิมโหลดใน member-app อีกต่อไป
+
+ฟังก์ชันหลัก:
+- ตรวจ Active Member session
+- ปฐมวัย / ประถม / มัธยม
+- ระดับชั้น
+- กลุ่มสาระ / ด้าน
+- ค้นหาและเลือกตัวชี้วัด
+- รายละเอียดแผน
+- ข้อมูลผู้สอน
+- สไตล์ + โทนสี
+- สร้าง / คัดลอก Prompt
+- ใบงาน / แบบทดสอบ / ใบความรู้ / Rubric / เกม / Teaching Pack
+- ChatGPT / Gemini / Claude / Canva / Word / PDF
+- งานของฉัน
+- คลังตัวชี้วัด
+- ศูนย์ช่วยเหลือ
+- โปรไฟล์ / Avatar / รูปจริง
+- ออกจากระบบ
+
+Teacher Login:
 https://klang-plan.pages.dev/teacher.html
+
+Member App:
+https://klang-plan.pages.dev/member-app.html
