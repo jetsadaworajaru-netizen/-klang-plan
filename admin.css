@@ -140,3 +140,7 @@ body>main,main,#adminApp,.admin-app{
   .member-row .row-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%}
   .member-row .row-actions .mini-btn{min-height:38px}
 }
+
+/* ===== V7.9.7 MEMBER REVENUE + DELETE ===== */
+.revenue-note{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:7px 10px;border-radius:999px;background:#ecf8ef;border:1px solid #cfe7d4;color:#3f7650;font-size:.7rem;font-weight:800}
+.mini-btn.delete-member{background:#fff0f0!important;border-color:#efc3c3!important;color:#ad4545!important}

@@ -1,3 +1,4 @@
+const MEMBER_PRICE=169;
 const CFG=window.KLANG_CONFIG||{};
 const $=id=>document.getElementById(id);
 let sb=null,user=null,profile=null,profiles=[],requests=[],invites=[],usage=[];
@@ -124,7 +125,7 @@ function renderDashboard(){
   const members=profiles.filter(x=>x.role!=="admin");
   $("dMembers").textContent=members.length;$("dActive").textContent=members.filter(x=>x.status==="active").length;
   const pend=members.filter(x=>x.status==="pending").length;$("dPending").textContent=pend;$("sidePendingCount").textContent=pend;
-  $("dSales").textContent=money(members.reduce((s,x)=>s+Number(x.price_paid||0),0));
+  $("dSales").textContent=money(active.length*MEMBER_PRICE);
   $("attentionList").innerHTML=pend?`<div class="pending-row"><div class="row-main"><b>${pend} คนรออนุมัติ</b><small>กดไปที่เมนูรออนุมัติ</small></div><button class="mini-btn good" id="attnPending">ดูเลย</button></div>`:'<div class="pending-row"><div class="row-main"><b>✓ ไม่มีคำขอค้าง</b></div></div>';
   $("attnPending")?.addEventListener("click",()=>openTab("pending"));
   const c={};members.forEach(x=>{const k=x.sales_source||x.auth_provider||"ไม่ระบุ";c[k]=(c[k]||0)+1});
@@ -176,6 +177,7 @@ function renderMembers(){
         <button class="mini-btn" data-active="${x.id}" data-req="${req?.id||""}">Active</button>
         <button class="mini-btn recovery" data-reset-devices="${x.id}" data-member="${esc(x.member_id||"")}">รีเซ็ตอุปกรณ์</button>
         <button class="mini-btn recovery-pin" data-reset-pin="${x.id}" data-member="${esc(x.member_id||"")}" data-name="${esc(x.full_name||"สมาชิก")}">รีเซ็ต PIN</button>
+        <button class="mini-btn danger delete-member" data-delete-member="${x.id}" data-member="${esc(x.member_id||"")}" data-name="${esc(x.full_name||"สมาชิก")}">ลบสมาชิก</button>
         <button class="mini-btn danger" data-suspend="${x.id}" data-req="${req?.id||""}">ระงับ</button>
       </div>
     </div>`
@@ -230,6 +232,32 @@ async function resetMemberPin(userId,memberId,fullName){
   toast(`รีเซ็ต PIN ของ ${memberId||fullName||"สมาชิก"} สำเร็จ ✓`)
 }
 
+
+async function deleteMemberAccount(userId,memberId,fullName){
+  const label=[fullName,memberId].filter(Boolean).join(" • ");
+  const ok=confirm(`ลบสมาชิก ${label||"รายนี้"} ออกจากระบบถาวรหรือไม่?\n\nข้อมูลบัญชี ประวัติ Prompt และอุปกรณ์ของสมาชิกจะถูกลบออกจากระบบ และไม่สามารถย้อนกลับได้`);
+  if(!ok)return;
+  const verify=prompt(`เพื่อยืนยันการลบ กรุณาพิมพ์คำว่า ลบ`);
+  if(verify!=="ลบ"){toast("ยกเลิกการลบสมาชิก");return}
+
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token){toast("Session Admin หมดอายุ กรุณาเข้าสู่ระบบใหม่");return}
+
+  const resp=await fetch(`${CFG.supabaseUrl}/functions/v1/admin-delete-member`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":CFG.supabasePublishableKey,
+      "Authorization":`Bearer ${session.access_token}`
+    },
+    body:JSON.stringify({user_id:userId})
+  });
+  const result=await resp.json().catch(()=>({}));
+  if(!resp.ok){toast("ลบสมาชิกไม่สำเร็จ: "+(result.detail||result.error||"กรุณาลองใหม่"));return}
+  toast(`ลบสมาชิก ${memberId||fullName||""} แล้ว ✓`);
+  await loadAll()
+}
+
 function wireMemberButtons(root){
   root.querySelectorAll("[data-approve]").forEach(b=>b.onclick=()=>setMember(b.dataset.approve,"active",b.dataset.req));
   root.querySelectorAll("[data-active]").forEach(b=>b.onclick=()=>setMember(b.dataset.active,"active",b.dataset.req));
@@ -274,4 +302,6 @@ document.addEventListener("click",e=>{
   if(d){resetMemberDevices(d.dataset.resetDevices,d.dataset.member);return}
   const p=e.target.closest("[data-reset-pin]");
   if(p){resetMemberPin(p.dataset.resetPin,p.dataset.member,p.dataset.name);return}
+  const del=e.target.closest("[data-delete-member]");
+  if(del){deleteMemberAccount(del.dataset.deleteMember,del.dataset.member,del.dataset.name);return}
 });
