@@ -39,8 +39,11 @@ async function auth(){
   sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}});
   const {data}=await sb.auth.getSession(); if(!data?.session){location.replace("/teacher.html");return false}
   user=data.session.user;
-  const {data:p}=await sb.from("profiles").select("id,full_name,school_name,avatar_url,role,status,member_id").eq("id",user.id).maybeSingle();
+  const {data:p}=await sb.from("profiles").select("id,full_name,school_name,avatar_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle();
   if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
+  if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
+    await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
+  }
   profile=p;renderProfile();return true
 }
 function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||""}

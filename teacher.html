@@ -6,7 +6,7 @@
 <title>Klang Plan | เข้าสู่ระบบครู</title>
 <link rel="icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=912">
 <style>
   html,body{min-height:100%;margin:0;font-family:"Noto Sans Thai",sans-serif;background:#f4f8fc;color:#254f76}
   .member-login-page{min-height:100dvh;display:grid;place-items:center;padding:22px}
@@ -73,6 +73,10 @@
   const sb=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-member-auth"}});
   const show=(text,ok=false)=>$("memberLoginMsg").innerHTML=`<div class="${ok?"ok":"warn"}">${text}</div>`;
 
+  if(new URLSearchParams(location.search).get("expired")==="1"){
+    show("สิทธิ์ทดลองใช้งานของบัญชีนี้หมดอายุแล้ว กรุณาติดต่อ Admin");
+  }
+
   const remembered=localStorage.getItem("klangRememberMemberId");
   if(remembered){
     const m=String(remembered).toUpperCase().match(/KP-M(\d{6})/);
@@ -83,8 +87,8 @@
     const {data}=await sb.auth.getSession();
     const session=data?.session;
     if(!session)return;
-    const {data:p}=await sb.from("profiles").select("role,status,member_id").eq("id",session.user.id).maybeSingle();
-    if(p?.role==="member"&&p?.status==="active"){
+    const {data:p}=await sb.from("profiles").select("role,status,member_id,membership_expires_at").eq("id",session.user.id).maybeSingle();
+    if(p?.role==="member"&&p?.status==="active"&&(!p.membership_expires_at||new Date(p.membership_expires_at).getTime()>Date.now())){
       location.replace("/member-app.html");
     }else{
       await sb.auth.signOut();
@@ -103,9 +107,12 @@
     const email=`${memberId.toLowerCase()}@members.klangplan.app`;
     const {data,error}=await sb.auth.signInWithPassword({email,password:pin});
     if(error){show("Member ID หรือรหัสผ่านไม่ถูกต้อง");$("memberLoginBtn").disabled=false;return}
-    const {data:p}=await sb.from("profiles").select("role,status,member_id").eq("id",data.user.id).maybeSingle();
+    const {data:p}=await sb.from("profiles").select("role,status,member_id,membership_expires_at").eq("id",data.user.id).maybeSingle();
     if(p?.role!=="member"||p?.status!=="active"){
       await sb.auth.signOut();show("บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
+    }
+    if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
+      await sb.auth.signOut();show("สิทธิ์ทดลองใช้งานของบัญชีนี้หมดอายุแล้ว กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
     }
     localStorage.setItem("klangRememberMemberId",memberId);
     location.replace("/member-app.html");

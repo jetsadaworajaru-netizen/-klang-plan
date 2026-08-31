@@ -57,7 +57,7 @@ async function loadAll(){
   const [p,r,i,u]=await Promise.all([
     sb.from("profiles").select("id,email,full_name,role,status,invite_code,member_id,created_at,auth_provider,sales_source,campaign_name,price_paid,payment_status,avatar_url").order("created_at",{ascending:false}),
     sb.from("membership_requests").select("id,user_id,status,invite_code,created_at").order("created_at",{ascending:false}),
-    sb.from("invite_codes").select("id,code,label,is_active,max_uses,used_count,expires_at,created_at,invite_type,auto_activate,sales_source,campaign_name,price_paid,payment_note").order("created_at",{ascending:false}).limit(150),
+    sb.from("invite_codes").select("id,code,label,is_active,max_uses,used_count,expires_at,created_at,invite_type,auto_activate,sales_source,campaign_name,price_paid,payment_note,trial_days").order("created_at",{ascending:false}).limit(150),
     sb.from("prompt_history").select("created_at,product_type,title,grade,subject,indicator_code,user_id").order("created_at",{ascending:false}).limit(100)
   ]);
   if(p.error||r.error||i.error||u.error){console.error(p.error||r.error||i.error||u.error);toast("โหลดข้อมูลบางส่วนไม่สำเร็จ")}
@@ -375,18 +375,38 @@ $("approveAllBtn").onclick=async()=>{
 
 $("createPromoBtn").onclick=async()=>{
   try{
-    const days=Number($("promoDays").value||7),max=Number($("promoMax").value||20);
-    const row=await createInvite({label:$("promoName").value.trim()||"Promotion",maxUses:max,expiresAt:new Date(Date.now()+days*86400000).toISOString(),autoActivate:false,inviteType:"public_promo",source:"โปรโมชั่น",campaign:$("promoName").value.trim()});
-    const link=`${CFG.siteUrl||location.origin}/?invite=${row.code}`;
-    $("promoResult").innerHTML=`<div class="quick-result" style="display:block"><b>Code: ${esc(row.code)}</b><div class="link-box">${esc(link)}</div></div>`;
-    await navigator.clipboard.writeText(link);toast("สร้าง Code และคัดลอกแล้ว ✓");await loadAll()
-  }catch(e){toast(e.message||"สร้าง Code ไม่สำเร็จ")}
+    const trialDays=Math.max(1,Number($("promoTrialDays").value||7));
+    const linkDays=Math.max(1,Number($("promoLinkDays").value||3));
+    const max=Math.max(1,Number($("promoMax").value||30));
+    const campaign=$("promoName").value.trim()||`ทดลองใช้งานฟรี ${trialDays} วัน`;
+    const {data,error}=await sb.rpc("admin_create_trial_invite",{
+      p_label:campaign,
+      p_max_uses:max,
+      p_link_expires_at:new Date(Date.now()+linkDays*86400000).toISOString(),
+      p_trial_days:trialDays,
+      p_sales_source:"ทดลองใช้ฟรี",
+      p_campaign_name:campaign
+    });
+    if(error)throw error;
+    const row=Array.isArray(data)?data[0]:data;
+    const link=`${CFG.siteUrl||location.origin}/join.html?invite=${encodeURIComponent(row.code)}`;
+    $("promoResult").innerHTML=`<div class="quick-result trial-result" style="display:block">
+      <b>🎟️ ${esc(campaign)}</b>
+      <small>ทดลอง ${trialDays} วัน/คน • สูงสุด ${max} คน • ลิงก์รับสมัคร ${linkDays} วัน • สมัครแล้ว Active ทันที</small>
+      <div class="link-box">${esc(link)}</div>
+      <button class="mini-btn" id="copyTrialLink">คัดลอกลิงก์</button>
+    </div>`;
+    $("copyTrialLink").onclick=async()=>{await navigator.clipboard.writeText(link);toast("คัดลอกลิงก์ทดลองใช้ฟรีแล้ว ✓")};
+    try{await navigator.clipboard.writeText(link)}catch{}
+    toast("สร้างทดลองใช้ฟรีสำเร็จ • คัดลอกลิงก์แล้ว ✓");
+    await loadAll()
+  }catch(e){console.error(e);toast(e.message||"สร้างทดลองใช้ฟรีไม่สำเร็จ")}
 };
 function renderInvites(){
   $("inviteHistory").innerHTML=invites.map(x=>{
     const link=`${CFG.siteUrl||location.origin}/join.html?invite=${x.code}`;
-    const type=x.invite_type==="private_paid"?"💳 หลังชำระเงิน":x.invite_type==="public_promo"?"🎟️ โปรโมชั่น":x.invite_type||"—";
-    return `<div class="invite-row"><div class="row-main"><b>${type} • ${esc(x.code)}</b><small>${esc(x.label||"—")} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้ ${x.used_count||0}/${x.max_uses??"∞"} • หมดอายุ ${d(x.expires_at)} • ${x.auto_activate?"Auto Active":"Pending"}</em></div><button class="mini-btn" data-hcopy="${esc(link)}">คัดลอก</button></div>`
+    const type=x.invite_type==="private_paid"?"💳 หลังชำระเงิน":x.invite_type==="trial"?"🧪 ทดลองใช้ฟรี":x.invite_type==="public_promo"?"🎟️ โปรโมชั่น":x.invite_type||"—";
+    return `<div class="invite-row"><div class="row-main"><b>${type} • ${esc(x.code)}</b><small>${esc(x.label||"—")} • ${money(x.price_paid)} • ${esc(x.sales_source||"—")}</small><em>ใช้ ${x.used_count||0}/${x.max_uses??"∞"} • ลิงก์หมดอายุ ${d(x.expires_at)} • ${x.trial_days?`ทดลอง ${x.trial_days} วัน/คน • `:""}${x.auto_activate?"Auto Active":"Pending"}</em></div><button class="mini-btn" data-hcopy="${esc(link)}">คัดลอก</button></div>`
   }).join("")||'<div class="invite-row">ยังไม่มีลิงก์</div>';
   $("inviteHistory").querySelectorAll("[data-hcopy]").forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.hcopy);toast("คัดลอกแล้ว ✓")})
 }

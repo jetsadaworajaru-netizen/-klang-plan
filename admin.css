@@ -267,3 +267,8 @@ body>main,main,#adminApp,.admin-app{
 }
 
 .support-admin-row{display:flex;justify-content:space-between;gap:16px;padding:16px;border-bottom:1px solid #e5edf3}.support-admin-row:last-child{border-bottom:0}.support-admin-row div:first-child{display:grid;gap:4px}.support-admin-row small{color:#8091a2}.support-admin-row h4{margin:5px 0 0}.support-admin-row p{margin:0;color:#49657c;white-space:pre-wrap}@media(max-width:700px){.support-admin-row{display:grid}}
+
+/* ===== V9.1.2 REAL TRIAL ===== */
+.trial-promo-form{display:grid!important;grid-template-columns:2fr 1fr 1fr 1fr auto!important;gap:9px!important;align-items:end!important}
+.trial-promo-form label{display:grid;gap:5px}.trial-promo-form label>span{font-size:.68rem;font-weight:800;color:#617b91}.input-suffix{display:flex;align-items:center;border:1px solid #d5e2ec;border-radius:13px;overflow:hidden;background:#fff}.input-suffix input{border:0!important;min-width:0}.input-suffix em{font-style:normal;padding:0 10px;color:#71879a;font-size:.72rem}.trial-create-btn{min-height:50px}.promo-help{margin-top:9px;background:#eef9f2;border:1px solid #cfe9d8;border-radius:13px;padding:10px 12px;color:#426b51;font-size:.69rem}.trial-result{display:grid!important;gap:7px}.trial-result small{color:#668093}
+@media(max-width:800px){.trial-promo-form{grid-template-columns:1fr 1fr!important}.trial-promo-form label:first-child,.trial-create-btn{grid-column:1/-1}.trial-create-btn{width:100%}}

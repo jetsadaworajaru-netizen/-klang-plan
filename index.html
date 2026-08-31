@@ -3,27 +3,116 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>เปิดหลังบ้าน Admin</title>
+<title>Klang Plan | เข้าสู่ระบบครู</title>
+<link rel="icon" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font-family:system-ui,-apple-system,sans-serif;background:#f6f9fc;color:#244b70}
-.card{width:min(440px,100%);background:#fff;border:1px solid #dbe6ef;border-radius:22px;padding:25px;text-align:center;box-shadow:0 16px 38px rgba(39,75,108,.10)}
-h2{margin:0 0 8px;font-size:1.45rem}p{margin:0 0 18px;color:#70859a;line-height:1.6}
-a.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#3158d6;color:#fff;text-decoration:none;border-radius:14px;font-weight:900;font-size:1.05rem;box-shadow:0 7px 0 #2544a5}
-a.btn:active{transform:translateY(2px);box-shadow:0 5px 0 #2544a5}
-small{display:block;margin-top:15px;color:#93a2b1}
+  html,body{min-height:100%;margin:0;font-family:"Noto Sans Thai",sans-serif;background:#f4f8fc;color:#254f76}
+  .member-login-page{min-height:100dvh;display:grid;place-items:center;padding:22px}
+  .member-login-card{width:min(100%,430px);background:#fff;border:1px solid #dbe6ef;border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(42,75,110,.10)}
+  .member-login-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .member-login-brand img{width:58px;height:58px;object-fit:contain}
+  .member-login-brand h1{font-size:1.35rem;margin:0}.member-login-brand p{margin:2px 0 0;color:#8191a1;font-size:.78rem}
+  .member-login-title{font-size:1.7rem;margin:8px 0 5px}.member-login-sub{margin:0 0 18px;color:#7d8d9c}
+  .member-login-card label{display:grid;gap:6px;font-weight:800;margin:12px 0;color:#355c7f}
+  .member-login-card input{min-height:52px;border:1px solid #ccdbe7;border-radius:14px;padding:0 14px;font:inherit;font-size:16px}
+  .member-id-input-wrap{display:flex;align-items:center;min-height:52px;border:1px solid #ccdbe7;border-radius:14px;background:#fff;overflow:hidden}
+  .member-id-prefix{height:52px;display:flex;align-items:center;padding:0 13px;background:#eef4fb;color:#3d6487;font-weight:900;border-right:1px solid #d4e1ec;flex:0 0 auto}
+  .member-id-input-wrap input{border:0!important;border-radius:0!important;min-width:0;flex:1;outline:none!important;box-shadow:none!important}
+
+  .member-login-btn{width:100%;min-height:54px;border:0;border-radius:15px;margin-top:10px;background:linear-gradient(135deg,#1da0ff,#6155ed);color:#fff;font:inherit;font-weight:900;font-size:1.02rem}
+  .member-login-note{margin-top:14px;padding:10px 12px;border-radius:12px;background:#f4f7fb;color:#6f8193;font-size:.72rem;text-align:center}
+  .member-login-msg{margin-top:10px}.member-login-msg .warn{padding:10px 12px;border-radius:11px;background:#fff0f0;color:#a64e4e}
+  .member-login-msg .ok{padding:10px 12px;border-radius:11px;background:#edf9f2;color:#347252}
+  .first-time{margin-top:16px;padding-top:15px;border-top:1px solid #e6edf3;text-align:center;font-size:.76rem;color:#7b8c9d}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>หลังบ้าน Admin</h2>
-<p>กดปุ่มด้านล่างเพื่อเปิดหน้าหลังบ้านโดยตรง</p>
-<a id="openAdminDirect" class="btn" href="/admin-panel.html">เปิดหลังบ้าน Admin</a>
-<small>เส้นทางตรง: /admin-panel.html</small>
-</div>
+<main class="member-login-page">
+  <section class="member-login-card">
+    <div class="member-login-brand">
+      <img src="/brand-logo.png" alt="Klang Plan">
+      <div><h1>Klang Plan</h1><p>คลังแผนการสอนหน้าเดียว</p></div>
+    </div>
+
+    <h2 class="member-login-title">เข้าสู่ระบบครู</h2>
+    <p class="member-login-sub">ใช้ Member ID และรหัสผ่าน 6 หลัก</p>
+
+    <label>Member ID
+      <div class="member-id-input-wrap">
+        <span class="member-id-prefix">KP-M</span>
+        <input id="memberId" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="550939" aria-label="เลขสมาชิก 6 หลัก">
+      </div>
+      <small style="font-weight:500;color:#8a99a8">กรอกเฉพาะเลขสมาชิก 6 หลัก ระบบใส่ KP-M ให้แล้ว</small>
+    </label>
+
+    <label>รหัสผ่าน 6 หลัก
+      <input id="memberPin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="••••••">
+    </label>
+
+    <button id="memberLoginBtn" class="member-login-btn" type="button">เข้าสู่ระบบ</button>
+    <div class="member-login-note">🔒 1 บัญชีใช้งานได้สูงสุด 2 เครื่อง</div>
+    <div id="memberLoginMsg" class="member-login-msg"></div>
+
+    <div class="first-time">สมัครครั้งแรกต้องใช้ลิงก์เชิญจาก Admin เท่านั้น</div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
 <script>
-document.getElementById('openAdminDirect').addEventListener('click',function(){
-  location.href='/admin-panel.html';
-});
+(()=>{
+  const $=id=>document.getElementById(id);
+  const CFG=window.KLANG_CONFIG||{};
+  const key=CFG.supabasePublishableKey||CFG.supabaseAnonKey||"";
+  const url=CFG.supabaseUrl||"";
+  if(!window.supabase||!url||!key){
+    $("memberLoginMsg").innerHTML='<div class="warn">ระบบสมาชิกยังไม่พร้อม กรุณาติดต่อ Admin</div>';
+    return;
+  }
+  const sb=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-member-auth"}});
+  const show=(text,ok=false)=>$("memberLoginMsg").innerHTML=`<div class="${ok?"ok":"warn"}">${text}</div>`;
+
+  const remembered=localStorage.getItem("klangRememberMemberId");
+  if(remembered){
+    const m=String(remembered).toUpperCase().match(/KP-M(\d{6})/);
+    $("memberId").value=m?m[1]:String(remembered).replace(/\D/g,"").slice(-6);
+  }
+
+  async function checkExisting(){
+    const {data}=await sb.auth.getSession();
+    const session=data?.session;
+    if(!session)return;
+    const {data:p}=await sb.from("profiles").select("role,status,member_id").eq("id",session.user.id).maybeSingle();
+    if(p?.role==="member"&&p?.status==="active"){
+      location.replace("/member-app.html");
+    }else{
+      await sb.auth.signOut();
+    }
+  }
+
+  $("memberLoginBtn").onclick=async()=>{
+    const rawMember=$("memberId").value.trim().toUpperCase();
+    const pin=$("memberPin").value.trim();
+    const digits=(rawMember.match(/KP-M(\d{6})/)||rawMember.match(/^(\d{6})$/))?.[1]||"";
+    if(!digits){show("กรุณากรอกเลขสมาชิก 6 หลักหลัง KP-M เช่น 550939");return}
+    if(!/^\d{6}$/.test(pin)){show("รหัสผ่านต้องเป็นตัวเลข 6 หลัก");return}
+    const memberId=`KP-M${digits}`;
+    $("memberLoginBtn").disabled=true;
+    show("กำลังเข้าสู่ระบบ...",true);
+    const email=`${memberId.toLowerCase()}@members.klangplan.app`;
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pin});
+    if(error){show("Member ID หรือรหัสผ่านไม่ถูกต้อง");$("memberLoginBtn").disabled=false;return}
+    const {data:p}=await sb.from("profiles").select("role,status,member_id").eq("id",data.user.id).maybeSingle();
+    if(p?.role!=="member"||p?.status!=="active"){
+      await sb.auth.signOut();show("บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
+    }
+    localStorage.setItem("klangRememberMemberId",memberId);
+    location.replace("/member-app.html");
+  };
+
+  checkExisting();
+})();
 </script>
 </body>
 </html>

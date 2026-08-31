@@ -193,7 +193,14 @@
           <div class="page-title split-title"><div><span>🔗</span><div><h1>ลิงก์และ Code</h1><p>ดูประวัติลิงก์ส่วนตัวและโปรโมชั่น</p></div></div><button id="goQuickBtn" class="primary-btn small">+ สร้างลิงก์ใหม่</button></div>
           <div class="promo-box">
             <h2>🎟️ สร้าง Code โปรโมชั่น</h2>
-            <div class="promo-form"><input id="promoName" placeholder="ชื่อแคมเปญ"><input id="promoMax" type="number" min="1" value="20" placeholder="ใช้ได้กี่คน"><input id="promoDays" type="number" min="1" value="7" placeholder="กี่วัน"><button id="createPromoBtn" class="ghost-btn">สร้าง Code</button></div>
+            <div class="promo-form trial-promo-form">
+  <label><span>ชื่อแคมเปญ</span><input id="promoName" value="ทดลองใช้งานฟรี 7 วัน" placeholder="ชื่อแคมเปญ"></label>
+  <label><span>จำนวนครูสูงสุด</span><input id="promoMax" type="number" min="1" value="30" placeholder="ใช้ได้กี่คน"></label>
+  <label><span>ทดลองใช้ต่อคน</span><div class="input-suffix"><input id="promoTrialDays" type="number" min="1" max="365" value="7"><em>วัน</em></div></label>
+  <label><span>ลิงก์เปิดรับสมัคร</span><div class="input-suffix"><input id="promoLinkDays" type="number" min="1" value="3"><em>วัน</em></div></label>
+  <button id="createPromoBtn" class="ghost-btn trial-create-btn">สร้างลิงก์ทดลองใช้ฟรี</button>
+</div>
+<div class="promo-help">ครูที่สมัครจากลิงก์นี้จะ <b>Active ทันที</b> และแต่ละบัญชีจะหมดสิทธิ์ตามจำนวนวันทดลอง นับจากวันที่สมัครของคนนั้น</div>
             <div id="promoResult"></div>
           </div>
           <div id="inviteHistory" class="stack-list"></div>
