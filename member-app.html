@@ -6,7 +6,7 @@
 <title>Klang Plan | สร้างแผน</title>
 <link rel="icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/member-app.css?v=870">
+<link rel="stylesheet" href="/member-app.css?v=880">
 </head>
 <body>
 <div id="appShell" class="app-shell is-loading">
@@ -64,7 +64,7 @@
       </section>
 
       <section id="step2" class="card">
-        <div class="section-head"><span>2</span><div><h2>รายละเอียดการสอน</h2><p>กรอกเฉพาะข้อมูลที่ต้องการใช้จริง</p></div></div>
+        <div class="section-head"><span>2</span><div><h2>รายละเอียดของแผน</h2><p>ข้อมูลส่วนนี้จะแยกจากข้อมูลหลักสูตรอย่างชัดเจนใน Prompt</p></div></div>
         <div class="form-grid">
           <label>หน่วยการเรียนรู้<input id="unitName" type="text" placeholder="เช่น จำนวน"></label>
           <label>เรื่อง<input id="topic" type="text" placeholder="เช่น การบวกจำนวนไม่เกิน 1,000"></label>
@@ -75,11 +75,25 @@
               <option>PBL</option><option>STEM</option><option>Project-based Learning</option>
             </select>
           </label>
+          <label>ภาคเรียน
+            <select id="semester"><option value="">ไม่ระบุ</option><option>1</option><option>2</option><option>3</option></select>
+          </label>
+          <label>ปีการศึกษา<input id="academicYear" type="text" inputmode="numeric" placeholder="เช่น 2569"></label>
+        </div>
+
+        <div class="optional-block">
+          <div class="toggle-row">
+            <div><b>📅 เพิ่มวันที่สอน</b><small>เลือกเปิดเฉพาะเมื่อโรงเรียนต้องการระบุวันที่ในแผน</small></div>
+            <label class="switch"><input id="includeTeachingDate" type="checkbox"><span></span></label>
+          </div>
+          <div id="teachingDateFields" class="optional-fields" hidden>
+            <label>วันที่สอน<input id="teachingDate" type="date"></label>
+          </div>
         </div>
       </section>
 
       <section id="step3" class="card">
-        <div class="section-head"><span>3</span><div><h2>ข้อมูลผู้สอน</h2><p>ไม่บังคับ กรอกเพื่อให้ Prompt พร้อมใช้มากขึ้น</p></div></div>
+        <div class="section-head"><span>3</span><div><h2>ข้อมูลผู้สอนและการรับรอง</h2><p>ข้อมูลผู้สอนไม่บังคับ และเลือกเพิ่มส่วนลงนามได้ตามแบบของโรงเรียน</p></div></div>
         <div class="form-grid">
           <label>ชื่อผู้สอน<input id="teacherName" type="text" placeholder="ชื่อ-สกุล"></label>
           <label>ตำแหน่ง<input id="teacherPosition" type="text" placeholder="เช่น ครู"></label>
@@ -88,11 +102,38 @@
           <label>จังหวัด<input id="province" type="text"></label>
           <label>จำนวนนักเรียน<input id="studentCount" type="number" inputmode="numeric"></label>
         </div>
+
+        <div class="optional-block">
+          <div class="toggle-row">
+            <div><b>✍️ เพิ่มส่วนลงนาม / รับรองแผน</b><small>สำหรับโรงเรียนที่ต้องการช่องลงนามครูและผู้บริหาร</small></div>
+            <label class="switch"><input id="includeSignatures" type="checkbox"><span></span></label>
+          </div>
+          <div id="signatureFields" class="optional-fields form-grid" hidden>
+            <label>ชื่อครูผู้สอนสำหรับลงนาม<input id="teacherSignatureName" type="text" placeholder="หากเว้นว่างจะใช้ชื่อผู้สอนด้านบน"></label>
+            <label>ชื่อผู้บริหาร / ผอ.<input id="directorName" type="text" placeholder="ชื่อ-สกุล"></label>
+            <label>ตำแหน่งผู้บริหาร<input id="directorPosition" type="text" value="ผู้อำนวยการสถานศึกษา"></label>
+            <label>รูปแบบการรับรอง
+              <select id="approvalLayout"><option>ครูผู้สอน + ผู้อำนวยการ</option><option>ครูผู้สอนเท่านั้น</option><option>ครูผู้สอน + หัวหน้าวิชาการ + ผู้อำนวยการ</option></select>
+            </label>
+          </div>
+        </div>
       </section>
 
       <section id="step4" class="card">
-        <div class="section-head"><span>4</span><div><h2>สไตล์ + โทนสี</h2><p>เลือกหน้าตาของแผนที่ต้องการ</p></div></div>
-        <div id="styleGrid" class="choice-grid"></div>
+        <div class="section-head"><span>4</span><div><h2>สไตล์ + โทนสี</h2><p>ดูตัวอย่าง Layout ก่อนเลือก และกำหนดแนวทางเพิ่มเติมได้</p></div></div>
+        <div id="styleGrid" class="style-preview-grid"></div>
+
+        <label class="field-label">แนวทางสไตล์เพิ่มเติม
+          <textarea id="customStyleDirection" rows="3" maxlength="300" placeholder="เช่น ต้องการงานสดใสแต่เป็นทางการ ใช้ไอคอน 3D เล็กน้อย หัวข้อชัด พื้นที่ไม่แน่น"></textarea>
+        </label>
+        <div class="style-chip-row">
+          <button type="button" data-style-hint="เรียบหรู อ่านง่าย พื้นที่โปร่ง">เรียบหรู</button>
+          <button type="button" data-style-hint="สดใส เหมาะกับเด็กประถม ใช้ภาพประกอบการศึกษา">สดใสสำหรับเด็ก</button>
+          <button type="button" data-style-hint="ราชการไทยร่วมสมัย สุภาพ เป็นทางการ">ราชการร่วมสมัย</button>
+          <button type="button" data-style-hint="อินโฟกราฟิกชัดเจน ใช้ไอคอนและการแบ่ง Section เด่น">Infographic</button>
+          <button type="button" data-style-hint="3D Education สมัยใหม่ มีมิติแต่ยังอ่านง่าย">3D Education</button>
+        </div>
+
         <h3 class="subhead">โทนสี</h3>
         <div id="paletteGrid" class="choice-grid palette-grid"></div>
       </section>
@@ -107,7 +148,7 @@
           <pre id="promptText"></pre>
 
           <section class="after-section">
-            <div class="after-title"><span>✨</span><div><h3>สร้างอะไรต่อจากแผนนี้?</h3><p>ใช้ข้อมูลเดิมต่อได้ทันที</p></div></div>
+            <div class="after-title"><span>✨</span><div><h3>สร้าง Prompt ต่อยอดจากแผนนี้</h3><p>เลือกงานที่ต้องการ ระบบจะสร้าง Prompt ใหม่จากข้อมูลเดิมทันที</p></div></div>
             <div id="continueGrid" class="continue-grid"></div>
           </section>
 
@@ -142,14 +183,24 @@
     </section>
 
     <section id="tab-indicators" class="page">
-      <div class="page-head"><h1>🎯 คลังตัวชี้วัด</h1><p>ค้นหาในฐานข้อมูลหลักสูตร 2,155 รายการ</p></div>
-      <input id="librarySearch" class="big-search" type="search" placeholder="ค้นหารหัส ตัวชี้วัด หรือคำสำคัญ">
+      <div class="page-head"><h1>🎯 คลังตัวชี้วัด</h1><p>เลือกช่วงชั้น ระดับชั้น และกลุ่มสาระก่อนค้นหาได้</p></div>
+      <div class="library-filter-card">
+        <div class="form-grid">
+          <label>ช่วงชั้น
+            <select id="libraryStage"><option value="">ทั้งหมด</option><option>ปฐมวัย</option><option>ประถมศึกษา</option><option>มัธยมศึกษา</option></select>
+          </label>
+          <label>ระดับชั้น<select id="libraryGrade"><option value="">ทั้งหมด</option></select></label>
+          <label>กลุ่มสาระ / ด้าน<select id="librarySubject"><option value="">ทั้งหมด</option></select></label>
+          <label>ค้นหา<input id="librarySearch" type="search" placeholder="รหัส ตัวชี้วัด หรือคำสำคัญ"></label>
+        </div>
+        <button id="useLibraryIndicatorBtn" class="secondary-btn" type="button" hidden>ใช้ตัวชี้วัดนี้สร้างแผน</button>
+      </div>
       <div id="libraryList" class="list-stack"></div>
     </section>
 
     <section id="tab-styles" class="page">
-      <div class="page-head"><h1>🎨 สไตล์</h1><p>เลือกสไตล์และโทนสีที่ใช้เป็นค่าเริ่มต้น</p></div>
-      <div id="stylesLibrary" class="choice-grid"></div>
+      <div class="page-head"><h1>🎨 คลังสไตล์แผน</h1><p>ตัวอย่างจำลองช่วยให้เห็นภาพก่อนนำไปสร้างจริง</p></div>
+      <div id="stylesLibrary" class="style-preview-grid"></div>
       <h3 class="subhead">โทนสี</h3>
       <div id="palettesLibrary" class="choice-grid palette-grid"></div>
     </section>
@@ -212,6 +263,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=870"></script>
+<script src="/member-app.js?v=880"></script>
 </body>
 </html>
