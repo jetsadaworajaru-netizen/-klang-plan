@@ -6,7 +6,7 @@
 <title>Klang Plan | สร้างแผน</title>
 <link rel="icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/member-app.css?v=880">
+<link rel="stylesheet" href="/member-app.css?v=900">
 </head>
 <body>
 <div id="appShell" class="app-shell is-loading">
@@ -23,7 +23,7 @@
 
   <nav class="top-tabs" aria-label="เมนูหลัก">
     <button class="top-tab active" data-tab="create">✨ สร้างแผน</button>
-    <button class="top-tab" data-tab="work">📁 งานของฉัน</button>
+    <button class="top-tab" data-tab="work">📁 แผนของฉัน</button>
     <button class="top-tab" data-tab="indicators">🎯 ตัวชี้วัด</button>
     <button class="top-tab" data-tab="styles">🎨 สไตล์</button>
     <button class="top-tab" data-tab="help">💬 ช่วยเหลือ</button>
@@ -98,9 +98,30 @@
           <label>ชื่อผู้สอน<input id="teacherName" type="text" placeholder="ชื่อ-สกุล"></label>
           <label>ตำแหน่ง<input id="teacherPosition" type="text" placeholder="เช่น ครู"></label>
           <label>โรงเรียน<input id="schoolName" type="text" placeholder="ชื่อโรงเรียน"></label>
-          <label>สังกัด<input id="organization" type="text" placeholder="เช่น สพฐ."></label>
+          <label>สังกัด / ระบบการศึกษา
+            <select id="affiliationType">
+              <option value="obec">สพฐ. / กระทรวงศึกษาธิการ</option>
+              <option value="bma">กรุงเทพมหานคร (กทม.)</option>
+              <option value="local">อปท. / เทศบาล / อบจ. / อบต.</option>
+              <option value="private">โรงเรียนเอกชน / สช.</option>
+              <option value="university">โรงเรียนสาธิต / มหาวิทยาลัย</option>
+              <option value="custom">อื่น ๆ / กำหนดเอง</option>
+            </select>
+          </label>
+          <label>หน่วยงาน / สังกัดที่แสดงในแผน<input id="organization" type="text" placeholder="เช่น สำนักงานเขตพื้นที่การศึกษา..."></label>
           <label>จังหวัด<input id="province" type="text"></label>
           <label>จำนวนนักเรียน<input id="studentCount" type="number" inputmode="numeric"></label>
+        </div>
+
+        <div class="affiliation-panel">
+          <div class="affiliation-panel-head">
+            <span>🏫</span>
+            <div><b id="affiliationTitle">กรอบสำหรับ สพฐ.</b><small id="affiliationDesc">ระบบจะปรับ Prompt ให้เหมาะกับสังกัดที่เลือกโดยอัตโนมัติ</small></div>
+          </div>
+          <div id="affiliationTags" class="affiliation-tags"></div>
+          <label id="customAffiliationWrap" hidden>อธิบายกรอบ/แนวทางของหน่วยงานเพิ่มเติม
+            <textarea id="customAffiliationNote" rows="3" maxlength="400" placeholder="เช่น ใช้สมรรถนะเฉพาะของโรงเรียน หรือรูปแบบการประเมินของหน่วยงาน"></textarea>
+          </label>
         </div>
 
         <div class="optional-block">
@@ -178,8 +199,15 @@
     </section>
 
     <section id="tab-work" class="page">
-      <div class="page-head"><h1>📁 งานของฉัน</h1><p>Prompt ที่สร้างล่าสุดบนอุปกรณ์นี้</p></div>
-      <div id="workList" class="list-stack"></div>
+      <div class="page-head"><h1>📁 Smart Plan Workspace</h1><p>ค้นหา เปิด สร้างต่อ บันทึกหลังสอน และส่งออกจากแผนเดิม</p></div>
+      <section class="workspace-toolbar">
+        <input id="planSearch" type="search" placeholder="ค้นหาชื่อแผน เรื่อง หน่วย หรือตัวชี้วัด">
+        <select id="planGradeFilter"><option value="">ทุกชั้น</option></select>
+        <select id="planSubjectFilter"><option value="">ทุกวิชา</option></select>
+        <button id="refreshPlansBtn" class="secondary-btn" type="button">↻ รีเฟรช</button>
+      </section>
+      <div class="workspace-stats"><div><b id="cloudPlanCount">0</b><small>แผนของฉัน</small></div><div><b id="reflectionCount">0</b><small>มีบันทึกหลังสอน</small></div><div><b id="thisMonthPlanCount">0</b><small>สร้างเดือนนี้</small></div></div>
+      <div id="workList" class="plan-workspace-list"><div class="list-item">กำลังโหลดแผน...</div></div>
     </section>
 
     <section id="tab-indicators" class="page">
@@ -229,13 +257,32 @@
 
   <nav class="bottom-nav">
     <button class="active" data-bottom-tab="create" type="button">✨<small>สร้างแผน</small></button>
-    <button data-bottom-tab="work" type="button">📁<small>งานของฉัน</small></button>
+    <button data-bottom-tab="work" type="button">📁<small>แผนของฉัน</small></button>
     <button data-bottom-tab="help" type="button">💬<small>ช่วยเหลือ</small></button>
   </nav>
 </div>
 
 <div id="loadingGate" class="loading-gate"><div class="loader"></div><b>กำลังตรวจสอบสมาชิก...</b></div>
 
+<div id="planWorkspaceModal" class="modal" hidden>
+  <button id="planWorkspaceBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card plan-workspace-modal-card">
+    <button id="closePlanWorkspaceBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2 id="workspacePlanTitle">แผนการจัดการเรียนรู้</h2><p id="workspacePlanMeta"></p></div><span id="workspacePlanStatus" class="workspace-status">พร้อมใช้</span></div>
+    <div class="workspace-action-grid">
+      <button id="reusePlanBtn" type="button">✏️ <b>ใช้แผนนี้ต่อ</b><small>เปิด Prompt เดิมกลับมาทำงาน</small></button>
+      <button id="workspaceWorksheetBtn" type="button">📝 <b>สร้างใบงาน</b><small>ต่อยอดจากแผนเดิม</small></button>
+      <button id="workspaceQuizBtn" type="button">✅ <b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
+      <button id="workspaceGameBtn" type="button">🎮 <b>สร้างเกม</b><small>เลือกแพลตฟอร์มต่อได้</small></button>
+      <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>รวมสื่อทั้งชุด</small></button>
+      <button id="workspaceWordBtn" type="button">📄 <b>ดาวน์โหลด Word</b><small>ไฟล์ .doc แก้ไขต่อได้</small></button>
+      <button id="workspacePdfBtn" type="button">📕 <b>บันทึก PDF</b><small>Save / Print เป็น PDF</small></button>
+    </div>
+    <section class="reflection-box"><div class="reflection-head"><div><b>🪞 บันทึกหลังสอน</b><small>เก็บ Reflection ไว้กับแผนนี้และเปิดจากเครื่องอื่นได้</small></div></div><textarea id="workspaceReflection" rows="6" placeholder="ผลการเรียนรู้ / ปัญหาอุปสรรค / สิ่งที่ควรปรับ / แนวทางครั้งต่อไป"></textarea><button id="saveReflectionBtn" class="primary-btn" type="button">บันทึกหลังสอน</button><div id="reflectionStatus"></div></section>
+    <details class="workspace-prompt-details"><summary>ดู Prompt ต้นฉบับ</summary><pre id="workspacePromptText"></pre></details>
+    <button id="deleteCloudPlanBtn" class="danger-outline-btn" type="button">ลบแผนนี้</button>
+  </section>
+</div>
 <div id="profileModal" class="modal" hidden>
   <button id="profileBackdrop" class="modal-backdrop" type="button"></button>
   <section class="modal-card">
@@ -263,6 +310,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=880"></script>
+<script src="/member-app.js?v=900"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 (()=>{"use strict";
 const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
 const CFG=window.KLANG_CONFIG||{};
-let sb=null,user=null,profile=null,DATA=[],stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -14,6 +14,15 @@ const styleMeta={
 };
 const styles=Object.keys(styleMeta);
 const palettes=["ฟ้า–ม่วง–ทอง","กรมท่า–ทอง","มิ้นต์–ฟ้า","ส้ม–ครีม","ชมพู–ฟ้า","เขียว–ทอง"];
+const affiliationMeta={
+  obec:{title:"สพฐ. / กระทรวงศึกษาธิการ",short:"กรอบหลักสูตรแกนกลาง + มาตรฐาน/ตัวชี้วัด",tags:["มาตรฐานและตัวชี้วัด","สมรรถนะสำคัญของผู้เรียน","คุณลักษณะอันพึงประสงค์"],prompt:"ให้ยึดหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน มาตรฐาน ตัวชี้วัด สมรรถนะสำคัญของผู้เรียน และคุณลักษณะอันพึงประสงค์ที่สัมพันธ์กับบทเรียน"},
+  bma:{title:"กรุงเทพมหานคร (กทม.)",short:"ปรับแผนให้รองรับกรอบสมรรถนะผู้เรียน 7 ด้านของ กทม.",tags:["สมรรถนะผู้เรียน 7 ด้าน","บริบทโรงเรียน กทม.","กิจกรรมเชิงสมรรถนะ"],prompt:"ให้ปรับแผนให้เหมาะกับโรงเรียนสังกัดกรุงเทพมหานคร และเพิ่มหัวข้อ “สมรรถนะผู้เรียน 7 ด้านที่เกี่ยวข้อง” โดยเลือกเฉพาะด้านที่สัมพันธ์กับกิจกรรมจริง ไม่จำเป็นต้องใส่ครบทั้ง 7 ด้านทุกแผน"},
+  local:{title:"อปท. / เทศบาล / อบจ. / อบต.",short:"เน้นบริบทท้องถิ่น ชุมชน และการนำไปใช้จริง",tags:["บริบทท้องถิ่น","ชุมชนและพื้นที่","การเรียนรู้เชื่อมชีวิตจริง"],prompt:"ให้ปรับแผนให้เหมาะกับสถานศึกษาสังกัดองค์กรปกครองส่วนท้องถิ่น โดยเชื่อมโยงบริบทชุมชน ท้องถิ่น และทรัพยากรในพื้นที่เมื่อเหมาะสม โดยยังยึดมาตรฐาน/ตัวชี้วัดตามข้อมูลหลักสูตร"},
+  private:{title:"โรงเรียนเอกชน / สช.",short:"ใช้หลักสูตรแกนกลางเป็นฐาน และเปิดรับกรอบเฉพาะของโรงเรียน",tags:["หลักสูตรแกนกลางเป็นฐาน","อัตลักษณ์โรงเรียน","กรอบเสริมของสถานศึกษา"],prompt:"ให้ใช้หลักสูตรและตัวชี้วัดที่กำหนดเป็นฐาน และเปิดพื้นที่ให้สถานศึกษาเอกชนเพิ่มเติมอัตลักษณ์ สมรรถนะ หรือแนวทางเฉพาะของโรงเรียน โดยไม่แต่งข้อมูลที่ผู้ใช้ไม่ได้ระบุ"},
+  university:{title:"โรงเรียนสาธิต / มหาวิทยาลัย",short:"รองรับการทดลองนวัตกรรมการสอนและการสะท้อนผล",tags:["นวัตกรรมการเรียนรู้","การสะท้อนผล","การประเมินตามสภาพจริง"],prompt:"ให้ปรับแผนให้เหมาะกับบริบทโรงเรียนสาธิตหรือสถานศึกษาภายใต้มหาวิทยาลัย โดยสามารถเน้นนวัตกรรมการจัดการเรียนรู้ การวิจัยในชั้นเรียน และการประเมินตามสภาพจริงเมื่อเหมาะสม"},
+  custom:{title:"อื่น ๆ / กำหนดเอง",short:"ใช้คำอธิบายของผู้ใช้เป็นกรอบเพิ่มเติม",tags:["กำหนดเอง","ยืดหยุ่นตามหน่วยงาน"],prompt:"ให้ปรับแผนตามกรอบหรือข้อกำหนดของหน่วยงานที่ผู้ใช้ระบุเพิ่มเติม โดยไม่คาดเดาข้อมูลที่ไม่ได้ให้"}
+};
+
 const gradeOrder={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};
 const unique=a=>[...new Set(a.filter(Boolean))], esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
@@ -28,7 +37,7 @@ async function auth(){
   profile=p;renderProfile();return true
 }
 function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||""}
-async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();buildGrades();updateLibraryFilters();renderStyles();updateSummary()}
+async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();buildGrades();updateLibraryFilters();renderStyles();renderAffiliation();updateSummary()}
 function opt(el,val,text=val){const o=document.createElement("option");o.value=val;o.textContent=text;el.appendChild(o)}
 function setOpts(el,vals,ph){el.innerHTML="";opt(el,"",ph);vals.forEach(v=>opt(el,v));el.disabled=false}
 function buildGrades(){const avail=unique(DATA.filter(x=>x.stage===stage).map(x=>x.grade));const arr=(gradeOrder[stage]||[]).filter(x=>avail.includes(x));setOpts($("grade"),arr.length?arr:avail,"เลือกระดับชั้น");setOpts($("subject"),[],"เลือกระดับชั้นก่อน");$("subject").disabled=true;setOpts($("indicator"),[],"เลือกชั้นและกลุ่มสาระก่อน");$("indicator").disabled=true}
@@ -56,7 +65,16 @@ function renderStyles(){
   $$("[data-style]").forEach(b=>b.onclick=()=>{style=b.dataset.style;renderStyles();updateSummary()});
   $$("[data-palette]").forEach(b=>b.onclick=()=>{palette=b.dataset.palette;renderStyles();updateSummary()})
 }
-function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
+function renderAffiliation(){
+  const key=$("affiliationType")?.value||"obec";
+  const meta=affiliationMeta[key]||affiliationMeta.obec;
+  if($("affiliationTitle"))$("affiliationTitle").textContent=meta.title;
+  if($("affiliationDesc"))$("affiliationDesc").textContent=meta.short;
+  if($("affiliationTags"))$("affiliationTags").innerHTML=meta.tags.map(x=>`<span>${esc(x)}</span>`).join("");
+  if($("customAffiliationWrap"))$("customAffiliationWrap").hidden=key!=="custom";
+  updateSummary()
+}
+function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
 function v(id){return $(id).value.trim()}
 function prompt(){
   if(!selected)return"";
@@ -66,6 +84,9 @@ function prompt(){
   const signatures=$("includeSignatures").checked;
   const teacherSign=v("teacherSignatureName")||v("teacherName")||"........................................";
   const customStyle=v("customStyleDirection")||"ไม่มีคำแนะนำเพิ่มเติม";
+  const affiliationKey=$("affiliationType")?.value||"obec";
+  const affiliation=affiliationMeta[affiliationKey]||affiliationMeta.obec;
+  const customAffiliation=v("customAffiliationNote")||"ไม่มีคำอธิบายเพิ่มเติม";
   const approval=signatures?`
 D. การรับรองแผนและการลงนาม
 รูปแบบการรับรอง: ${v("approvalLayout")}
@@ -103,8 +124,13 @@ C. ข้อมูลผู้สอน
 ชื่อผู้สอน: ${v("teacherName")||"ไม่ระบุ"}
 ตำแหน่ง: ${v("teacherPosition")||"ไม่ระบุ"}
 โรงเรียน: ${v("schoolName")||"ไม่ระบุ"}
-สังกัด: ${v("organization")||"ไม่ระบุ"}
+ประเภทสังกัด / ระบบการศึกษา: ${affiliation.title}
+หน่วยงาน / สังกัดที่แสดงในแผน: ${v("organization")||"ไม่ระบุ"}
 จังหวัด: ${v("province")||"ไม่ระบุ"}
+
+แนวทางเฉพาะตามสังกัด
+${affiliation.prompt}
+${affiliationKey==="custom"?"คำอธิบายเพิ่มเติมจากผู้ใช้: "+customAffiliation:""}
 จำนวนนักเรียน: ${v("studentCount")||"ไม่ระบุ"}
 
 ${approval}
@@ -144,8 +170,13 @@ F. แนวทางการออกแบบ
 - ถ้ามีการแนบรูปครูหรือโลโก้ภายหลัง ให้ใช้ไฟล์จริงที่แนบเท่านั้น`;
 }
 async function copy(){const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");try{await navigator.clipboard.writeText(t);toast("คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}}
-function saveWork(t){try{let a=JSON.parse(localStorage.getItem("klang-clean-work")||"[]");a.unshift({id:Date.now(),title:v("topic")||selected.indicator||"แผนการสอน",prompt:t,date:new Date().toISOString()});localStorage.setItem("klang-clean-work",JSON.stringify(a.slice(0,40)));renderWork()}catch{}}
-function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
+async function saveWork(t){
+  const payload={user_id:user.id,title:v("topic")||selected?.indicator||"แผนการจัดการเรียนรู้",stage,grade:$("grade").value||null,subject:$("subject").value||null,domain:selected?.domain||null,standard:selected?.standard||null,indicator:selected?.indicator||null,indicator_text:selected?.indicator_text||null,unit_name:v("unitName")||null,topic:v("topic")||null,duration:v("duration")||null,method:v("method")||null,semester:$("semester")?.value||null,academic_year:v("academicYear")||null,teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,affiliation_type:$("affiliationType")?.value||"obec",organization:v("organization")||null,teacher_name:v("teacherName")||null,school_name:v("schoolName")||null,style,palette,prompt_text:t,status:"ready"};
+  const {data,error}=await sb.from("lesson_plans").insert(payload).select("*").single();
+  if(error){console.warn("cloud save",error);return null}
+  cloudPlans.unshift(data);renderWork();return data
+}
+async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
   const items=[
     ["worksheet","📝","สร้าง Prompt ใบงาน","ใบงานพร้อมคำชี้แจง/พื้นที่ตอบ"],
@@ -176,31 +207,23 @@ ${base}`;
   $("promptWrap").scrollIntoView({behavior:"smooth"});
   toast("สร้าง Prompt ต่อยอดแล้ว ✓")
 }
-function switchTab(name){$$(".page").forEach(x=>x.classList.toggle("active",x.id===`tab-${name}`));$$(".top-tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));$$("[data-bottom-tab]").forEach(x=>x.classList.toggle("active",x.dataset.bottomTab===name));if(name==="work")renderWork();window.scrollTo({top:0,behavior:"smooth"})}
-function renderWork(){let a=[];try{a=JSON.parse(localStorage.getItem("klang-clean-work")||"[]")}catch{};$("workList").innerHTML=a.map(x=>`<article class="list-item"><b>${esc(x.title)}</b><small>${new Date(x.date).toLocaleString("th-TH")}</small><button type="button" class="secondary-btn" data-work="${x.id}">เปิด Prompt</button></article>`).join("")||'<div class="list-item">ยังไม่มีงานที่บันทึก</div>';$$("[data-work]").forEach(b=>b.onclick=()=>{const x=a.find(i=>i.id==b.dataset.work);if(x){switchTab("create");$("promptText").textContent=x.prompt;$("promptWrap").hidden=false;$("promptWrap").scrollIntoView({behavior:"smooth"})}})}
-function updateLibraryFilters(){
-  const st=$("libraryStage").value;
-  const rows=DATA.filter(x=>!st||x.stage===st);
-  const grades=unique(rows.map(x=>x.grade));
-  const oldG=$("libraryGrade").value;
-  $("libraryGrade").innerHTML='<option value="">ทั้งหมด</option>'+grades.map(g=>`<option>${esc(g)}</option>`).join("");
-  if(grades.includes(oldG))$("libraryGrade").value=oldG;
-  updateLibrarySubjects()
+function switchTab(name){$$(".page").forEach(x=>x.classList.toggle("active",x.id===`tab-${name}`));$$(".top-tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));$$("[data-bottom-tab]").forEach(x=>x.classList.toggle("active",x.dataset.bottomTab===name));if(name==="work")loadCloudPlans();window.scrollTo({top:0,behavior:"smooth"})}
+async function loadCloudPlans(){
+  if(!sb||!user)return;const {data,error}=await sb.from("lesson_plans").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200);if(error){console.warn(error);return}cloudPlans=data||[];populatePlanFilters();renderWork()
 }
-function updateLibrarySubjects(){
-  const st=$("libraryStage").value,g=$("libraryGrade").value;
-  const rows=DATA.filter(x=>(!st||x.stage===st)&&(!g||x.grade===g));
-  const subjects=unique(rows.map(x=>x.subject));
-  const old=$("librarySubject").value;
-  $("librarySubject").innerHTML='<option value="">ทั้งหมด</option>'+subjects.map(s=>`<option>${esc(s)}</option>`).join("");
-  if(subjects.includes(old))$("librarySubject").value=old;
-  applyLibraryFilters()
-}
-function applyLibraryFilters(){
-  const st=$("libraryStage").value,g=$("libraryGrade").value,s=$("librarySubject").value,q=$("librarySearch").value.toLowerCase().trim();
-  const rows=DATA.filter(x=>(!st||x.stage===st)&&(!g||x.grade===g)&&(!s||x.subject===s)&&(!q||[x.indicator,x.indicator_text,x.standard,x.subject,x.grade,x.domain].some(v=>String(v||"").toLowerCase().includes(q))));
-  renderLibrary(rows)
-}
+function populatePlanFilters(){const grades=unique(cloudPlans.map(x=>x.grade)),subjects=unique(cloudPlans.map(x=>x.subject)),g=$("planGradeFilter"),s=$("planSubjectFilter");if(!g||!s)return;g.innerHTML='<option value="">ทุกชั้น</option>'+grades.map(x=>`<option>${esc(x)}</option>`).join("");s.innerHTML='<option value="">ทุกวิชา</option>'+subjects.map(x=>`<option>${esc(x)}</option>`).join("")}
+function renderWork(){const wrap=$("workList");if(!wrap)return;const q=($("planSearch")?.value||"").toLowerCase().trim(),g=$("planGradeFilter")?.value||"",s=$("planSubjectFilter")?.value||"";const rows=cloudPlans.filter(x=>(!g||x.grade===g)&&(!s||x.subject===s)&&(!q||[x.title,x.topic,x.unit_name,x.indicator,x.indicator_text,x.subject,x.grade].some(v=>String(v||"").toLowerCase().includes(q))));$("cloudPlanCount").textContent=cloudPlans.length;$("reflectionCount").textContent=cloudPlans.filter(x=>x.reflection_text?.trim()).length;const now=new Date();$("thisMonthPlanCount").textContent=cloudPlans.filter(x=>{const d=new Date(x.created_at);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;wrap.innerHTML=rows.map(x=>`<article class="plan-workspace-item"><div class="plan-workspace-main"><span class="plan-doc-icon">📘</span><div><b>${esc(x.title)}</b><small>${esc(x.grade||"")} · ${esc(x.subject||"")} · ${esc(x.indicator||"")}</small><em>${esc(x.unit_name||"")}${x.updated_at?` · แก้ไขล่าสุด ${new Date(x.updated_at).toLocaleDateString("th-TH")}`:""}</em></div></div><div class="plan-workspace-right">${x.reflection_text?'<span class="reflection-badge">มีบันทึกหลังสอน</span>':""}<button type="button" class="secondary-btn" data-open-cloud-plan="${x.id}">เปิด</button></div></article>`).join("")||'<div class="list-item">ยังไม่มีแผนที่บันทึกไว้</div>';$$('[data-open-cloud-plan]').forEach(b=>b.onclick=()=>openWorkspacePlan(b.dataset.openCloudPlan))}
+function openWorkspacePlan(id){activeWorkspacePlan=cloudPlans.find(x=>x.id===id);if(!activeWorkspacePlan)return;$("workspacePlanTitle").textContent=activeWorkspacePlan.title||"แผนการจัดการเรียนรู้";$("workspacePlanMeta").textContent=[activeWorkspacePlan.grade,activeWorkspacePlan.subject,activeWorkspacePlan.indicator].filter(Boolean).join(" · ");$("workspacePromptText").textContent=activeWorkspacePlan.prompt_text||"";$("workspaceReflection").value=activeWorkspacePlan.reflection_text||"";$("workspacePlanStatus").textContent=activeWorkspacePlan.reflection_text?"สอนแล้ว / มี Reflection":"พร้อมใช้";$("planWorkspaceModal").hidden=false}
+function closeWorkspacePlan(){$("planWorkspaceModal").hidden=true}
+function workspaceContinuation(type){if(!activeWorkspacePlan)return;const intro={worksheet:"สร้างใบงานจากแผนนี้ พร้อมคำชี้แจง พื้นที่ตอบ และเฉลย",quiz:"สร้างแบบทดสอบจากแผนนี้ พร้อมเฉลย",game:"สร้างเกมการเรียนรู้จากแผนนี้ พร้อมกติกา คำถาม เฉลย และแพลตฟอร์มที่เหมาะ",pack:"สร้าง Teaching Pack จากแผนนี้ ประกอบด้วย ใบความรู้ ใบงาน แบบทดสอบ Rubric และเกม"};switchTab("create");$("promptText").textContent=`${intro[type]||"สร้างสื่อการสอนต่อจากแผนนี้"}
+
+ข้อมูลแผนเดิม:
+---
+${activeWorkspacePlan.prompt_text||""}`;$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)}
+function downloadWord(plan){const body=`<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Tahoma,Arial;line-height:1.6;padding:24px}pre{white-space:pre-wrap;font-family:Tahoma,Arial}</style></head><body><h1>${esc(plan.title||"แผนการจัดการเรียนรู้")}</h1><pre>${esc(plan.prompt_text||"")}</pre>${plan.reflection_text?`<h2>บันทึกหลังสอน</h2><p>${esc(plan.reflection_text)}</p>`:""}</body></html>`;const blob=new Blob(["\ufeff",body],{type:"application/msword;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(plan.title||"klang-plan")+".doc";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function printPlanPdf(plan){const w=window.open("","_blank");if(!w)return toast("เบราว์เซอร์ปิดกั้นหน้าต่าง");w.document.write(`<html><head><meta charset="utf-8"><style>body{font-family:Arial;padding:28px;line-height:1.65}pre{white-space:pre-wrap}</style></head><body><h2>${esc(plan.title||"แผนการจัดการเรียนรู้")}</h2><pre>${esc(plan.prompt_text||"")}</pre>${plan.reflection_text?`<h3>บันทึกหลังสอน</h3><p>${esc(plan.reflection_text)}</p>`:""}<script>setTimeout(()=>print(),250)<\/script></body></html>`);w.document.close()}
+async function saveReflection(){if(!activeWorkspacePlan)return;const text=$("workspaceReflection").value.trim();const {data,error}=await sb.from("lesson_plans").update({reflection_text:text||null}).eq("id",activeWorkspacePlan.id).select("*").single();if(error)return $("reflectionStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;const i=cloudPlans.findIndex(x=>x.id===data.id);if(i>=0)cloudPlans[i]=data;activeWorkspacePlan=data;$("reflectionStatus").innerHTML='<div class="indicator-preview">บันทึกหลังสอนแล้ว ✓</div>';renderWork()}
+async function deleteCloudPlan(){if(!activeWorkspacePlan||!confirm(`ลบ “${activeWorkspacePlan.title}” หรือไม่?`))return;const {error}=await sb.from("lesson_plans").delete().eq("id",activeWorkspacePlan.id);if(error)return toast(error.message);cloudPlans=cloudPlans.filter(x=>x.id!==activeWorkspacePlan.id);closeWorkspacePlan();renderWork();toast("ลบแผนแล้ว")}
 function renderLibrary(rows){
   $("libraryList").innerHTML=rows.slice(0,80).map(x=>`<button type="button" class="list-item indicator-library-item ${librarySelected===x?"selected":""}" data-lib-index="${DATA.indexOf(x)}"><b>${esc(x.indicator||x.standard||"ตัวชี้วัด")}</b><div>${esc(x.indicator_text||"")}</div><small>${esc(x.stage||"")} · ${esc(x.grade||"")} · ${esc(x.subject||"")}</small></button>`).join("")||'<div class="list-item">ไม่พบตัวชี้วัด</div>';
   $$("[data-lib-index]").forEach(b=>b.onclick=()=>{librarySelected=DATA[Number(b.dataset.libIndex)];renderLibrary(rows);$("useLibraryIndicatorBtn").hidden=false})
@@ -224,7 +247,8 @@ async function compress(file){return new Promise((res,rej)=>{const rd=new FileRe
 function bind(){
   $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();updateSummary()});
   $("grade").onchange=buildSubjects;$("subject").onchange=buildIndicators;$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
-  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection"].forEach(id=>$(id).oninput=updateSummary);
+  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>$(id).oninput=updateSummary);
+  $("affiliationType").onchange=renderAffiliation;
   $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
   $$("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
@@ -233,6 +257,7 @@ function bind(){
   $("includeSignatures").onchange=()=>{$("signatureFields").hidden=!$("includeSignatures").checked;updateSummary()};
   $$("[data-style-hint]").forEach(b=>b.onclick=()=>{const t=$("customStyleDirection");t.value=(t.value?t.value+" · ":"")+b.dataset.styleHint;updateSummary()});
   $$("[data-help-type]").forEach(b=>b.onclick=()=>{$$(" [data-help-type]".trim()).forEach(x=>x.classList.toggle("active",x===b));$("helpType").value=b.dataset.helpType});$("sendHelpBtn").onclick=sendHelp;
+  if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>workspaceContinuation("worksheet");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=()=>workspaceContinuation("quiz");if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=()=>workspaceContinuation("game");if($("workspacePackBtn"))$("workspacePackBtn").onclick=()=>workspaceContinuation("pack");if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
   $$("[data-avatar]").forEach(b=>b.onclick=()=>{profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile()}};
@@ -243,6 +268,6 @@ function bind(){
   $("openWordBtn").onclick=async()=>{await copy();window.open("https://www.office.com/launch/word","_blank","noopener")};
   $("savePdfBtn").onclick=()=>{const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");const w=window.open("","_blank");if(!w)return;w.document.write(`<html><head><meta charset="utf-8"><title>Klang Plan Prompt</title><style>body{font-family:Arial;padding:28px;line-height:1.7}pre{white-space:pre-wrap}</style></head><body><h2>Klang Plan — Prompt</h2><pre>${esc(t)}</pre><script>setTimeout(()=>print(),250)<\/script></body></html>`);w.document.close()}
 }
-async function start(){try{const ok=await auth();if(!ok)return;bind();await loadData();$("loadingGate").classList.add("hidden");$("appShell").classList.remove("is-loading")}catch(e){console.error(e);$("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message)}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button></div>`}}
+async function start(){try{const ok=await auth();if(!ok)return;bind();await loadData();await loadCloudPlans();$("loadingGate").classList.add("hidden");$("appShell").classList.remove("is-loading")}catch(e){console.error(e);$("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message)}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button></div>`}}
 document.readyState==="loading"?document.addEventListener("DOMContentLoaded",start,{once:true}):start();
 })();
