@@ -1,0 +1,49 @@
+{
+  "dataset_version": "KLANG-CURRICULUM-2026.09-FINAL",
+  "release": "V9.1",
+  "records": 2155,
+  "stage_counts": {
+    "ปฐมวัย": 99,
+    "ประถมศึกษา": 1061,
+    "มัธยมศึกษา": 995
+  },
+  "grade_counts": {
+    "อ.1": 33,
+    "อ.2": 33,
+    "อ.3": 33,
+    "ป.1": 130,
+    "ป.2": 158,
+    "ป.3": 191,
+    "ป.4": 187,
+    "ป.5": 197,
+    "ป.6": 198,
+    "ม.1": 217,
+    "ม.2": 231,
+    "ม.3": 240,
+    "ม.4–6": 197,
+    "ม.4": 31,
+    "ม.5": 53,
+    "ม.6": 26
+  },
+  "duplicate_core_records": 0,
+  "missing_core_fields": {
+    "dataset_id": 0,
+    "stage": 0,
+    "curriculum": 0,
+    "grade": 0,
+    "subject": 0,
+    "standard": 0,
+    "indicator": 0,
+    "indicator_text": 0,
+    "status": 0
+  },
+  "direct_source_records": 1400,
+  "curriculum_group_source_records": 755,
+  "shared_upper_secondary_records": 197,
+  "notes": [
+    "Records with grade ม.4–6 are shared indicators and expose available_grades ม.4, ม.5, ม.6 in the UI.",
+    "Blank per-record source URLs are treated as curriculum-group metadata gaps; core curriculum fields remain present.",
+    "Early-childhood records do not use the same classification model as basic-education indicators."
+  ],
+  "sha256": "e2707adf572fc69d7263926371f3cac4d025d1ca973d834af41778b2ca183014"
+}

@@ -25,6 +25,13 @@ const affiliationMeta={
 
 const gradeOrder={"ปฐมวัย":["อ.1","อ.2","อ.3"],"ประถมศึกษา":["ป.1","ป.2","ป.3","ป.4","ป.5","ป.6"],"มัธยมศึกษา":["ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"]};
 const unique=a=>[...new Set(a.filter(Boolean))], esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function recordGrades(x){
+  const a=Array.isArray(x?.available_grades)?x.available_grades.filter(Boolean):[];
+  return a.length?a:[x?.grade].filter(Boolean)
+}
+function recordMatchesGrade(x,g){return !g||recordGrades(x).includes(g)}
+function displayGradeForRecord(x,fallback=""){return fallback||recordGrades(x)[0]||x?.grade||""}
 function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
 function avatar(v){const p={"avatar:teacher":"👩‍🏫","avatar:teacher_male":"👨‍🏫","avatar:book":"📚","avatar:star":"⭐"};if(p[v])return p[v];if(v?.startsWith("data:image/"))return `<img src="${v}" alt="">`;return "👤"}
 async function auth(){
@@ -38,6 +45,7 @@ async function auth(){
 }
 function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||""}
 async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
+if(!Array.isArray(DATA)||DATA.length!==2155)throw new Error("Curriculum dataset integrity check failed");
 buildGrades();
 try{updateLibraryFilters()}catch(err){console.warn("library filters",err)}
 renderStyles();
@@ -45,9 +53,25 @@ renderAffiliation();
 updateSummary()}
 function opt(el,val,text=val){const o=document.createElement("option");o.value=val;o.textContent=text;el.appendChild(o)}
 function setOpts(el,vals,ph){el.innerHTML="";opt(el,"",ph);vals.forEach(v=>opt(el,v));el.disabled=false}
-function buildGrades(){const avail=unique(DATA.filter(x=>x.stage===stage).map(x=>x.grade));const arr=(gradeOrder[stage]||[]).filter(x=>avail.includes(x));setOpts($("grade"),arr.length?arr:avail,"เลือกระดับชั้น");setOpts($("subject"),[],"เลือกระดับชั้นก่อน");$("subject").disabled=true;setOpts($("indicator"),[],"เลือกชั้นและกลุ่มสาระก่อน");$("indicator").disabled=true}
-function buildSubjects(){const g=$("grade").value;if(!g){buildGrades();return}const vals=unique(DATA.filter(x=>x.stage===stage&&x.grade===g).map(x=>x.subject));setOpts($("subject"),vals,"เลือกกลุ่มสาระ / ด้าน");setOpts($("indicator"),[],"เลือกกลุ่มสาระก่อน");$("indicator").disabled=true;selected=null;updateSummary()}
-function filteredIndicators(){const g=$("grade").value,s=$("subject").value,q=$("indicatorSearch").value.trim().toLowerCase();return DATA.filter(x=>x.stage===stage&&x.grade===g&&x.subject===s&&(!q||[x.indicator,x.indicator_text,x.standard,x.domain].some(v=>String(v||"").toLowerCase().includes(q))))}
+function buildGrades(){
+  const records=DATA.filter(x=>x.stage===stage);
+  const avail=unique(records.flatMap(recordGrades));
+  const arr=(gradeOrder[stage]||[]).filter(x=>avail.includes(x));
+  setOpts($("grade"),arr.length?arr:avail,"เลือกระดับชั้น");
+  setOpts($("subject"),[],"เลือกระดับชั้นก่อน");$("subject").disabled=true;
+  setOpts($("indicator"),[],"เลือกชั้นและกลุ่มสาระก่อน");$("indicator").disabled=true
+}
+function buildSubjects(){
+  const g=$("grade").value;if(!g){buildGrades();return}
+  const vals=unique(DATA.filter(x=>x.stage===stage&&recordMatchesGrade(x,g)).map(x=>x.subject));
+  setOpts($("subject"),vals,"เลือกกลุ่มสาระ / ด้าน");
+  setOpts($("indicator"),[],"เลือกกลุ่มสาระก่อน");$("indicator").disabled=true;
+  selected=null;updateSummary()
+}
+function filteredIndicators(){
+  const g=$("grade").value,s=$("subject").value,q=$("indicatorSearch").value.trim().toLowerCase();
+  return DATA.filter(x=>x.stage===stage&&recordMatchesGrade(x,g)&&x.subject===s&&(!q||[x.indicator,x.indicator_text,x.standard,x.domain].some(v=>String(v||"").toLowerCase().includes(q))))
+}
 function buildIndicators(){if(!$("grade").value||!$("subject").value)return;const rows=filteredIndicators();$("indicator").innerHTML="";opt($("indicator"),"","เลือกตัวชี้วัด / ความสามารถ");rows.forEach(x=>{const o=document.createElement("option");o.value=String(DATA.indexOf(x));o.textContent=`${x.indicator||x.standard||""}${x.indicator_text?" — "+x.indicator_text:""}`;$("indicator").appendChild(o)});$("indicator").disabled=false}
 function chooseIndicator(){const i=Number($("indicator").value);selected=Number.isFinite(i)?DATA[i]:null;$("indicatorPreview").innerHTML=selected?`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`:"เลือกตัวชี้วัดเพื่อดูรายละเอียด";updateSummary()}
 function styleCard(v){
@@ -108,7 +132,7 @@ D. การรับรองแผนและการลงนาม
 A. ข้อมูลหลักสูตร
 หลักสูตร: ${selected.curriculum||"หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551 (รวมฉบับปรับปรุง พ.ศ. 2560)"}
 ช่วงชั้น: ${stage}
-ระดับชั้น: ${selected.grade}
+ระดับชั้น: ${$("grade")?.value||selected.grade}
 กลุ่มสาระการเรียนรู้/ด้าน: ${selected.subject}
 สาระ/พัฒนาการ: ${selected.domain||"-"}
 มาตรฐานการเรียนรู้: ${selected.standard||"-"}
@@ -235,7 +259,9 @@ function updateLibraryFilters(){
   if(!stageEl||!gradeEl||!subjectEl)return;
   const st=stageEl.value;
   const rows=DATA.filter(x=>!st||x.stage===st);
-  const grades=unique(rows.map(x=>x.grade));
+  const grades=unique(rows.flatMap(recordGrades));
+  const order=["อ.1","อ.2","อ.3","ป.1","ป.2","ป.3","ป.4","ป.5","ป.6","ม.1","ม.2","ม.3","ม.4","ม.5","ม.6"];
+  grades.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
   const oldGrade=gradeEl.value;
   gradeEl.innerHTML='<option value="">ทั้งหมด</option>'+grades.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
   if(grades.includes(oldGrade))gradeEl.value=oldGrade;
@@ -245,7 +271,7 @@ function updateLibrarySubjects(){
   const stageEl=$("libraryStage"),gradeEl=$("libraryGrade"),subjectEl=$("librarySubject");
   if(!stageEl||!gradeEl||!subjectEl)return;
   const st=stageEl.value,g=gradeEl.value;
-  const rows=DATA.filter(x=>(!st||x.stage===st)&&(!g||x.grade===g));
+  const rows=DATA.filter(x=>(!st||x.stage===st)&&recordMatchesGrade(x,g));
   const subjects=unique(rows.map(x=>x.subject));
   const oldSubject=subjectEl.value;
   subjectEl.innerHTML='<option value="">ทั้งหมด</option>'+subjects.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
@@ -259,7 +285,7 @@ function applyLibraryFilters(){
   const q=($("librarySearch")?.value||"").toLowerCase().trim();
   const rows=DATA.filter(x=>
     (!st||x.stage===st) &&
-    (!g||x.grade===g) &&
+    recordMatchesGrade(x,g) &&
     (!s||x.subject===s) &&
     (!q||[x.indicator,x.indicator_text,x.standard,x.subject,x.grade,x.domain]
       .some(v=>String(v||"").toLowerCase().includes(q)))
@@ -274,8 +300,9 @@ function useLibraryIndicator(){
   if(!librarySelected)return;
   stage=librarySelected.stage;
   $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  const preferredGrade=$("libraryGrade")?.value||recordGrades(librarySelected)[0]||librarySelected.grade;
   buildGrades();
-  $("grade").value=librarySelected.grade;buildSubjects();
+  $("grade").value=preferredGrade;buildSubjects();
   $("subject").value=librarySelected.subject;buildIndicators();
   $("indicator").value=String(DATA.indexOf(librarySelected));chooseIndicator();
   switchTab("create");
