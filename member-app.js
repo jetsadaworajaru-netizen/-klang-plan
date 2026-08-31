@@ -37,7 +37,12 @@ async function auth(){
   profile=p;renderProfile();return true
 }
 function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||""}
-async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();buildGrades();updateLibraryFilters();renderStyles();renderAffiliation();updateSummary()}
+async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
+buildGrades();
+try{updateLibraryFilters()}catch(err){console.warn("library filters",err)}
+renderStyles();
+renderAffiliation();
+updateSummary()}
 function opt(el,val,text=val){const o=document.createElement("option");o.value=val;o.textContent=text;el.appendChild(o)}
 function setOpts(el,vals,ph){el.innerHTML="";opt(el,"",ph);vals.forEach(v=>opt(el,v));el.disabled=false}
 function buildGrades(){const avail=unique(DATA.filter(x=>x.stage===stage).map(x=>x.grade));const arr=(gradeOrder[stage]||[]).filter(x=>avail.includes(x));setOpts($("grade"),arr.length?arr:avail,"เลือกระดับชั้น");setOpts($("subject"),[],"เลือกระดับชั้นก่อน");$("subject").disabled=true;setOpts($("indicator"),[],"เลือกชั้นและกลุ่มสาระก่อน");$("indicator").disabled=true}
@@ -224,6 +229,43 @@ function downloadWord(plan){const body=`<!doctype html><html><head><meta charset
 function printPlanPdf(plan){const w=window.open("","_blank");if(!w)return toast("เบราว์เซอร์ปิดกั้นหน้าต่าง");w.document.write(`<html><head><meta charset="utf-8"><style>body{font-family:Arial;padding:28px;line-height:1.65}pre{white-space:pre-wrap}</style></head><body><h2>${esc(plan.title||"แผนการจัดการเรียนรู้")}</h2><pre>${esc(plan.prompt_text||"")}</pre>${plan.reflection_text?`<h3>บันทึกหลังสอน</h3><p>${esc(plan.reflection_text)}</p>`:""}<script>setTimeout(()=>print(),250)<\/script></body></html>`);w.document.close()}
 async function saveReflection(){if(!activeWorkspacePlan)return;const text=$("workspaceReflection").value.trim();const {data,error}=await sb.from("lesson_plans").update({reflection_text:text||null}).eq("id",activeWorkspacePlan.id).select("*").single();if(error)return $("reflectionStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;const i=cloudPlans.findIndex(x=>x.id===data.id);if(i>=0)cloudPlans[i]=data;activeWorkspacePlan=data;$("reflectionStatus").innerHTML='<div class="indicator-preview">บันทึกหลังสอนแล้ว ✓</div>';renderWork()}
 async function deleteCloudPlan(){if(!activeWorkspacePlan||!confirm(`ลบ “${activeWorkspacePlan.title}” หรือไม่?`))return;const {error}=await sb.from("lesson_plans").delete().eq("id",activeWorkspacePlan.id);if(error)return toast(error.message);cloudPlans=cloudPlans.filter(x=>x.id!==activeWorkspacePlan.id);closeWorkspacePlan();renderWork();toast("ลบแผนแล้ว")}
+
+function updateLibraryFilters(){
+  const stageEl=$("libraryStage"),gradeEl=$("libraryGrade"),subjectEl=$("librarySubject");
+  if(!stageEl||!gradeEl||!subjectEl)return;
+  const st=stageEl.value;
+  const rows=DATA.filter(x=>!st||x.stage===st);
+  const grades=unique(rows.map(x=>x.grade));
+  const oldGrade=gradeEl.value;
+  gradeEl.innerHTML='<option value="">ทั้งหมด</option>'+grades.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
+  if(grades.includes(oldGrade))gradeEl.value=oldGrade;
+  updateLibrarySubjects()
+}
+function updateLibrarySubjects(){
+  const stageEl=$("libraryStage"),gradeEl=$("libraryGrade"),subjectEl=$("librarySubject");
+  if(!stageEl||!gradeEl||!subjectEl)return;
+  const st=stageEl.value,g=gradeEl.value;
+  const rows=DATA.filter(x=>(!st||x.stage===st)&&(!g||x.grade===g));
+  const subjects=unique(rows.map(x=>x.subject));
+  const oldSubject=subjectEl.value;
+  subjectEl.innerHTML='<option value="">ทั้งหมด</option>'+subjects.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  if(subjects.includes(oldSubject))subjectEl.value=oldSubject;
+  applyLibraryFilters()
+}
+function applyLibraryFilters(){
+  const st=$("libraryStage")?.value||"";
+  const g=$("libraryGrade")?.value||"";
+  const s=$("librarySubject")?.value||"";
+  const q=($("librarySearch")?.value||"").toLowerCase().trim();
+  const rows=DATA.filter(x=>
+    (!st||x.stage===st) &&
+    (!g||x.grade===g) &&
+    (!s||x.subject===s) &&
+    (!q||[x.indicator,x.indicator_text,x.standard,x.subject,x.grade,x.domain]
+      .some(v=>String(v||"").toLowerCase().includes(q)))
+  );
+  renderLibrary(rows)
+}
 function renderLibrary(rows){
   $("libraryList").innerHTML=rows.slice(0,80).map(x=>`<button type="button" class="list-item indicator-library-item ${librarySelected===x?"selected":""}" data-lib-index="${DATA.indexOf(x)}"><b>${esc(x.indicator||x.standard||"ตัวชี้วัด")}</b><div>${esc(x.indicator_text||"")}</div><small>${esc(x.stage||"")} · ${esc(x.grade||"")} · ${esc(x.subject||"")}</small></button>`).join("")||'<div class="list-item">ไม่พบตัวชี้วัด</div>';
   $$("[data-lib-index]").forEach(b=>b.onclick=()=>{librarySelected=DATA[Number(b.dataset.libIndex)];renderLibrary(rows);$("useLibraryIndicatorBtn").hidden=false})
