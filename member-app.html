@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Klang Plan | สร้างแผน</title>
+<title>Klang Plan | V9.2.7 Document Engine</title>
 <link rel="icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/member-app.css?v=912">
+<link rel="stylesheet" href="/member-app.css?v=926">
 </head>
 <body>
 <div id="appShell" class="app-shell is-loading">
   <header class="topbar">
     <div class="brand">
       <img src="/brand-logo.png" alt="Klang Plan">
-      <div><b>Klang Plan</b><small>คลังแผนการสอนหน้าเดียว · Final V9.1</small></div>
+      <div><b>Klang Plan</b><small>คลังแผนการสอนหน้าเดียว · V9.2.7 Document Engine</small></div>
     </div>
     <button id="profileBtn" class="profile-btn" type="button">
       <span id="profileAvatar" class="profile-avatar">👤</span>
@@ -22,7 +22,8 @@
   </header>
 
   <nav class="top-tabs" aria-label="เมนูหลัก">
-    <button class="top-tab active" data-tab="create">✨ สร้างแผน</button>
+    <button class="top-tab active" data-tab="create">✨ สร้างงาน</button>
+    <button class="top-tab" data-tab="courses">📚 รายวิชาของฉัน</button>
     <button class="top-tab" data-tab="work">📁 แผนของฉัน</button>
     <button class="top-tab" data-tab="indicators">🎯 ตัวชี้วัด</button>
     <button class="top-tab" data-tab="styles">🎨 สไตล์</button>
@@ -198,6 +199,29 @@
       </section>
     </section>
 
+    <section id="tab-courses" class="page">
+      <div class="page-head"><h1>📚 รายวิชาของฉัน</h1><p>ศูนย์กลางงานทั้งภาคเรียน — สร้างครั้งเดียวแล้วเชื่อมหลักสูตร หน่วย แผน สื่อ ข้อสอบ และเอกสารเข้าด้วยกัน</p></div>
+      <section class="course-hero card">
+        <div><span class="course-kicker">V9.2.7 COURSE WORKSPACE</span><h2>กรอกครั้งเดียว สร้างงานครูได้ทั้งภาคเรียน</h2><p>เริ่มจากข้อมูลรายวิชา แล้วระบบจะพาไปทีละขั้นโดยไม่ต้องกรอกชั้น วิชา ภาคเรียน และปีการศึกษาซ้ำ</p></div>
+        <button id="newCourseBtn" class="primary-btn course-new-btn" type="button">＋ สร้างรายวิชา</button>
+      </section>
+      <div class="course-sync-bar"><span id="courseSyncStatus">Local cache · กำลังตรวจ Cloud…</span><button id="syncCoursesBtn" class="secondary-btn" type="button">☁️ ซิงก์รายวิชา</button></div>
+      <div id="courseList" class="course-grid"></div>
+      <section class="card course-roadmap">
+        <h3>เส้นทางงานในรายวิชา</h3>
+        <div class="course-step-grid">
+          <div>🧠<b>วิเคราะห์หลักสูตร</b><small>มาตรฐาน • ตัวชี้วัด • สมรรถนะ</small></div>
+          <div>📘<b>คำอธิบายรายวิชา</b><small>สร้างจากข้อมูลหลักสูตรจริง</small></div>
+          <div>🗂️<b>โครงสร้างรายวิชา</b><small>หน่วย • ชั่วโมง • น้ำหนัก</small></div>
+          <div>📅<b>กำหนดการสอน</b><small>กระจายตลอดภาคเรียน</small></div>
+          <div>🧩<b>หน่วยการเรียนรู้</b><small>เชื่อมตัวชี้วัดและชิ้นงาน</small></div>
+          <div>📝<b>แผนและสื่อ</b><small>ใบงาน • บัตรภาพ • เกม</small></div>
+          <div>✅<b>การประเมิน</b><small>ก่อน–หลัง • ปลายภาค</small></div>
+          <div>📄<b>Word + PDF</b><small>เอกสารพร้อมปรับใช้</small></div>
+        </div>
+      </section>
+    </section>
+
     <section id="tab-work" class="page">
       <div class="page-head"><h1>📁 Smart Plan Workspace</h1><p>ค้นหา เปิด สร้างต่อ บันทึกหลังสอน และส่งออกจากแผนเดิม</p></div>
       <section class="workspace-toolbar">
@@ -256,10 +280,134 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="active" data-bottom-tab="create" type="button">✨<small>สร้างแผน</small></button>
+    <button class="active" data-bottom-tab="create" type="button">✨<small>สร้างงาน</small></button>
+    <button data-bottom-tab="courses" type="button">📚<small>รายวิชา</small></button>
     <button data-bottom-tab="work" type="button">📁<small>แผนของฉัน</small></button>
     <button data-bottom-tab="help" type="button">💬<small>ช่วยเหลือ</small></button>
   </nav>
+</div>
+
+<div id="courseModal" class="modal" hidden>
+  <button id="courseBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card">
+    <button id="closeCourseBtn" class="close-btn" type="button">×</button>
+    <h2>📚 สร้างรายวิชา</h2>
+    <p class="course-note">V9.2.7 Upload-ready — Course Workspace + Document Engine พร้อม Word (.docx) และ PDF</p>
+    <div class="form-grid">
+      <label>ชื่อรายวิชา<input id="courseName" type="text" placeholder="เช่น ศิลปะ (ดนตรี–นาฏศิลป์)"></label>
+      <label>ระดับชั้น<input id="courseGrade" type="text" placeholder="เช่น ป.3"></label>
+      <label>กลุ่มสาระ / วิชา<input id="courseSubject" type="text" placeholder="เช่น ศิลปะ"></label>
+      <label>ภาคเรียน<select id="courseSemester"><option>1</option><option>2</option><option>3</option></select></label>
+      <label>ปีการศึกษา<input id="courseYear" type="text" inputmode="numeric" placeholder="เช่น 2569"></label>
+      <label>จำนวนชั่วโมง<input id="courseHours" type="number" inputmode="numeric" placeholder="เช่น 20"></label>
+      <label>โรงเรียน<input id="courseSchool" type="text" placeholder="ชื่อโรงเรียน"></label>
+    </div>
+    <button id="saveCourseDraftBtn" class="primary-btn" type="button">บันทึกรายวิชา</button>
+    <div id="courseStatus"></div>
+  </section>
+</div>
+
+<div id="curriculumAnalysisModal" class="modal" hidden>
+  <button id="curriculumAnalysisBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card curriculum-analysis-card">
+    <button id="closeCurriculumAnalysisBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>🧠 วิเคราะห์หลักสูตร</h2><p id="curriculumAnalysisMeta"></p></div><span class="workspace-status">ข้อมูลจากฐานจริง</span></div>
+    <div id="curriculumAnalysisSummary" class="analysis-summary"></div>
+    <div class="analysis-toolbar"><input id="curriculumAnalysisSearch" type="search" placeholder="ค้นหาตัวชี้วัด / มาตรฐาน / ข้อความ"><button id="selectAllCurriculumBtn" class="secondary-btn" type="button">เลือกทั้งหมด</button></div>
+    <div id="curriculumIndicatorList" class="analysis-indicator-list"></div>
+    <section class="analysis-result-box"><h3>สรุปสำหรับนำไปสร้างงานต่อ</h3><div id="curriculumSelectedSummary"></div><button id="saveCurriculumAnalysisBtn" class="primary-btn" type="button">บันทึกผลวิเคราะห์หลักสูตร</button></section>
+    <div id="curriculumAnalysisStatus"></div>
+  </section>
+</div>
+
+
+<div id="courseDescriptionModal" class="modal" hidden>
+  <button id="courseDescriptionBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card">
+    <button id="closeCourseDescriptionBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>📘 คำอธิบายรายวิชา</h2><p id="courseDescriptionMeta"></p></div><span class="workspace-status">ต่อจากหลักสูตร</span></div>
+    <div id="courseDescriptionSource" class="doc-source-note"></div>
+    <label>คำอธิบายรายวิชา<textarea id="courseDescriptionText" rows="12" placeholder="ระบบจะร่างจากตัวชี้วัดที่บันทึกไว้ และครูแก้ไขได้"></textarea></label>
+    <div class="doc-action-row"><button id="generateCourseDescriptionBtn" class="secondary-btn" type="button">✨ สร้างฉบับร่าง</button><button id="saveCourseDescriptionBtn" class="primary-btn" type="button">บันทึกคำอธิบายรายวิชา</button></div>
+    <div id="courseDescriptionStatus"></div>
+  </section>
+</div>
+
+<div id="courseStructureModal" class="modal" hidden>
+  <button id="courseStructureBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card structure-card">
+    <button id="closeCourseStructureBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>🗂️ โครงสร้างรายวิชา</h2><p id="courseStructureMeta"></p></div><span class="workspace-status">หน่วย • ชั่วโมง • น้ำหนัก</span></div>
+    <div id="courseStructureSource" class="doc-source-note"></div>
+    <div class="structure-toolbar"><label>จำนวนหน่วย<input id="courseUnitCount" type="number" min="1" max="12" value="4"></label><button id="generateCourseStructureBtn" class="secondary-btn" type="button">✨ จัดหน่วยอัตโนมัติ</button></div>
+    <div id="courseStructureList" class="structure-list"></div>
+    <div class="structure-total" id="courseStructureTotal"></div>
+    <button id="saveCourseStructureBtn" class="primary-btn" type="button">บันทึกโครงสร้างรายวิชา</button>
+    <div id="courseStructureStatus"></div>
+  </section>
+</div>
+
+<div id="teachingScheduleModal" class="modal" hidden>
+  <button id="teachingScheduleBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card schedule-card">
+    <button id="closeTeachingScheduleBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>📅 กำหนดการสอน</h2><p id="teachingScheduleMeta"></p></div><span class="workspace-status">ต่อจากโครงสร้างรายวิชา</span></div>
+    <div id="teachingScheduleSource" class="doc-source-note"></div>
+    <div class="schedule-head"><span>สัปดาห์</span><span>หน่วย</span><span>เรื่อง/หัวข้อ</span><span>ชม.</span><span>ตัวชี้วัด</span></div>
+    <div id="teachingScheduleList" class="schedule-list"></div>
+    <div id="teachingScheduleTotal" class="structure-total"></div>
+    <div class="doc-action-row"><button id="generateTeachingScheduleBtn" class="secondary-btn" type="button">✨ สร้างใหม่อัตโนมัติ</button><button id="saveTeachingScheduleBtn" class="primary-btn" type="button">บันทึกกำหนดการสอน</button></div>
+    <div id="teachingScheduleStatus"></div>
+  </section>
+</div>
+
+<div id="learningUnitsModal" class="modal" hidden>
+  <button id="learningUnitsBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card learning-units-modal-card">
+    <button id="closeLearningUnitsBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>🧩 หน่วยการเรียนรู้</h2><p id="learningUnitsMeta"></p></div><span class="workspace-status">ข้อมูลไหลต่ออัตโนมัติ</span></div>
+    <div id="learningUnitsSource" class="doc-source-note"></div>
+    <div id="learningUnitsList" class="learning-units-list"></div>
+    <div class="doc-action-row"><button id="generateLearningUnitsBtn" class="secondary-btn" type="button">✨ สร้างหน่วยใหม่</button><button id="saveLearningUnitsBtn" class="primary-btn" type="button">บันทึกหน่วยการเรียนรู้</button></div>
+    <div id="learningUnitsStatus"></div>
+  </section>
+</div>
+
+<div id="courseLessonsModal" class="modal" hidden>
+  <button id="courseLessonsBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card course-lessons-modal-card">
+    <button id="closeCourseLessonsBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>📝 แผนการสอนและสื่อ</h2><p id="courseLessonsMeta"></p></div><span class="workspace-status">ขั้นที่ 6</span></div>
+    <div class="doc-source-note">เลือกหน่วย แล้วส่งข้อมูลทั้งรายวิชา + หน่วย + ตัวชี้วัดเข้าสู่แผนหรือสื่อโดยอัตโนมัติ</div>
+    <div id="courseLessonsList" class="course-lessons-list"></div>
+    <div id="courseLessonsStatus"></div>
+  </section>
+</div>
+
+<div id="courseAssessmentsModal" class="modal" hidden>
+  <button id="courseAssessmentsBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card course-assessments-modal-card">
+    <button id="closeCourseAssessmentsBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>✅ การประเมินผล</h2><p id="courseAssessmentsMeta"></p></div><span class="workspace-status">ขั้นที่ 7</span></div>
+    <div id="courseAssessmentsSource" class="doc-source-note"></div>
+    <div id="courseAssessmentsList" class="course-assessments-list"></div>
+    <div id="courseAssessmentsStatus"></div>
+  </section>
+</div>
+
+<div id="courseDocumentsModal" class="modal" hidden>
+  <button id="courseDocumentsBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card course-doc-card course-documents-modal-card">
+    <button id="closeCourseDocumentsBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head"><div><h2>📄 ศูนย์เอกสารรายวิชา</h2><p id="courseDocumentsMeta"></p></div><span class="workspace-status">ขั้นที่ 8 · Final</span></div>
+    <div class="doc-source-note">รวมข้อมูลที่ทำไว้ทั้งรายวิชาเป็นเอกสารชุดเดียว ดาวน์โหลดได้ทันทีแบบ Word จริง (.docx) และ PDF จริง โดยไม่ต้องเปิดเว็บภายนอก</div>
+    <div class="document-export-grid">
+      <button id="downloadCourseDocxBtn" class="document-export-btn" type="button"><b>📘 Word (.docx)</b><small>เปิดแก้ไขต่อใน Microsoft Word / Google Docs ได้</small></button>
+      <button id="downloadCoursePdfBtn" class="document-export-btn" type="button"><b>📕 PDF</b><small>สร้างไฟล์ PDF ลงเครื่องโดยตรง</small></button>
+    </div>
+    <div class="document-preview-wrap"><b>ตัวอย่างเนื้อหา</b><pre id="courseDocumentPreview"></pre></div>
+    <div id="courseDocumentsStatus"></div>
+  </section>
 </div>
 
 <div id="loadingGate" class="loading-gate"><div class="loader"></div><b>กำลังตรวจสอบสมาชิก...</b></div>
@@ -310,6 +458,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=912"></script>
+<script src="/member-app.js?v=927"></script>
 </body>
 </html>

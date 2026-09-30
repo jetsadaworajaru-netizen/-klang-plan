@@ -1,3 +1,5 @@
+KLANG PLAN V9.2.7 DOCUMENT ENGINE — UPLOAD READY
+
 KLANG PLAN V9.1.2 — REAL 7-DAY TRIAL
 
 แก้ระบบ Code โปรโมชั่นให้เป็น Trial จริง
