@@ -89,3 +89,8 @@
 .material-teacher-key h3{margin:0 0 8px;color:#173f65}
 .teacher-key-btn{border-color:#d7c78d!important;background:#fffdf4!important}
 @media(max-width:780px){.material-visual-cards{grid-template-columns:1fr}.material-answer-switch{flex-direction:column}}
+
+.profile-media-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.profile-media-grid label{display:grid;gap:6px}.profile-media-grid input{font:inherit}.profile-media-grid small{color:#7d8d9c;font-weight:500}
+.profile-media-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.profile-media-preview>div{display:grid;gap:6px}.profile-media-thumb{height:110px;border:1px dashed #ccd9e5;border-radius:12px;background:#f8fbfd;display:grid;place-items:center;overflow:hidden;color:#8394a4;font-size:.78rem}.profile-media-thumb img{width:100%;height:100%;object-fit:contain}
+.material-brand-row{display:flex;align-items:center;justify-content:space-between;min-height:84px;margin-bottom:6px}.material-school-logo{width:78px;height:78px;object-fit:contain}.material-teacher-photo{width:78px;height:78px;border-radius:50%;object-fit:cover;border:3px solid var(--soft)}
+@media(max-width:640px){.profile-media-grid,.profile-media-preview{grid-template-columns:1fr}.material-brand-row{min-height:64px}.material-school-logo,.material-teacher-photo{width:60px;height:60px}}
