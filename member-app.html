@@ -419,7 +419,8 @@
     <div class="workspace-modal-head"><div><h2 id="workspacePlanTitle">แผนการจัดการเรียนรู้</h2><p id="workspacePlanMeta"></p></div><span id="workspacePlanStatus" class="workspace-status">พร้อมใช้</span></div>
     <div class="workspace-action-grid">
       <button id="reusePlanBtn" type="button">✏️ <b>ใช้แผนนี้ต่อ</b><small>เปิด Prompt เดิมกลับมาทำงาน</small></button>
-      <button id="workspaceWorksheetBtn" type="button">📝 <b>สร้างใบงาน</b><small>ต่อยอดจากแผนเดิม</small></button>
+      <button id="workspaceWorksheetBtn" type="button">📝 <b>สร้างใบงาน</b><small>เลือกสไตล์ • เห็นตัวอย่างทันที</small></button>
+      <button id="workspaceKnowledgeBtn" type="button">📚 <b>สร้างใบความรู้</b><small>ตรงตามแผน • พร้อม Word/PDF</small></button>
       <button id="workspaceQuizBtn" type="button">✅ <b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
       <button id="workspaceGameBtn" type="button">🎮 <b>สร้างเกม</b><small>เลือกแพลตฟอร์มต่อได้</small></button>
       <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>รวมสื่อทั้งชุด</small></button>
@@ -431,6 +432,59 @@
     <button id="deleteCloudPlanBtn" class="danger-outline-btn" type="button">ลบแผนนี้</button>
   </section>
 </div>
+
+<div id="materialStudioModal" class="modal" hidden>
+  <button id="materialStudioBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card material-studio-card">
+    <button id="closeMaterialStudioBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>🎨 Worksheet & Knowledge Studio</h2><p id="materialStudioMeta">สร้างสื่อให้ตรงกับแผนการสอน</p></div>
+      <span class="workspace-status">V9.3</span>
+    </div>
+
+    <div class="material-type-switch">
+      <button id="materialTypeWorksheet" class="active" type="button">📝 ใบงาน</button>
+      <button id="materialTypeKnowledge" type="button">📚 ใบความรู้</button>
+    </div>
+
+    <div class="material-style-panel">
+      <div>
+        <b>เลือกสไตล์</b>
+        <small>ตัวอย่างจะเปลี่ยนทันทีโดยไม่ต้องกดสร้างใหม่</small>
+      </div>
+      <div id="materialStylePicker" class="material-style-picker">
+        <button class="active" data-material-style="clean" type="button"><span>⬜</span><b>มินิมอลคลีน</b></button>
+        <button data-material-style="primary" type="button"><span>🧸</span><b>พาสเทลประถม</b></button>
+        <button data-material-style="formal" type="button"><span>🔵</span><b>ทางการน้ำเงิน</b></button>
+        <button data-material-style="playful" type="button"><span>🎈</span><b>สดใสสนุก</b></button>
+        <button data-material-style="eco" type="button"><span>🌿</span><b>ธรรมชาติ</b></button>
+      </div>
+    </div>
+
+    <div class="material-toolbar">
+      <label>ชื่อผู้เรียน <input id="materialStudentPlaceholder" type="text" value="ชื่อ-สกุล ______________________________"></label>
+      <label>จำนวนภารกิจ
+        <select id="materialTaskCount">
+          <option value="2">2 ภารกิจ</option>
+          <option value="3" selected>3 ภารกิจ</option>
+          <option value="4">4 ภารกิจ</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="material-preview-shell">
+      <div class="material-preview-head"><b>ตัวอย่าง A4 แบบทันที</b><small>เนื้อหาดึงจากแผนเดิม: หน่วย • เรื่อง • ตัวชี้วัด • วิธีสอน</small></div>
+      <article id="materialPreview" class="material-preview style-clean"></article>
+    </div>
+
+    <div class="document-export-grid material-export-grid">
+      <button id="downloadMaterialDocxBtn" class="document-export-btn" type="button"><b>📘 ดาวน์โหลด Word (.docx)</b><small>ไฟล์ Word จริง แก้ไขต่อได้</small></button>
+      <button id="downloadMaterialPdfBtn" class="document-export-btn" type="button"><b>📕 ดาวน์โหลด PDF</b><small>ไฟล์ PDF A4 พร้อมพิมพ์</small></button>
+    </div>
+    <div id="materialStudioStatus"></div>
+  </section>
+</div>
+
 <div id="profileModal" class="modal" hidden>
   <button id="profileBackdrop" class="modal-backdrop" type="button"></button>
   <section class="modal-card">
@@ -458,6 +512,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=927"></script>
+<script src="/member-app.js?v=930"></script>
 </body>
 </html>
