@@ -1,5 +1,5 @@
 (()=>{"use strict";
-const $=id=>document.getElementById(id), $=s=>[...document.querySelectorAll(s)];
+const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
 const nodes=s=>[...document.querySelectorAll(s)];
 const CFG=window.KLANG_CONFIG||{};
 let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student";
