@@ -9,24 +9,76 @@ function money(v){return v==null||v===""?"—":Number(v).toLocaleString("th-TH")
 function d(v){return v?new Date(v).toLocaleDateString("th-TH"):"—"}
 function esc(s){return (s??"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let sessionCheckPromise=null;
+
 async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
     $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อม Supabase</div>';return
   }
   sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-admin-auth"}});
-  const {data}=await sb.auth.getSession();
-  if(data.session)await useSession(data.session);
-  sb.auth.onAuthStateChange(async(_e,s)=>{if(s)await useSession(s);else showLogin()})
+  const {data,error}=await sb.auth.getSession();
+  if(error){showLogin("อ่าน Session ไม่สำเร็จ กรุณาลองใหม่");return}
+  if(data?.session)await useSession(data.session);
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==="SIGNED_OUT"){showLogin();return}
+    if((event==="SIGNED_IN"||event==="TOKEN_REFRESHED")&&session){
+      setTimeout(()=>{useSession(session).catch(console.error)},0)
+    }
+  })
 }
+
+async function verifyAdminAccess(){
+  let lastError=null;
+  for(let attempt=1;attempt<=6;attempt++){
+    try{
+      const {data,error}=await sb.rpc("is_current_user_admin");
+      if(!error&&data===true)return {ok:true,error:null};
+      if(!error&&data===false)return {ok:false,error:null};
+      lastError=error||new Error("admin_check_not_ready");
+    }catch(e){lastError=e}
+    await sleep(attempt*300)
+  }
+  return {ok:null,error:lastError}
+}
+
+async function readOwnProfile(uid){
+  let lastError=null;
+  for(let attempt=1;attempt<=6;attempt++){
+    try{
+      const {data,error}=await sb.from("profiles").select("id,email,full_name,role,status,member_id,avatar_url").eq("id",uid).maybeSingle();
+      if(!error&&data)return {data,error:null};
+      lastError=error||new Error("profile_not_ready");
+    }catch(e){lastError=e}
+    await sleep(attempt*300)
+  }
+  return {data:null,error:lastError}
+}
+
 async function useSession(session){
-  user=session.user;
-  const {data,error}=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
-  if(error){showLogin("อ่านข้อมูลบัญชีไม่สำเร็จ");return}
-  profile=data;
-  if(profile?.role!=="admin"){showLogin("บัญชีนี้ไม่มีสิทธิ์ Admin");await sb.auth.signOut();return}
-  $("adminName").textContent=profile.full_name||user.email||"Admin";
-  $("loginScreen").style.display="none";$("adminApp").style.display="block";$("logoutBtn").style.display="inline-flex";
-  await loadAll()
+  if(!session?.user){showLogin();return}
+  if(sessionCheckPromise)return sessionCheckPromise;
+  sessionCheckPromise=(async()=>{
+    user=session.user;
+    const adminCheck=await verifyAdminAccess();
+    if(adminCheck.ok===null){
+      console.error("admin rpc check failed",adminCheck.error);
+      showLogin("ตรวจสอบสิทธิ์ Admin ไม่สำเร็จ กรุณารอสักครู่แล้วลองใหม่");
+      return
+    }
+    if(adminCheck.ok!==true){
+      showLogin("บัญชีนี้ไม่มีสิทธิ์ Admin");
+      return
+    }
+    const own=await readOwnProfile(user.id);
+    profile=own.data||{id:user.id,email:user.email,full_name:user.email,role:"admin",status:"active"};
+    $("adminLoginMsg").innerHTML="";
+    $("adminName").textContent=profile.full_name||user.email||"Admin";
+    $("loginScreen").style.display="none";$("adminApp").style.display="block";$("logoutBtn").style.display="inline-flex";
+    await loadAll()
+  })();
+  try{return await sessionCheckPromise}
+  finally{sessionCheckPromise=null}
 }
 function showLogin(msg=""){
   user=null;profile=null;$("loginScreen").style.display="grid";$("adminApp").style.display="none";$("logoutBtn").style.display="none";
