@@ -39,14 +39,15 @@ async function auth(){
   sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}});
   const {data}=await sb.auth.getSession(); if(!data?.session){location.replace("/teacher.html");return false}
   user=data.session.user;
-  const {data:p}=await sb.from("profiles").select("id,full_name,school_name,avatar_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle();
+  const {data:p}=await sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle();
   if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
   if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
     await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
   }
   profile=p;renderProfile();return true
 }
-function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||""}
+function profileImageHtml(v,label){return v?.startsWith("data:image/")?'<img src="'+v+'" alt="'+esc(label||"")+'">':'<span>ยังไม่ได้อัปโหลด</span>'}
+function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||"";if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน")}
 async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
 if(!Array.isArray(DATA)||DATA.length!==2155)throw new Error("Curriculum dataset integrity check failed");
 buildGrades();
@@ -549,7 +550,9 @@ function bind(){
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
   $$("[data-avatar]").forEach(b=>b.onclick=()=>{profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile()}};
-  $("saveProfileBtn").onclick=async()=>{const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null};const {error}=await sb.from("profiles").update(payload).eq("id",user.id);if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;Object.assign(profile,payload);renderProfile();$("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓</div>'};
+  if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
+  if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
+  $("saveProfileBtn").onclick=async()=>{const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};const {error}=await sb.from("profiles").update(payload).eq("id",user.id);if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;Object.assign(profile,payload);renderProfile();$("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓</div>'};
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut();location.replace("/teacher.html")};
   $$(".dest-tab").forEach(b=>b.onclick=()=>{$$(".dest-tab").forEach(x=>x.classList.toggle("active",x===b));$$(".dest-panel").forEach(x=>x.classList.toggle("active",x.id===`dest-${b.dataset.dest}`))});
   $$("[data-open]").forEach(b=>b.onclick=async()=>{await copy();window.open(b.dataset.open,"_blank","noopener")});
