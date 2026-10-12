@@ -1,7 +1,7 @@
 (()=>{"use strict";
 const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
 const CFG=window.KLANG_CONFIG||{};
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -418,6 +418,71 @@ function downloadCoursePdf(){const c=courseDrafts()[activeCourseIndex];if(!c)ret
 function downloadWord(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(makeDocxBlob(plan.title||"แผนการจัดการเรียนรู้",text),safeFilename(plan.title||"klang-plan")+".docx")}
 function printPlanPdf(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(makePdfBlob(text),safeFilename(plan.title||"klang-plan")+".pdf")}
 
+function materialStyleName(key){
+  return ({clean:"มินิมอลคลีน",primary:"พาสเทลประถม",formal:"ทางการน้ำเงิน",playful:"สดใสสนุก",eco:"ธรรมชาติ"})[key]||"มินิมอลคลีน"
+}
+function materialPlan(){return activeWorkspacePlan||null}
+function materialTopic(p){return p?.topic||p?.title?.replace(/^แผนการจัดการเรียนรู้\s*/,"")||p?.unit_name||"บทเรียน"}
+function materialIndicatorText(p){return p?.indicator_text||p?.indicator||"ยึดตามตัวชี้วัดที่ระบุในแผน"}
+function materialTasks(p,count){
+  const topic=materialTopic(p),method=p?.method||"กิจกรรมตามแผน";
+  const pool=[
+    {title:"ทบทวนความรู้เดิม",body:"เขียนหรืออธิบายสิ่งที่นักเรียนรู้เกี่ยวกับ “"+topic+"” อย่างน้อย 2 ประเด็น"},
+    {title:"ภารกิจจากแผน",body:"ปฏิบัติหรือวิเคราะห์กิจกรรมเรื่อง “"+topic+"” โดยใช้แนวทาง "+method+" แล้วบันทึกขั้นตอนและผลที่ได้"},
+    {title:"เชื่อมโยงตัวชี้วัด",body:"อธิบายว่าผลงานหรือคำตอบของนักเรียนแสดงความเข้าใจตามตัวชี้วัด "+(p?.indicator||"-")+" อย่างไร"},
+    {title:"สรุปและสะท้อนคิด",body:"สรุปสิ่งสำคัญที่ได้เรียนรู้จากเรื่อง “"+topic+"” และยกตัวอย่างการนำไปใช้ 1 ตัวอย่าง"}
+  ];
+  return pool.slice(0,Math.max(2,Math.min(4,Number(count)||3)))
+}
+function materialModel(){
+  const p=materialPlan();if(!p)return null;const topic=materialTopic(p);const count=Number($("materialTaskCount")?.value||3);
+  return {type:materialType,style:materialStyle,title:materialType==="worksheet"?"ใบงาน เรื่อง "+topic:"ใบความรู้ เรื่อง "+topic,topic,grade:p.grade||"",subject:p.subject||"",unit:p.unit_name||"",indicator:p.indicator||"",indicatorText:materialIndicatorText(p),method:p.method||"",duration:p.duration||"",school:p.school_name||profile?.school_name||"",teacher:p.teacher_name||profile?.full_name||"",student:$("materialStudentPlaceholder")?.value||"ชื่อ-สกุล ______________________________",tasks:materialTasks(p,count)}
+}
+function renderMaterialPreview(){
+  const m=materialModel(),el=$("materialPreview");if(!m||!el)return;
+  el.className="material-preview style-"+materialStyle;
+  $("[data-material-style]").forEach(b=>b.classList.toggle("active",b.dataset.materialStyle===materialStyle));
+  $("materialTypeWorksheet")?.classList.toggle("active",materialType==="worksheet");
+  $("materialTypeKnowledge")?.classList.toggle("active",materialType==="knowledge");
+  if($("materialTaskCount"))$("materialTaskCount").closest("label").style.display=materialType==="worksheet"?"grid":"none";
+  if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").closest("label").style.display=materialType==="worksheet"?"grid":"none";
+  const meta="<div><b>รายวิชา:</b> "+esc(m.subject||"-")+"</div><div><b>ชั้น:</b> "+esc(m.grade||"-")+"</div><div><b>หน่วย:</b> "+esc(m.unit||"-")+"</div><div><b>เวลา:</b> "+esc(m.duration||"-")+"</div>";
+  const indicator="<div class=\"material-indicator\"><b>ตัวชี้วัด:</b> "+esc(m.indicator||"-")+"<br><span>"+esc(m.indicatorText)+"</span></div>";
+  let body="";
+  if(m.type==="worksheet"){
+    body="<div class=\"material-section\"><h3><span>1</span>ข้อมูลผู้เรียน</h3><div class=\"material-task\">"+esc(m.student)+"</div></div>"+
+      "<div class=\"material-section\"><h3><span>2</span>คำชี้แจง</h3><div class=\"material-task\">ทำกิจกรรมต่อไปนี้ให้ครบ โดยใช้ความรู้และทักษะจากแผนการเรียนรู้เรื่อง <b>"+esc(m.topic)+"</b></div></div>"+
+      "<div class=\"material-section\"><h3><span>3</span>ภารกิจการเรียนรู้</h3>"+m.tasks.map((t,i)=>"<div class=\"material-task\"><b>ภารกิจที่ "+(i+1)+": "+esc(t.title)+"</b><p>"+esc(t.body)+"</p><div class=\"material-answer-lines\"><div></div><div></div><div></div></div></div>").join("")+"</div>"+
+      "<div class=\"material-summary-box\"><b>สรุปท้ายใบงาน</b><p>สิ่งที่ฉันทำได้ดี ____________________________________________</p><p>สิ่งที่ฉันอยากพัฒนาต่อ ________________________________________</p></div>";
+  }else{
+    body="<div class=\"material-section\"><h3><span>1</span>สาระสำคัญ</h3><div class=\"material-knowledge-box\">"+esc(m.indicatorText)+"</div></div>"+
+      "<div class=\"material-section\"><h3><span>2</span>สิ่งที่ควรรู้</h3><div class=\"material-knowledge-box\"><b>แนวคิดหลัก</b><p>เรียนรู้และทำความเข้าใจเรื่อง “"+esc(m.topic)+"” ให้สัมพันธ์กับตัวชี้วัดของบทเรียน</p></div>"+
+      "<div class=\"material-knowledge-box\"><b>การเรียนรู้ตามแผน</b><p>ใช้แนวทาง "+esc(m.method||"กิจกรรมตามแผน")+" เพื่อฝึกความเข้าใจ การปฏิบัติ และการอธิบายสิ่งที่เรียนรู้</p></div>"+
+      "<div class=\"material-knowledge-box\"><b>จุดสังเกตสำคัญ</b><p>เน้นความถูกต้องของสาระ การลงมือทำ และการเชื่อมโยงผลการเรียนรู้กับตัวชี้วัด "+esc(m.indicator||"-")+"</p></div></div>"+
+      "<div class=\"material-summary-box\"><b>จำให้แม่น</b><p>หัวใจของบทเรียนนี้คือการเข้าใจ “"+esc(m.topic)+"” และนำความรู้ไปใช้ในกิจกรรมตามแผนได้อย่างเหมาะสม</p></div>";
+  }
+  el.innerHTML="<header class=\"material-doc-title\"><div class=\"kicker\">"+(m.type==="worksheet"?"WORKSHEET":"KNOWLEDGE SHEET")+" · "+esc(materialStyleName(m.style))+"</div><h1>"+esc(m.title)+"</h1><p>"+esc(m.school||"คลังแผนการสอนหน้าเดียว")+"</p></header><div class=\"material-meta-grid\">"+meta+"</div>"+indicator+body+"<footer class=\"material-footer\">สร้างจากแผนการสอนเดียวกัน • ไม่เปลี่ยนตัวชี้วัดของแผน • สามารถแก้ไขต่อใน Word ได้</footer>";
+}
+function openMaterialStudio(type="worksheet"){
+  if(!activeWorkspacePlan)return toast("กรุณาเลือกแผนก่อน");materialType=type;materialStyle="clean";
+  $("materialStudioMeta").textContent=[activeWorkspacePlan.title,activeWorkspacePlan.grade,activeWorkspacePlan.subject].filter(Boolean).join(" · ");
+  $("materialStudioStatus").innerHTML="";$("materialStudioModal").hidden=false;closeWorkspacePlan();renderMaterialPreview()
+}
+function closeMaterialStudio(){$("materialStudioModal").hidden=true}
+function materialPlainText(){
+  const m=materialModel();if(!m)return "";
+  const lines=[m.title,"รูปแบบ: "+materialStyleName(m.style),m.school?"โรงเรียน: "+m.school:"","รายวิชา: "+(m.subject||"-")+"   ชั้น: "+(m.grade||"-"),"หน่วย: "+(m.unit||"-")+"   เวลา: "+(m.duration||"-"),"ตัวชี้วัด: "+(m.indicator||"-"),m.indicatorText,""];
+  if(m.type==="worksheet"){
+    lines.push(m.student,"","คำชี้แจง","ทำกิจกรรมต่อไปนี้ให้ครบ โดยใช้ความรู้และทักษะจากแผนการเรียนรู้เรื่อง "+m.topic,"");
+    m.tasks.forEach((t,i)=>{lines.push("ภารกิจที่ "+(i+1)+": "+t.title,t.body,"คำตอบ: ______________________________________________________________","______________________________________________________________________","")});
+    lines.push("สรุปท้ายใบงาน","สิ่งที่ฉันทำได้ดี ____________________________________________","สิ่งที่ฉันอยากพัฒนาต่อ ________________________________________");
+  }else{
+    lines.push("สาระสำคัญ",m.indicatorText,"","สิ่งที่ควรรู้","1. แนวคิดหลัก: เรียนรู้และทำความเข้าใจเรื่อง “"+m.topic+"” ให้สัมพันธ์กับตัวชี้วัดของบทเรียน","2. การเรียนรู้ตามแผน: ใช้แนวทาง "+(m.method||"กิจกรรมตามแผน")+" เพื่อฝึกความเข้าใจและการปฏิบัติ","3. จุดสังเกตสำคัญ: เชื่อมผลการเรียนรู้กับตัวชี้วัด "+(m.indicator||"-"),"","จำให้แม่น","หัวใจของบทเรียนนี้คือการเข้าใจ “"+m.topic+"” และนำความรู้ไปใช้ในกิจกรรมตามแผนได้อย่างเหมาะสม");
+  }
+  return lines.filter(x=>x!==null&&x!==undefined).join("\n")
+}
+function downloadMaterialDocx(){const m=materialModel();if(!m)return;saveBlob(makeDocxBlob(m.title,materialPlainText()),safeFilename(m.title)+".docx");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด Word (.docx) สำเร็จ ✓</div>';toast("ดาวน์โหลด Word แล้ว ✓")}
+function downloadMaterialPdf(){const m=materialModel();if(!m)return;saveBlob(makePdfBlob(materialPlainText()),safeFilename(m.title)+".pdf");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด PDF สำเร็จ ✓</div>';toast("ดาวน์โหลด PDF แล้ว ✓")}
 function openCourseModal(){if($("courseSchool"))$("courseSchool").value=profile?.school_name||"";$("courseModal").hidden=false}
 function closeCourseModal(){$("courseModal").hidden=true}
 function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("courseGrade").value.trim(),subject=$("courseSubject").value.trim(),year=$("courseYear").value.trim();if(!name||!grade||!subject||!year){$("courseStatus").innerHTML='<div class="error-box">กรุณากรอกชื่อรายวิชา ระดับชั้น กลุ่มสาระ/วิชา และปีการศึกษา</div>';return}const a=courseDrafts();a.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,grade,subject,semester:$("courseSemester").value,year,hours:$("courseHours").value,school:$("courseSchool").value.trim(),created_at:new Date().toISOString()});writeCourseDrafts(a);closeCourseModal();renderCourses();toast(courseCloudReady?"บันทึกรายวิชาและเตรียมซิงก์ Cloud แล้ว ✓":"บันทึกรายวิชาในเครื่องแล้ว ✓")}
@@ -436,7 +501,7 @@ function bind(){
   $("includeSignatures").onchange=()=>{$("signatureFields").hidden=!$("includeSignatures").checked;updateSummary()};
   $$("[data-style-hint]").forEach(b=>b.onclick=()=>{const t=$("customStyleDirection");t.value=(t.value?t.value+" · ":"")+b.dataset.styleHint;updateSummary()});
   $$("[data-help-type]").forEach(b=>b.onclick=()=>{$$(" [data-help-type]".trim()).forEach(x=>x.classList.toggle("active",x===b));$("helpType").value=b.dataset.helpType});$("sendHelpBtn").onclick=sendHelp;
-  if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>workspaceContinuation("worksheet");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=()=>workspaceContinuation("quiz");if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=()=>workspaceContinuation("game");if($("workspacePackBtn"))$("workspacePackBtn").onclick=()=>workspaceContinuation("pack");if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};
+  if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>openMaterialStudio("worksheet");if($("workspaceKnowledgeBtn"))$("workspaceKnowledgeBtn").onclick=()=>openMaterialStudio("knowledge");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=()=>workspaceContinuation("quiz");if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=()=>workspaceContinuation("game");if($("workspacePackBtn"))$("workspacePackBtn").onclick=()=>workspaceContinuation("pack");if($("closeMaterialStudioBtn"))$("closeMaterialStudioBtn").onclick=closeMaterialStudio;if($("materialStudioBackdrop"))$("materialStudioBackdrop").onclick=closeMaterialStudio;if($("materialTypeWorksheet"))$("materialTypeWorksheet").onclick=()=>{materialType="worksheet";renderMaterialPreview()};if($("materialTypeKnowledge"))$("materialTypeKnowledge").onclick=()=>{materialType="knowledge";renderMaterialPreview()};$("[data-material-style]").forEach(b=>b.onclick=()=>{materialStyle=b.dataset.materialStyle;renderMaterialPreview()});if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").oninput=renderMaterialPreview;if($("materialTaskCount"))$("materialTaskCount").onchange=renderMaterialPreview;if($("downloadMaterialDocxBtn"))$("downloadMaterialDocxBtn").onclick=downloadMaterialDocx;if($("downloadMaterialPdfBtn"))$("downloadMaterialPdfBtn").onclick=downloadMaterialPdf;if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
   $$("[data-avatar]").forEach(b=>b.onclick=()=>{profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile()}};
