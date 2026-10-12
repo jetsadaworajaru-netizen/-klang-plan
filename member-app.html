@@ -470,6 +470,14 @@
           <option value="4">4 ภารกิจ</option>
         </select>
       </label>
+      <label>จำนวนหน้า
+        <select id="materialPageCount">
+          <option value="1" selected>1 หน้า</option>
+          <option value="2">2 หน้า</option>
+          <option value="3">3 หน้า</option>
+        </select>
+      </label>
+      <label class="material-toggle-label"><input id="materialVisualCards" type="checkbox" checked> เพิ่มบัตรภาพ/ภาพประกอบอัตโนมัติ</label>
     </div>
 
     <div class="material-preview-shell">
@@ -477,9 +485,15 @@
       <article id="materialPreview" class="material-preview style-clean"></article>
     </div>
 
+    <div class="material-answer-switch" id="materialAnswerSwitch">
+      <button id="previewStudentMaterialBtn" class="active" type="button">👧 ตัวอย่างสำหรับนักเรียน</button>
+      <button id="previewTeacherKeyBtn" type="button">👩‍🏫 เฉลยสำหรับครู</button>
+    </div>
     <div class="document-export-grid material-export-grid">
-      <button id="downloadMaterialDocxBtn" class="document-export-btn" type="button"><b>📘 ดาวน์โหลด Word (.docx)</b><small>ไฟล์ Word จริง แก้ไขต่อได้</small></button>
-      <button id="downloadMaterialPdfBtn" class="document-export-btn" type="button"><b>📕 ดาวน์โหลด PDF</b><small>ไฟล์ PDF A4 พร้อมพิมพ์</small></button>
+      <button id="downloadMaterialDocxBtn" class="document-export-btn" type="button"><b>📘 Word สำหรับนักเรียน</b><small>ไฟล์ .docx แก้ไขต่อได้</small></button>
+      <button id="downloadMaterialPdfBtn" class="document-export-btn" type="button"><b>📕 PDF สำหรับนักเรียน</b><small>ไฟล์ PDF A4 พร้อมพิมพ์</small></button>
+      <button id="downloadTeacherKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลยครู</b><small>เฉลยแยก ไม่ปะปนกับใบงานนักเรียน</small></button>
+      <button id="downloadTeacherKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลยครู</b><small>พร้อมพิมพ์เก็บสำหรับครู</small></button>
     </div>
     <div id="materialStudioStatus"></div>
   </section>
@@ -512,6 +526,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=930"></script>
+<script src="/member-app.js?v=931"></script>
 </body>
 </html>
