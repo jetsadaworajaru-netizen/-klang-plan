@@ -1,4 +1,5 @@
 {
+  // Auto deploy enabled for Cloudflare Git integration
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "klang-plan",
   "compatibility_date": "2026-10-12",
