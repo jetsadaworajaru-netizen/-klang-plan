@@ -516,6 +516,20 @@
     </div>
     <label>ชื่อที่แสดง<input id="profileDisplayName" type="text"></label>
     <label>โรงเรียน<input id="profileSchool" type="text"></label>
+    <div class="profile-media-grid">
+      <label>รูปครู
+        <input id="teacherPhotoUpload" type="file" accept="image/*">
+        <small>ใช้ในแผน ใบงาน และใบความรู้</small>
+      </label>
+      <label>โลโก้โรงเรียน
+        <input id="schoolLogoUpload" type="file" accept="image/*">
+        <small>ใช้ในหัวเอกสารและหน้าปก</small>
+      </label>
+    </div>
+    <div class="profile-media-preview">
+      <div><b>รูปครู</b><div id="teacherPhotoPreview" class="profile-media-thumb">ยังไม่ได้อัปโหลด</div></div>
+      <div><b>โลโก้โรงเรียน</b><div id="schoolLogoPreview" class="profile-media-thumb">ยังไม่ได้อัปโหลด</div></div>
+    </div>
     <button id="saveProfileBtn" class="primary-btn" type="button">บันทึกโปรไฟล์</button>
     <button id="logoutBtn" class="secondary-btn" type="button">ออกจากระบบ</button>
     <div id="profileStatus"></div>
@@ -526,6 +540,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=931"></script>
+<script src="/member-app.js?v=932"></script>
 </body>
 </html>
