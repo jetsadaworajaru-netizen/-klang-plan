@@ -1,6 +1,7 @@
 (()=>{"use strict";
 const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
 const nodes=s=>[...document.querySelectorAll(s)];
+function withTimeout(promise,ms,label="การเชื่อมต่อ"){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+" ใช้เวลานานเกินไป กรุณาลองใหม่")),ms))])}
 const CFG=window.KLANG_CONFIG||{};
 let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student";
 const styleMeta={
@@ -38,9 +39,9 @@ function avatar(v){const p={"avatar:teacher":"👩‍🏫","avatar:teacher_male"
 async function auth(){
   if(!window.supabase||!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
   sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}});
-  const {data}=await sb.auth.getSession(); if(!data?.session){location.replace("/teacher.html");return false}
+  const {data}=await withTimeout(sb.auth.getSession(),8000,"ตรวจสอบการเข้าสู่ระบบ"); if(!data?.session){location.replace("/teacher.html");return false}
   user=data.session.user;
-  const {data:p}=await sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle();
+  const {data:p}=await withTimeout(sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),8000,"โหลดข้อมูลสมาชิก");
   if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
   if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
     await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
@@ -606,6 +607,6 @@ function bind(){
   $("openWordBtn").onclick=async()=>{await copy();window.open("https://www.office.com/launch/word","_blank","noopener")};
   $("savePdfBtn").onclick=()=>{const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");saveBlob(makePdfBlob("Klang Plan — Prompt\n\n"+t),"Klang-Plan-Prompt.pdf")}
 }
-async function start(){try{const ok=await auth();if(!ok)return;bind();await loadData();await loadCloudPlans();await loadCoursesFromCloud();renderCourses();$("loadingGate").classList.add("hidden");$("appShell").classList.remove("is-loading")}catch(e){console.error(e);$("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message)}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button></div>`}}
+async function start(){try{const ok=await auth();if(!ok)return;bind();await withTimeout(loadData(),10000,"โหลดฐานหลักสูตร");await Promise.allSettled([withTimeout(loadCloudPlans(),8000,"โหลดคลังแผน"),withTimeout(loadCoursesFromCloud(),8000,"โหลดรายวิชา")]);renderCourses();$("loadingGate").classList.add("hidden");$("appShell").classList.remove("is-loading")}catch(e){console.error(e);$("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message||"เกิดข้อผิดพลาดในการเชื่อมต่อ")}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button><br><small>หากอินเทอร์เน็ตช้า ระบบจะหยุดรอแทนการค้างหน้าจอ</small></div>`}}
 document.readyState==="loading"?document.addEventListener("DOMContentLoaded",start,{once:true}):start();
 })();
