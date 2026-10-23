@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)]
 const nodes=s=>[...document.querySelectorAll(s)];
 function withTimeout(promise,ms,label="การเชื่อมต่อ"){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+" ใช้เวลานานเกินไป กรุณาลองใหม่")),ms))])}
 const CFG=window.KLANG_CONFIG||{};
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -476,6 +476,100 @@ function downloadCoursePdf(){const c=courseDrafts()[activeCourseIndex];if(!c)ret
 function downloadWord(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(makeDocxBlobBranded(plan.title||"แผนการจัดการเรียนรู้",text,profile?.school_logo_url,profile?.teacher_photo_url||profile?.avatar_url),safeFilename(plan.title||"klang-plan")+".docx")}
 async function printPlanPdf(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(await makePdfBlobBranded(text,profile?.school_logo_url,profile?.teacher_photo_url||profile?.avatar_url),safeFilename(plan.title||"klang-plan")+".pdf")}
 
+
+function quizDifficultyName(v){return ({easy:"ง่าย",medium:"ปานกลาง",hard:"ท้าทาย"})[v]||"ปานกลาง"}
+function quizTypeName(v){return ({mcq:"ปรนัย 4 ตัวเลือก",mixed:"ผสมปรนัย + อัตนัย",short:"อัตนัยสั้น"})[v]||"ปรนัย 4 ตัวเลือก"}
+function quizPlan(){return activeWorkspacePlan||null}
+function quizTopic(p){return materialTopic(p)}
+function quizStemBank(p,diff){
+  const topic=quizTopic(p),indicator=p?.indicator||"-",method=p?.method||"กิจกรรมตามแผน";
+  const easy=[
+    {q:"ข้อใดกล่าวถึงเรื่อง “"+topic+"” ได้สอดคล้องกับบทเรียนมากที่สุด",a:"แนวคิดที่สัมพันธ์กับสาระและกิจกรรมในแผน",b:"เรื่องที่ไม่เกี่ยวข้องกับบทเรียน",c:"ข้อมูลที่ขัดกับตัวชี้วัด",d:"กิจกรรมที่ไม่ใช้ความรู้จากบทเรียน",key:"A"},
+    {q:"จากการเรียนเรื่อง “"+topic+"” นักเรียนควรทำสิ่งใดได้",a:"อธิบายหรือปฏิบัติได้ตามกิจกรรมในแผน",b:"จดจำคำศัพท์ที่ไม่เกี่ยวข้อง",c:"ทำกิจกรรมอื่นที่ไม่สัมพันธ์กับหน่วย",d:"หลีกเลี่ยงการใช้ความรู้จากบทเรียน",key:"A"},
+    {q:"ตัวชี้วัด "+indicator+" เน้นให้นักเรียนแสดงอะไร",a:"ความรู้หรือทักษะที่สัมพันธ์กับบทเรียน",b:"ข้อมูลนอกหน่วยทั้งหมด",c:"การท่องจำโดยไม่ต้องเข้าใจ",d:"การทำงานที่ไม่ต้องอ้างอิงบทเรียน",key:"A"}
+  ];
+  const medium=[
+    {q:"หากต้องนำความรู้เรื่อง “"+topic+"” ไปใช้ในกิจกรรม นักเรียนควรเริ่มจากข้อใด",a:"พิจารณาจุดประสงค์และขั้นตอนของกิจกรรม",b:"เลือกคำตอบแบบสุ่ม",c:"ข้ามคำชี้แจงของงาน",d:"ทำเฉพาะส่วนที่ไม่เกี่ยวข้อง",key:"A"},
+    {q:"ข้อใดเป็นหลักฐานที่เหมาะสมที่สุดว่าผู้เรียนเข้าใจเรื่อง “"+topic+"”",a:"สามารถอธิบายและยกตัวอย่างตามบริบทของบทเรียน",b:"คัดลอกข้อความโดยไม่อธิบาย",c:"ตอบโดยไม่สัมพันธ์กับคำถาม",d:"เว้นคำตอบทั้งหมด",key:"A"},
+    {q:"การเรียนแบบ "+method+" ช่วยให้ผู้เรียนพัฒนาด้านใดมากที่สุดตามแผน",a:"การลงมือคิดหรือปฏิบัติตามเป้าหมาย",b:"การจำข้อมูลที่ไม่เกี่ยวข้อง",c:"การหลีกเลี่ยงการทำกิจกรรม",d:"การทำงานโดยไม่ตรวจสอบผล",key:"A"}
+  ];
+  const hard=[
+    {q:"สถานการณ์ใดแสดงการประยุกต์ใช้ความรู้เรื่อง “"+topic+"” ได้ดีที่สุด",a:"เลือกวิธีที่เหมาะกับสถานการณ์และอธิบายเหตุผลได้",b:"ใช้คำตอบเดิมทุกสถานการณ์โดยไม่พิจารณา",c:"ตัดสินใจโดยไม่ใช้ข้อมูลจากบทเรียน",d:"ทำตามผู้อื่นโดยไม่อธิบาย",key:"A"},
+    {q:"หากผลงานยังไม่สอดคล้องกับตัวชี้วัด "+indicator+" ควรปรับอย่างไร",a:"ตรวจหลักฐานการเรียนรู้และแก้ให้สัมพันธ์กับเกณฑ์",b:"เพิ่มเนื้อหาที่ไม่เกี่ยวข้อง",c:"ตัดขั้นตอนสำคัญออก",d:"ไม่ต้องตรวจสอบผลงาน",key:"A"},
+    {q:"ข้อใดสะท้อนการคิดวิเคราะห์จากเรื่อง “"+topic+"” ได้ชัดที่สุด",a:"เปรียบเทียบเหตุผล หลักฐาน และสรุปอย่างมีที่มา",b:"เลือกคำตอบโดยไม่อ่านโจทย์",c:"คัดลอกคำตอบโดยไม่พิจารณา",d:"ตอบเพียงคำเดียวทุกข้อ",key:"A"}
+  ];
+  return diff==="easy"?easy:diff==="hard"?hard:medium
+}
+function quizShortQuestion(p,diff,i){
+  const topic=quizTopic(p),indicator=p?.indicator||"-";
+  const bank=diff==="easy"?[
+    "เขียนสรุปสิ่งสำคัญเกี่ยวกับ “"+topic+"” 1–2 ประโยค",
+    "ยกตัวอย่างสิ่งที่ได้เรียนรู้จากเรื่อง “"+topic+"” 1 ตัวอย่าง"
+  ]:diff==="hard"?[
+    "วิเคราะห์สถานการณ์หนึ่งที่สามารถนำความรู้เรื่อง “"+topic+"” ไปใช้ และอธิบายเหตุผล",
+    "อธิบายว่าผลงานของนักเรียนจะสะท้อนตัวชี้วัด "+indicator+" ได้อย่างไร"
+  ]:[
+    "อธิบายแนวคิดสำคัญของเรื่อง “"+topic+"” ด้วยภาษาของตนเอง",
+    "ยกตัวอย่างการนำความรู้เรื่อง “"+topic+"” ไปใช้ในสถานการณ์จริง"
+  ];
+  return bank[i%bank.length]
+}
+function quizModel(){
+  const p=quizPlan();if(!p)return null;
+  const count=Math.max(5,Math.min(20,Number($("quizCount")?.value||10))),difficulty=$("quizDifficulty")?.value||"medium",type=$("quizType")?.value||"mcq";
+  const base=quizStemBank(p,difficulty),questions=[];
+  for(let i=0;i<count;i++){
+    const makeShort=type==="short"||(type==="mixed"&&i%4===3);
+    if(makeShort){questions.push({kind:"short",q:quizShortQuestion(p,difficulty,i),key:"พิจารณาความถูกต้อง ความครบถ้วน และความสัมพันธ์กับเรื่อง “"+quizTopic(p)+"” และตัวชี้วัด "+(p.indicator||"-")})}
+    else{const q=base[i%base.length];questions.push({kind:"mcq",q:q.q,a:q.a,b:q.b,c:q.c,d:q.d,key:q.key})}
+  }
+  return {title:"แบบทดสอบ เรื่อง "+quizTopic(p),topic:quizTopic(p),subject:p.subject||"",grade:p.grade||"",unit:p.unit_name||"",indicator:p.indicator||"",indicatorText:materialIndicatorText(p),difficulty,type,count,questions,school:p.school_name||profile?.school_name||"",teacher:p.teacher_name||profile?.full_name||"",schoolLogo:profile?.school_logo_url||null,teacherPhoto:profile?.teacher_photo_url||profile?.avatar_url||null,style:"formal"}
+}
+function quizStudentHtml(m){
+  const brand=(m.schoolLogo?.startsWith("data:image/")||m.teacherPhoto?.startsWith("data:image/"))?"<div class=\"material-brand-row\">"+(m.schoolLogo?.startsWith("data:image/")?"<img class=\"material-school-logo\" src=\""+m.schoolLogo+"\" alt=\"โลโก้โรงเรียน\">":"<span></span>")+(m.teacherPhoto?.startsWith("data:image/")?"<img class=\"material-teacher-photo\" src=\""+m.teacherPhoto+"\" alt=\"รูปครู\">":"")+"</div>":"";
+  const qs=m.questions.map((q,i)=>q.kind==="mcq"?
+    "<div class=\"quiz-question\"><b>"+(i+1)+". "+esc(q.q)+"</b><div class=\"quiz-options\"><div class=\"quiz-option\">ก. "+esc(q.a)+"</div><div class=\"quiz-option\">ข. "+esc(q.b)+"</div><div class=\"quiz-option\">ค. "+esc(q.c)+"</div><div class=\"quiz-option\">ง. "+esc(q.d)+"</div></div></div>":
+    "<div class=\"quiz-question\"><b>"+(i+1)+". "+esc(q.q)+"</b><div class=\"quiz-short-lines\"><i></i><i></i><i></i></div></div>"
+  ).join("");
+  return "<header class=\"material-doc-title\">"+brand+"<div class=\"kicker\">QUIZ · "+esc(quizDifficultyName(m.difficulty))+"</div><h1>"+esc(m.title)+"</h1><p>"+esc(m.school||"คลังแผนการสอนหน้าเดียว")+"</p></header><div class=\"material-meta-grid\"><div><b>รายวิชา:</b> "+esc(m.subject||"-")+"</div><div><b>ชั้น:</b> "+esc(m.grade||"-")+"</div><div><b>หน่วย:</b> "+esc(m.unit||"-")+"</div><div><b>จำนวน:</b> "+m.count+" ข้อ</div></div><div class=\"material-indicator\"><b>ตัวชี้วัด:</b> "+esc(m.indicator||"-")+"<br>"+esc(m.indicatorText)+"</div><div class=\"quiz-note\">ชื่อ-สกุล ______________________________ ชั้น ______ เลขที่ ______</div>"+qs+"<footer class=\"material-footer\">แบบทดสอบสร้างจากแผนการสอนเดียวกัน • ครูสามารถแก้ไขก่อนดาวน์โหลดได้</footer>"
+}
+function quizKeyHtml(m){
+  const qs=m.questions.map((q,i)=>"<div class=\"quiz-question\"><b>"+(i+1)+". "+esc(q.q)+"</b><div class=\"quiz-answer\">"+(q.kind==="mcq"?"เฉลย: "+esc(q.key):"แนวตรวจ: "+esc(q.key))+"</div></div>").join("");
+  return "<header class=\"material-doc-title\"><div class=\"kicker\">ANSWER KEY</div><h1>เฉลย — "+esc(m.title)+"</h1><p>"+esc(m.school||"คลังแผนการสอนหน้าเดียว")+"</p></header><div class=\"material-indicator\"><b>ระดับ:</b> "+esc(quizDifficultyName(m.difficulty))+" · <b>รูปแบบ:</b> "+esc(quizTypeName(m.type))+"</div>"+qs+"<footer class=\"material-footer\">เอกสารสำหรับครู</footer>"
+}
+function quizSetEditable(on){
+  quizEditing=!!on;const el=$("quizPreview");if(!el)return;el.classList.toggle("is-editing",quizEditing);
+  el.querySelectorAll("h1,p,.quiz-question,.quiz-option,.quiz-answer,.material-indicator,.material-meta-grid div").forEach(x=>x.contentEditable=quizEditing?"true":"false");
+  if($("toggleQuizEditBtn")){$("toggleQuizEditBtn").classList.toggle("active",quizEditing);$("toggleQuizEditBtn").textContent=quizEditing?"✅ เสร็จสิ้น":"✏️ แก้ไข"}
+  if($("quizEditHint"))$("quizEditHint").hidden=!quizEditing
+}
+function renderQuizPreview(){
+  const m=quizModel(),el=$("quizPreview");if(!m||!el)return;
+  el.className="material-preview style-formal";
+  $("quizStudentViewBtn")?.classList.toggle("active",quizViewMode==="student");$("quizKeyViewBtn")?.classList.toggle("active",quizViewMode==="key");
+  const generated=quizViewMode==="key"?quizKeyHtml(m):quizStudentHtml(m);el.innerHTML=quizEditedHtml||generated;quizSetEditable(quizEditing)
+}
+function openQuizStudio(){
+  if(!activeWorkspacePlan)return toast("กรุณาเลือกแผนก่อน");quizViewMode="student";quizEditing=false;quizEditedHtml="";
+  $("quizStudioMeta").textContent=[activeWorkspacePlan.title,activeWorkspacePlan.grade,activeWorkspacePlan.subject].filter(Boolean).join(" · ");
+  $("quizStudioStatus").innerHTML="";$("quizStudioModal").hidden=false;closeWorkspacePlan();renderQuizPreview()
+}
+function closeQuizStudio(){$("quizStudioModal").hidden=true}
+function quizStudentText(){
+  const m=quizModel();if(!m)return "";const lines=[m.title,"ระดับ: "+quizDifficultyName(m.difficulty)+"   รูปแบบ: "+quizTypeName(m.type),"รายวิชา: "+(m.subject||"-")+"   ชั้น: "+(m.grade||"-"),"หน่วย: "+(m.unit||"-"),"ตัวชี้วัด: "+(m.indicator||"-"),m.indicatorText,"","ชื่อ-สกุล ______________________________ ชั้น ______ เลขที่ ______",""];
+  m.questions.forEach((q,i)=>{lines.push((i+1)+". "+q.q);if(q.kind==="mcq")lines.push("ก. "+q.a,"ข. "+q.b,"ค. "+q.c,"ง. "+q.d);else lines.push("____________________________________________________________","____________________________________________________________");lines.push("")});return lines.join("\n")
+}
+function quizKeyText(){
+  const m=quizModel();if(!m)return "";const lines=["เฉลย — "+m.title,"ระดับ: "+quizDifficultyName(m.difficulty)+"   รูปแบบ: "+quizTypeName(m.type),"ตัวชี้วัด: "+(m.indicator||"-"),""];
+  m.questions.forEach((q,i)=>lines.push((i+1)+". "+q.q,q.kind==="mcq"?"เฉลย: "+q.key:"แนวตรวจ: "+q.key,""));return lines.join("\n")
+}
+function quizEditedText(){return quizEditedHtml&&$("quizPreview")?$("quizPreview").innerText.replace(/\n{3,}/g,"\n\n").trim():""}
+function toggleQuizEdit(){quizEditing=!quizEditing;if(!quizEditing&&$("quizPreview"))quizEditedHtml=$("quizPreview").innerHTML;quizSetEditable(quizEditing)}
+function downloadQuizDocx(){const m=quizModel();if(!m)return;const txt=quizEditedText()||quizStudentText();saveBlob(makeDocxBlobBranded(m.title,txt,m.schoolLogo,m.teacherPhoto,m.style),safeFilename(m.title)+".docx");toast("ดาวน์โหลด Word แบบทดสอบแล้ว ✓")}
+async function downloadQuizPdf(){const m=quizModel();if(!m)return;const txt=quizEditedText()||quizStudentText();saveBlob(await makePdfBlobBranded(txt,m.schoolLogo,m.teacherPhoto,m.style),safeFilename(m.title)+".pdf");toast("ดาวน์โหลด PDF แบบทดสอบแล้ว ✓")}
+function downloadQuizKeyDocx(){const m=quizModel();if(!m)return;saveBlob(makeDocxBlobBranded("เฉลย "+m.title,quizKeyText(),m.schoolLogo,m.teacherPhoto,m.style),safeFilename("เฉลย-"+m.title)+".docx");toast("ดาวน์โหลด Word เฉลยแล้ว ✓")}
+async function downloadQuizKeyPdf(){const m=quizModel();if(!m)return;saveBlob(await makePdfBlobBranded(quizKeyText(),m.schoolLogo,m.teacherPhoto,m.style),safeFilename("เฉลย-"+m.title)+".pdf");toast("ดาวน์โหลด PDF เฉลยแล้ว ✓")}
+
 function materialStyleName(key){
   return ({clean:"มินิมอลคลีน",primary:"พาสเทลประถม",formal:"ทางการน้ำเงิน",playful:"สดใสสนุก",eco:"ธรรมชาติ"})[key]||"มินิมอลคลีน"
 }
@@ -624,6 +718,13 @@ async function downloadTeachingPack(){
     files.push(["03-"+safeFilename(km.title)+".pdf",await blobBytes(await makePdfBlobBranded(kText,km.schoolLogo,km.teacherPhoto,km.style))]);
     files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".docx",await blobBytes(makeDocxBlobBranded("เฉลย "+wm.title,keyText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
     files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".pdf",await blobBytes(await makePdfBlobBranded(keyText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
+    const qm=quizModel(),qText=quizStudentText(),qKey=quizKeyText();
+    if(qm){
+      files.push(["05-"+safeFilename(qm.title)+".docx",await blobBytes(makeDocxBlobBranded(qm.title,qText,qm.schoolLogo,qm.teacherPhoto,qm.style))]);
+      files.push(["05-"+safeFilename(qm.title)+".pdf",await blobBytes(await makePdfBlobBranded(qText,qm.schoolLogo,qm.teacherPhoto,qm.style))]);
+      files.push(["06-"+safeFilename("เฉลย-"+qm.title)+".docx",await blobBytes(makeDocxBlobBranded("เฉลย "+qm.title,qKey,qm.schoolLogo,qm.teacherPhoto,qm.style))]);
+      files.push(["06-"+safeFilename("เฉลย-"+qm.title)+".pdf",await blobBytes(await makePdfBlobBranded(qKey,qm.schoolLogo,qm.teacherPhoto,qm.style))]);
+    }
     saveBlob(zipStored(files,"application/zip"),safeFilename("Teaching-Pack-"+materialTopic(activeWorkspacePlan))+".zip");
     toast("ดาวน์โหลด Teaching Pack แล้ว ✓")
   }catch(e){console.error(e);toast("สร้าง Teaching Pack ไม่สำเร็จ")}
@@ -649,7 +750,7 @@ function bind(){
   $("includeSignatures").onchange=()=>{$("signatureFields").hidden=!$("includeSignatures").checked;updateSummary()};
   $$("[data-style-hint]").forEach(b=>b.onclick=()=>{const t=$("customStyleDirection");t.value=(t.value?t.value+" · ":"")+b.dataset.styleHint;updateSummary()});
   $$("[data-help-type]").forEach(b=>b.onclick=()=>{$$(" [data-help-type]".trim()).forEach(x=>x.classList.toggle("active",x===b));$("helpType").value=b.dataset.helpType});$("sendHelpBtn").onclick=sendHelp;
-  if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>openMaterialStudio("worksheet");if($("workspaceKnowledgeBtn"))$("workspaceKnowledgeBtn").onclick=()=>openMaterialStudio("knowledge");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=()=>workspaceContinuation("quiz");if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=()=>workspaceContinuation("game");if($("workspacePackBtn"))$("workspacePackBtn").onclick=downloadTeachingPack;if($("closeMaterialStudioBtn"))$("closeMaterialStudioBtn").onclick=closeMaterialStudio;if($("materialStudioBackdrop"))$("materialStudioBackdrop").onclick=closeMaterialStudio;if($("materialTypeWorksheet"))$("materialTypeWorksheet").onclick=()=>{materialType="worksheet";renderMaterialPreview()};if($("materialTypeKnowledge"))$("materialTypeKnowledge").onclick=()=>{materialType="knowledge";renderMaterialPreview()};nodes("[data-material-style]").forEach(b=>b.onclick=()=>{materialStyle=b.dataset.materialStyle;renderMaterialPreview()});if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").oninput=renderMaterialPreview;if($("materialTaskCount"))$("materialTaskCount").onchange=renderMaterialPreview;if($("materialPageCount"))$("materialPageCount").onchange=renderMaterialPreview;if($("materialVisualCards"))$("materialVisualCards").onchange=renderMaterialPreview;if($("toggleMaterialEditBtn"))$("toggleMaterialEditBtn").onclick=toggleMaterialEdit;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").onclick=resetMaterialEdit;if($("materialPreview"))$("materialPreview").oninput=()=>{if(materialEditing){materialEditedHtml=$("materialPreview").innerHTML;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").hidden=false}};if($("previewStudentMaterialBtn"))$("previewStudentMaterialBtn").onclick=()=>{materialPreviewMode="student";renderMaterialPreview()};if($("previewTeacherKeyBtn"))$("previewTeacherKeyBtn").onclick=()=>{materialPreviewMode="teacher";renderMaterialPreview()};if($("downloadTeacherKeyDocxBtn"))$("downloadTeacherKeyDocxBtn").onclick=downloadTeacherKeyDocx;if($("downloadTeacherKeyPdfBtn"))$("downloadTeacherKeyPdfBtn").onclick=downloadTeacherKeyPdf;if($("downloadMaterialDocxBtn"))$("downloadMaterialDocxBtn").onclick=downloadMaterialDocx;if($("downloadMaterialPdfBtn"))$("downloadMaterialPdfBtn").onclick=downloadMaterialPdf;if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};
+  if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>openMaterialStudio("worksheet");if($("workspaceKnowledgeBtn"))$("workspaceKnowledgeBtn").onclick=()=>openMaterialStudio("knowledge");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=openQuizStudio;if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=()=>workspaceContinuation("game");if($("workspacePackBtn"))$("workspacePackBtn").onclick=downloadTeachingPack;if($("closeQuizStudioBtn"))$("closeQuizStudioBtn").onclick=closeQuizStudio;if($("quizStudioBackdrop"))$("quizStudioBackdrop").onclick=closeQuizStudio;if($("quizCount"))$("quizCount").onchange=()=>{quizEditedHtml="";renderQuizPreview()};if($("quizDifficulty"))$("quizDifficulty").onchange=()=>{quizEditedHtml="";renderQuizPreview()};if($("quizType"))$("quizType").onchange=()=>{quizEditedHtml="";renderQuizPreview()};if($("quizStudentViewBtn"))$("quizStudentViewBtn").onclick=()=>{quizViewMode="student";quizEditedHtml="";renderQuizPreview()};if($("quizKeyViewBtn"))$("quizKeyViewBtn").onclick=()=>{quizViewMode="key";quizEditedHtml="";renderQuizPreview()};if($("toggleQuizEditBtn"))$("toggleQuizEditBtn").onclick=toggleQuizEdit;if($("quizPreview"))$("quizPreview").oninput=()=>{if(quizEditing)quizEditedHtml=$("quizPreview").innerHTML};if($("downloadQuizDocxBtn"))$("downloadQuizDocxBtn").onclick=downloadQuizDocx;if($("downloadQuizPdfBtn"))$("downloadQuizPdfBtn").onclick=downloadQuizPdf;if($("downloadQuizKeyDocxBtn"))$("downloadQuizKeyDocxBtn").onclick=downloadQuizKeyDocx;if($("downloadQuizKeyPdfBtn"))$("downloadQuizKeyPdfBtn").onclick=downloadQuizKeyPdf;if($("closeMaterialStudioBtn"))$("closeMaterialStudioBtn").onclick=closeMaterialStudio;if($("materialStudioBackdrop"))$("materialStudioBackdrop").onclick=closeMaterialStudio;if($("materialTypeWorksheet"))$("materialTypeWorksheet").onclick=()=>{materialType="worksheet";renderMaterialPreview()};if($("materialTypeKnowledge"))$("materialTypeKnowledge").onclick=()=>{materialType="knowledge";renderMaterialPreview()};nodes("[data-material-style]").forEach(b=>b.onclick=()=>{materialStyle=b.dataset.materialStyle;renderMaterialPreview()});if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").oninput=renderMaterialPreview;if($("materialTaskCount"))$("materialTaskCount").onchange=renderMaterialPreview;if($("materialPageCount"))$("materialPageCount").onchange=renderMaterialPreview;if($("materialVisualCards"))$("materialVisualCards").onchange=renderMaterialPreview;if($("toggleMaterialEditBtn"))$("toggleMaterialEditBtn").onclick=toggleMaterialEdit;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").onclick=resetMaterialEdit;if($("materialPreview"))$("materialPreview").oninput=()=>{if(materialEditing){materialEditedHtml=$("materialPreview").innerHTML;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").hidden=false}};if($("previewStudentMaterialBtn"))$("previewStudentMaterialBtn").onclick=()=>{materialPreviewMode="student";renderMaterialPreview()};if($("previewTeacherKeyBtn"))$("previewTeacherKeyBtn").onclick=()=>{materialPreviewMode="teacher";renderMaterialPreview()};if($("downloadTeacherKeyDocxBtn"))$("downloadTeacherKeyDocxBtn").onclick=downloadTeacherKeyDocx;if($("downloadTeacherKeyPdfBtn"))$("downloadTeacherKeyPdfBtn").onclick=downloadTeacherKeyPdf;if($("downloadMaterialDocxBtn"))$("downloadMaterialDocxBtn").onclick=downloadMaterialDocx;if($("downloadMaterialPdfBtn"))$("downloadMaterialPdfBtn").onclick=downloadMaterialPdf;if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
   $$("[data-avatar]").forEach(b=>b.onclick=()=>{profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile()}};
