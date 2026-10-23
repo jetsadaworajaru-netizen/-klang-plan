@@ -433,6 +433,42 @@
   </section>
 </div>
 
+<div id="quizStudioModal" class="modal" hidden>
+  <button id="quizStudioBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card quiz-studio-card">
+    <button id="closeQuizStudioBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>✅ Quiz Studio</h2><p id="quizStudioMeta">สร้างแบบทดสอบจากแผนการสอนเดียวกัน</p></div>
+      <span class="workspace-status">พร้อมใช้</span>
+    </div>
+    <div class="quiz-toolbar">
+      <label>จำนวนข้อ
+        <select id="quizCount"><option value="5">5 ข้อ</option><option value="10" selected>10 ข้อ</option><option value="15">15 ข้อ</option><option value="20">20 ข้อ</option></select>
+      </label>
+      <label>ระดับความยาก
+        <select id="quizDifficulty"><option value="easy">ง่าย</option><option value="medium" selected>ปานกลาง</option><option value="hard">ท้าทาย</option></select>
+      </label>
+      <label>รูปแบบ
+        <select id="quizType"><option value="mcq" selected>ปรนัย 4 ตัวเลือก</option><option value="mixed">ผสมปรนัย + อัตนัย</option><option value="short">อัตนัยสั้น</option></select>
+      </label>
+    </div>
+    <div class="quiz-preview-switch">
+      <button id="quizStudentViewBtn" class="active" type="button">👧 แบบทดสอบนักเรียน</button>
+      <button id="quizKeyViewBtn" type="button">🔑 เฉลยครู</button>
+      <button id="toggleQuizEditBtn" type="button">✏️ แก้ไข</button>
+    </div>
+    <div id="quizEditHint" class="material-edit-hint" hidden>แก้ข้อความในตัวอย่างได้ทันที ไฟล์ที่ดาวน์โหลดจะใช้ข้อความที่แก้แล้ว</div>
+    <article id="quizPreview" class="material-preview style-formal"></article>
+    <div class="document-export-grid material-export-grid">
+      <button id="downloadQuizDocxBtn" class="document-export-btn" type="button"><b>📘 Word แบบทดสอบ</b><small>ไฟล์ .docx แก้ไขต่อได้</small></button>
+      <button id="downloadQuizPdfBtn" class="document-export-btn" type="button"><b>📕 PDF แบบทดสอบ</b><small>พร้อมพิมพ์</small></button>
+      <button id="downloadQuizKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลย</b><small>แยกสำหรับครู</small></button>
+      <button id="downloadQuizKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลย</b><small>แยกสำหรับครู</small></button>
+    </div>
+    <div id="quizStudioStatus"></div>
+  </section>
+</div>
+
 <div id="materialStudioModal" class="modal" hidden>
   <button id="materialStudioBackdrop" class="modal-backdrop" type="button"></button>
   <section class="modal-card material-studio-card">
@@ -546,6 +582,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=936"></script>
+<script src="/member-app.js?v=937"></script>
 </body>
 </html>
