@@ -423,7 +423,7 @@
       <button id="workspaceKnowledgeBtn" type="button">📚 <b>สร้างใบความรู้</b><small>ตรงตามแผน • พร้อม Word/PDF</small></button>
       <button id="workspaceQuizBtn" type="button">✅ <b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
       <button id="workspaceGameBtn" type="button">🎮 <b>สร้างเกม</b><small>เลือกแพลตฟอร์มต่อได้</small></button>
-      <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>รวมสื่อทั้งชุด</small></button>
+      <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>แผน + ใบงาน + ใบความรู้ + เฉลย ZIP</small></button>
       <button id="workspaceWordBtn" type="button">📄 <b>ดาวน์โหลด Word</b><small>ไฟล์ .doc แก้ไขต่อได้</small></button>
       <button id="workspacePdfBtn" type="button">📕 <b>บันทึก PDF</b><small>Save / Print เป็น PDF</small></button>
     </div>
@@ -481,7 +481,13 @@
     </div>
 
     <div class="material-preview-shell">
-      <div class="material-preview-head"><b>ตัวอย่าง A4 แบบทันที</b><small>เนื้อหาดึงจากแผนเดิม: หน่วย • เรื่อง • ตัวชี้วัด • วิธีสอน</small></div>
+      <div class="material-preview-head"><div><b>ตัวอย่าง A4 แบบทันที</b><small>เนื้อหาดึงจากแผนเดิม: หน่วย • เรื่อง • ตัวชี้วัด • วิธีสอน</small></div>
+        <div class="material-edit-actions">
+          <button id="toggleMaterialEditBtn" type="button">✏️ แก้ไขเนื้อหา</button>
+          <button id="resetMaterialEditBtn" type="button" hidden>↩ คืนค่าเดิม</button>
+        </div>
+      </div>
+      <div id="materialEditHint" class="material-edit-hint" hidden>โหมดแก้ไขเปิดอยู่ — แตะข้อความในตัวอย่างแล้วพิมพ์แก้ได้ทันที การดาวน์โหลดจะใช้ข้อความที่แก้แล้ว</div>
       <article id="materialPreview" class="material-preview style-clean"></article>
     </div>
 
@@ -540,6 +546,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=935"></script>
+<script src="/member-app.js?v=936"></script>
 </body>
 </html>
