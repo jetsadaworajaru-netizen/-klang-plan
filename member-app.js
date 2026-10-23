@@ -269,7 +269,7 @@ async function duplicateActivePlan(){
 function nextPlanFromActive(){
   const p=activeWorkspacePlan;if(!p)return;
   switchTab("create");
-  stage=p.stage||String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย";
+  stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
   $(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
   if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
   if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
