@@ -423,7 +423,7 @@
       <button id="workspaceKnowledgeBtn" type="button">📚 <b>สร้างใบความรู้</b><small>ตรงตามแผน • พร้อม Word/PDF</small></button>
       <button id="workspaceQuizBtn" type="button">✅ <b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
       <button id="workspaceRubricBtn" type="button">📊 <b>Rubric</b><small>เกณฑ์ประเมิน 4 ระดับ</small></button>
-      <button id="workspaceGameBtn" type="button">🎮 <b>สร้างเกม</b><small>เลือกแพลตฟอร์มต่อได้</small></button>
+      <button id="workspaceGameBtn" type="button">🎮 <b>Game Studio</b><small>เกมพร้อมใช้ในชั้นเรียน</small></button>
       <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>แผน + ใบงาน + ใบความรู้ + แบบทดสอบ + เฉลย ZIP</small></button>
       <button id="workspaceWordBtn" type="button">📄 <b>ดาวน์โหลด Word</b><small>ไฟล์ .doc แก้ไขต่อได้</small></button>
       <button id="workspacePdfBtn" type="button">📕 <b>บันทึก PDF</b><small>Save / Print เป็น PDF</small></button>
@@ -431,6 +431,46 @@
     <section class="reflection-box"><div class="reflection-head"><div><b>🪞 บันทึกหลังสอน</b><small>เก็บ Reflection ไว้กับแผนนี้และเปิดจากเครื่องอื่นได้</small></div></div><textarea id="workspaceReflection" rows="6" placeholder="ผลการเรียนรู้ / ปัญหาอุปสรรค / สิ่งที่ควรปรับ / แนวทางครั้งต่อไป"></textarea><button id="saveReflectionBtn" class="primary-btn" type="button">บันทึกหลังสอน</button><div id="reflectionStatus"></div></section>
     <details class="workspace-prompt-details"><summary>ดู Prompt ต้นฉบับ</summary><pre id="workspacePromptText"></pre></details>
     <button id="deleteCloudPlanBtn" class="danger-outline-btn" type="button">ลบแผนนี้</button>
+  </section>
+</div>
+
+<div id="gameStudioModal" class="modal" hidden>
+  <button id="gameStudioBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card quiz-studio-card">
+    <button id="closeGameStudioBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>🎮 Game Studio</h2><p id="gameStudioMeta">สร้างเกมการเรียนรู้จากแผนการสอนเดียวกัน</p></div>
+      <span class="workspace-status">พร้อมใช้</span>
+    </div>
+    <div class="quiz-toolbar">
+      <label>รูปแบบเกม
+        <select id="gameType">
+          <option value="battle" selected>ตอบไวแข่งขัน</option>
+          <option value="truefalse">จริงหรือเท็จ</option>
+          <option value="match">จับคู่ความรู้</option>
+        </select>
+      </label>
+      <label>จำนวนภารกิจ
+        <select id="gameCount"><option value="6">6 ข้อ</option><option value="8" selected>8 ข้อ</option><option value="10">10 ข้อ</option><option value="12">12 ข้อ</option></select>
+      </label>
+      <label>รูปแบบการเล่น
+        <select id="gameMode"><option value="team" selected>แบ่งทีม</option><option value="individual">รายบุคคล</option><option value="pair">จับคู่ผู้เรียน</option></select>
+      </label>
+    </div>
+    <div class="quiz-preview-switch">
+      <button id="gameStudentViewBtn" class="active" type="button">🎲 ชุดเกม</button>
+      <button id="gameKeyViewBtn" type="button">🔑 เฉลยครู</button>
+      <button id="toggleGameEditBtn" type="button">✏️ แก้ไข</button>
+    </div>
+    <div id="gameEditHint" class="material-edit-hint" hidden>แก้ข้อความในเกมได้ทันที ไฟล์ที่ดาวน์โหลดจะใช้ข้อความที่แก้แล้ว</div>
+    <article id="gamePreview" class="material-preview style-playful"></article>
+    <div class="document-export-grid material-export-grid">
+      <button id="downloadGameDocxBtn" class="document-export-btn" type="button"><b>📘 Word ชุดเกม</b><small>แก้ไข/พิมพ์ใช้ได้</small></button>
+      <button id="downloadGamePdfBtn" class="document-export-btn" type="button"><b>📕 PDF ชุดเกม</b><small>พร้อมพิมพ์</small></button>
+      <button id="downloadGameKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลยเกม</b><small>สำหรับครู</small></button>
+      <button id="downloadGameKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลยเกม</b><small>สำหรับครู</small></button>
+    </div>
+    <div id="gameStudioStatus"></div>
   </section>
 </div>
 
@@ -621,6 +661,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=938"></script>
+<script src="/member-app.js?v=939"></script>
 </body>
 </html>
