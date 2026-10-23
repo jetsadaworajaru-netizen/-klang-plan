@@ -422,6 +422,7 @@
       <button id="workspaceWorksheetBtn" type="button">📝 <b>สร้างใบงาน</b><small>เลือกสไตล์ • เห็นตัวอย่างทันที</small></button>
       <button id="workspaceKnowledgeBtn" type="button">📚 <b>สร้างใบความรู้</b><small>ตรงตามแผน • พร้อม Word/PDF</small></button>
       <button id="workspaceQuizBtn" type="button">✅ <b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
+      <button id="workspaceRubricBtn" type="button">📊 <b>Rubric</b><small>เกณฑ์ประเมิน 4 ระดับ</small></button>
       <button id="workspaceGameBtn" type="button">🎮 <b>สร้างเกม</b><small>เลือกแพลตฟอร์มต่อได้</small></button>
       <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>แผน + ใบงาน + ใบความรู้ + แบบทดสอบ + เฉลย ZIP</small></button>
       <button id="workspaceWordBtn" type="button">📄 <b>ดาวน์โหลด Word</b><small>ไฟล์ .doc แก้ไขต่อได้</small></button>
@@ -430,6 +431,44 @@
     <section class="reflection-box"><div class="reflection-head"><div><b>🪞 บันทึกหลังสอน</b><small>เก็บ Reflection ไว้กับแผนนี้และเปิดจากเครื่องอื่นได้</small></div></div><textarea id="workspaceReflection" rows="6" placeholder="ผลการเรียนรู้ / ปัญหาอุปสรรค / สิ่งที่ควรปรับ / แนวทางครั้งต่อไป"></textarea><button id="saveReflectionBtn" class="primary-btn" type="button">บันทึกหลังสอน</button><div id="reflectionStatus"></div></section>
     <details class="workspace-prompt-details"><summary>ดู Prompt ต้นฉบับ</summary><pre id="workspacePromptText"></pre></details>
     <button id="deleteCloudPlanBtn" class="danger-outline-btn" type="button">ลบแผนนี้</button>
+  </section>
+</div>
+
+<div id="rubricStudioModal" class="modal" hidden>
+  <button id="rubricStudioBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card quiz-studio-card">
+    <button id="closeRubricStudioBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>📊 Rubric Studio</h2><p id="rubricStudioMeta">สร้างเกณฑ์ประเมินจากแผนการสอนเดียวกัน</p></div>
+      <span class="workspace-status">พร้อมใช้</span>
+    </div>
+    <div class="quiz-toolbar">
+      <label>ประเภทการประเมิน
+        <select id="rubricType">
+          <option value="work" selected>ชิ้นงาน/ผลงาน</option>
+          <option value="performance">การปฏิบัติ</option>
+          <option value="presentation">การนำเสนอ</option>
+          <option value="participation">การมีส่วนร่วม</option>
+        </select>
+      </label>
+      <label>จำนวนเกณฑ์
+        <select id="rubricCriteriaCount"><option value="3">3 เกณฑ์</option><option value="4" selected>4 เกณฑ์</option><option value="5">5 เกณฑ์</option></select>
+      </label>
+      <label>คะแนนเต็ม
+        <select id="rubricMaxScore"><option value="12">12 คะแนน</option><option value="16" selected>16 คะแนน</option><option value="20">20 คะแนน</option></select>
+      </label>
+    </div>
+    <div class="quiz-preview-switch">
+      <button id="rubricPreviewBtn" class="active" type="button">📋 ดูเกณฑ์ประเมิน</button>
+      <button id="toggleRubricEditBtn" type="button">✏️ แก้ไข</button>
+    </div>
+    <div id="rubricEditHint" class="material-edit-hint" hidden>แก้ข้อความในตารางได้ทันที ไฟล์ที่ดาวน์โหลดจะใช้ข้อความที่แก้แล้ว</div>
+    <article id="rubricPreview" class="material-preview style-formal"></article>
+    <div class="document-export-grid material-export-grid">
+      <button id="downloadRubricDocxBtn" class="document-export-btn" type="button"><b>📘 Word Rubric</b><small>ไฟล์ .docx แก้ไขต่อได้</small></button>
+      <button id="downloadRubricPdfBtn" class="document-export-btn" type="button"><b>📕 PDF Rubric</b><small>พร้อมพิมพ์</small></button>
+    </div>
+    <div id="rubricStudioStatus"></div>
   </section>
 </div>
 
@@ -582,6 +621,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=937"></script>
+<script src="/member-app.js?v=938"></script>
 </body>
 </html>
