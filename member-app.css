@@ -94,3 +94,10 @@
 .profile-media-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.profile-media-preview>div{display:grid;gap:6px}.profile-media-thumb{height:110px;border:1px dashed #ccd9e5;border-radius:12px;background:#f8fbfd;display:grid;place-items:center;overflow:hidden;color:#8394a4;font-size:.78rem}.profile-media-thumb img{width:100%;height:100%;object-fit:contain}
 .material-brand-row{display:flex;align-items:center;justify-content:space-between;min-height:84px;margin-bottom:6px}.material-school-logo{width:78px;height:78px;object-fit:contain}.material-teacher-photo{width:78px;height:78px;border-radius:50%;object-fit:cover;border:3px solid var(--soft)}
 @media(max-width:640px){.profile-media-grid,.profile-media-preview{grid-template-columns:1fr}.material-brand-row{min-height:64px}.material-school-logo,.material-teacher-photo{width:60px;height:60px}}
+
+.material-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.material-preview-head>div:first-child{display:grid;gap:2px}
+.material-edit-actions{display:flex;gap:7px;flex-wrap:wrap}.material-edit-actions button{border:1px solid #d3e0ea;background:#fff;border-radius:10px;padding:8px 10px;font:inherit;font-size:.78rem;font-weight:800;color:#355f80;cursor:pointer}
+.material-edit-actions button.active{background:#173f65;color:#fff;border-color:#173f65}
+.material-edit-hint{margin:10px 0;padding:9px 11px;border-radius:10px;background:#fff8dc;border:1px solid #ead58a;color:#735d18;font-size:.78rem;font-weight:700}
+.material-preview.is-editing{outline:3px solid rgba(36,103,164,.18);outline-offset:4px}.material-preview.is-editing [contenteditable="true"]:focus{outline:2px dashed var(--accent);outline-offset:2px;background:#fffef4}
+@media(max-width:700px){.material-preview-head{align-items:flex-start;flex-direction:column}.material-edit-actions{width:100%}.material-edit-actions button{flex:1}}
