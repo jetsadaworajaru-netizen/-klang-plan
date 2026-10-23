@@ -206,6 +206,12 @@
         <button id="newCourseBtn" class="primary-btn course-new-btn" type="button">＋ สร้างรายวิชา</button>
       </section>
       <div class="course-sync-bar"><span id="courseSyncStatus">Local cache · กำลังตรวจ Cloud…</span><button id="syncCoursesBtn" class="secondary-btn" type="button">☁️ ซิงก์รายวิชา</button></div>
+      <div class="course-dashboard-stats">
+        <div><b id="courseTotalCount">0</b><small>รายวิชาทั้งหมด</small></div>
+        <div><b id="courseReadyCount">0</b><small>พร้อมส่งออก</small></div>
+        <div><b id="courseAvgProgress">0%</b><small>ความคืบหน้าเฉลี่ย</small></div>
+        <div><b id="courseNeedActionCount">0</b><small>ต้องทำต่อ</small></div>
+      </div>
       <div id="courseList" class="course-grid"></div>
       <section class="card course-roadmap">
         <h3>เส้นทางงานในรายวิชา</h3>
@@ -285,6 +291,20 @@
     <button data-bottom-tab="work" type="button">📁<small>แผนของฉัน</small></button>
     <button data-bottom-tab="help" type="button">💬<small>ช่วยเหลือ</small></button>
   </nav>
+</div>
+
+<div id="courseReadinessModal" class="modal" hidden>
+  <button id="courseReadinessBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card readiness-modal-card">
+    <button id="closeCourseReadinessBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>✅ ตรวจความพร้อมรายวิชา</h2><p id="courseReadinessMeta">ตรวจองค์ประกอบก่อนส่งออก Word/PDF</p></div>
+      <span id="courseReadinessBadge" class="workspace-status">กำลังตรวจ</span>
+    </div>
+    <div id="courseReadinessScore" class="readiness-score"></div>
+    <div id="courseReadinessList" class="readiness-list"></div>
+    <div id="courseReadinessAdvice" class="readiness-advice"></div>
+  </section>
 </div>
 
 <div id="courseModal" class="modal" hidden>
@@ -661,6 +681,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=939"></script>
+<script src="/member-app.js?v=940"></script>
 </body>
 </html>
