@@ -423,7 +423,16 @@ function dataUrlToBytes(dataUrl){
   for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
   return {bytes,mime:(parts[0].match(/^data:([^;]+)/)||[])[1]||"image/jpeg"};
 }
-function makeDocxBlobBranded(title,text,logoUrl,teacherUrl){
+function materialExportTheme(key){
+  return {
+    clean:{accent:"355F80",soft:"EEF4F8"},
+    primary:{accent:"D56A7A",soft:"FFF0F4"},
+    formal:{accent:"214E83",soft:"EAF2FB"},
+    playful:{accent:"E67E22",soft:"FFF3E6"},
+    eco:{accent:"4D7B5B",soft:"EDF6EF"}
+  }[key]||{accent:"355F80",soft:"EEF4F8"}
+}
+function makeDocxBlobBranded(title,text,logoUrl,teacherUrl,styleKey="clean"){
   const logo=dataUrlToBytes(logoUrl),teacher=dataUrlToBytes(teacherUrl);
   if(!logo&&!teacher)return makeDocxBlob(title,text);
   const imgs=[];if(logo)imgs.push({key:"logo",...logo});if(teacher)imgs.push({key:"teacher",...teacher});
@@ -432,7 +441,7 @@ function makeDocxBlobBranded(title,text,logoUrl,teacherUrl){
     const cx=im.key==="logo"?1050000:900000,cy=im.key==="logo"?1050000:900000;
     return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+(i+1)+'" name="'+im.key+'"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="'+(i+1)+'" name="'+im.key+'.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rIdImg'+(i+2)+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>'
   }).join("");
-  const paras=lines.map(line=>{if(line==="[[PAGE_BREAK]]")return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';const isHead=/^\d+\.\s/.test(line)||line==="คลังแผนการสอนหน้าเดียว"||line==="ชุดเอกสารรายวิชา";return '<w:p>'+(isHead?'<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>':'')+'<w:r><w:rPr><w:rFonts w:ascii="TH Sarabun New" w:hAnsi="TH Sarabun New" w:eastAsia="TH Sarabun New"/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t xml:space="preserve">'+xmlText(line||" ")+'</w:t></w:r></w:p>'}).join("");
+  const theme=materialExportTheme(styleKey),firstNonEmpty=lines.find(x=>String(x||"").trim())||title;const paras=lines.map(line=>{if(line==="[[PAGE_BREAK]]")return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';const isTitle=line===firstNonEmpty,isHead=/^(สาระสำคัญ|สิ่งที่ควรรู้|คำชี้แจง|ภารกิจที่|สรุปท้ายใบงาน|จำให้แม่น|คำแนะนำการตรวจ|กิจกรรมเสริม|\d+\.\s)/.test(line)||line==="คลังแผนการสอนหน้าเดียว"||line==="ชุดเอกสารรายวิชา";const ppr=isTitle?'<w:pPr><w:jc w:val="center"/><w:shd w:fill="'+theme.soft+'"/><w:spacing w:after="180"/></w:pPr>':isHead?'<w:pPr><w:shd w:fill="'+theme.soft+'"/><w:spacing w:before="100" w:after="80"/></w:pPr>':'';const size=isTitle?"40":isHead?"34":"32";return '<w:p>'+ppr+'<w:r><w:rPr>'+(isTitle||isHead?'<w:b/><w:color w:val="'+theme.accent+'"/>':'')+'<w:rFonts w:ascii="TH Sarabun New" w:hAnsi="TH Sarabun New" w:eastAsia="TH Sarabun New"/><w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/></w:rPr><w:t xml:space="preserve">'+xmlText(line||" ")+'</w:t></w:r></w:p>'}).join("");
   const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:jc w:val="both"/></w:pPr>'+drawings+'</w:p>'+paras+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>';
   const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:qFormat/><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style></w:styles>';
   const rels=imgs.map((im,i)=>'<Relationship Id="rIdImg'+(i+2)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/'+im.key+'.jpg"/>').join("");
@@ -448,7 +457,7 @@ function makeDocxBlobBranded(title,text,logoUrl,teacherUrl){
 function loadCanvasImage(url){
   return new Promise(resolve=>{if(!url||!url.startsWith("data:image/"))return resolve(null);const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>resolve(null);im.src=url})
 }
-async function makePdfBlobBranded(text,logoUrl,teacherUrl){
+async function makePdfBlobBranded(text,logoUrl,teacherUrl,styleKey="clean"){
   const [logo,teacher]=await Promise.all([loadCanvasImage(logoUrl),loadCanvasImage(teacherUrl)]);
   if(!logo&&!teacher)return makePdfBlob(text);
   const W=1240,H=1754,M=96,lh=42,MAX=W-M*2,probe=document.createElement("canvas"),ctx=probe.getContext("2d");
@@ -456,7 +465,7 @@ async function makePdfBlobBranded(text,logoUrl,teacherUrl){
   const logical=[];for(const raw of String(text||"").split(/\r?\n/)){if(raw==="[[PAGE_BREAK]]"){logical.push("__KLANG_PAGE_BREAK__");continue}if(!raw){logical.push("");continue}let line="";for(const ch of raw){const t=line+ch;if(ctx.measureText(t).width>MAX&&line){logical.push(line);line=ch}else line=t}logical.push(line)}
   const header=logo||teacher?155:0,per=Math.floor((H-M*2-header)/lh),pageLines=[[]];
   for(const line of logical){const cur=pageLines[pageLines.length-1];if(line==="__KLANG_PAGE_BREAK__"){if(cur.length)pageLines.push([]);continue}if(cur.length>=per)pageLines.push([]);pageLines[pageLines.length-1].push(line)}
-  const imgs=[];for(let pi=0;pi<pageLines.length;pi++){const pageChunk=pageLines[pi];if(!pageChunk.length)continue;const c=document.createElement("canvas"),x=c.getContext("2d");c.width=W;c.height=H;x.fillStyle="#fff";x.fillRect(0,0,W,H);let y=M;if(pi===0&&(logo||teacher)){if(logo)x.drawImage(logo,M,y,105,105);if(teacher)x.drawImage(teacher,W-M-105,y,105,105);y+=135}x.fillStyle="#111";x.textBaseline="top";pageChunk.forEach(line=>{x.font=(/^(คลังแผนการสอนหน้าเดียว|ชุดเอกสารรายวิชา|\d+\.\s)/.test(line)?'bold 30px':'28px')+' Tahoma, Arial, sans-serif';x.fillText(line,M,y,MAX);y+=lh});const b64=c.toDataURL("image/jpeg",.9).split(",")[1],bin=atob(b64),bytes=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);imgs.push({bytes,w:W,h:H})}
+  const theme=materialExportTheme(styleKey),accent="#"+theme.accent,soft="#"+theme.soft;const imgs=[];for(let pi=0;pi<pageLines.length;pi++){const pageChunk=pageLines[pi];if(!pageChunk.length)continue;const c=document.createElement("canvas"),x=c.getContext("2d");c.width=W;c.height=H;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle=accent;x.fillRect(0,0,W,18);let y=M;if(pi===0&&(logo||teacher)){if(logo)x.drawImage(logo,M,y,105,105);if(teacher)x.drawImage(teacher,W-M-105,y,105,105);y+=135}x.textBaseline="top";pageChunk.forEach((line,li)=>{const isTitle=li===0&&pi===0,isHead=/^(สาระสำคัญ|สิ่งที่ควรรู้|คำชี้แจง|ภารกิจที่|สรุปท้ายใบงาน|จำให้แม่น|คำแนะนำการตรวจ|กิจกรรมเสริม|\d+\.\s)/.test(line);if(isTitle||isHead){x.fillStyle=soft;x.fillRect(M-10,y-5,MAX+20,lh);x.fillStyle=accent;x.font=(isTitle?"bold 34px":"bold 30px")+" Tahoma, Arial, sans-serif"}else{x.fillStyle="#111";x.font="28px Tahoma, Arial, sans-serif"}x.fillText(line,M,y,MAX);y+=lh});const b64=c.toDataURL("image/jpeg",.9).split(",")[1],bin=atob(b64),bytes=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);imgs.push({bytes,w:W,h:H})}
   const te=new TextEncoder(),parts=[],offsets=[0];let len=0;const add=x=>{const b=typeof x==="string"?te.encode(x):x;parts.push(b);len+=b.length};add("%PDF-1.4\n%KLANG\n");const pageObjs=[],imgObjs=[],contentObjs=[];let next=3;for(let i=0;i<imgs.length;i++){pageObjs.push(next++);imgObjs.push(next++);contentObjs.push(next++)}const total=next-1;const obj=(n,body)=>{offsets[n]=len;add(n+" 0 obj\n");add(body);add("\nendobj\n")};obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Count "+imgs.length+" /Kids ["+pageObjs.map(n=>n+" 0 R").join(" ")+"] >>");imgs.forEach((im,i)=>{obj(pageObjs[i],"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im"+(i+1)+" "+imgObjs[i]+" 0 R >> >> /Contents "+contentObjs[i]+" 0 R >>");offsets[imgObjs[i]]=len;add(imgObjs[i]+" 0 obj\n<< /Type /XObject /Subtype /Image /Width "+im.w+" /Height "+im.h+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+im.bytes.length+" >>\nstream\n");add(im.bytes);add("\nendstream\nendobj\n");const stream="q\n595.28 0 0 841.89 0 0 cm\n/Im"+(i+1)+" Do\nQ\n";obj(contentObjs[i],"<< /Length "+te.encode(stream).length+" >>\nstream\n"+stream+"endstream")});const xref=len;add("xref\n0 "+(total+1)+"\n0000000000 65535 f \n");for(let i=1;i<=total;i++)add(String(offsets[i]||0).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return new Blob(parts,{type:"application/pdf"})
 }
 function markDocumentsReady(type){if(activeCourseIndex==null)return;const rows=courseDrafts(),c=rows[activeCourseIndex];if(!c)return;c.documents={...(c.documents||{}),saved_at:new Date().toISOString(),last_export:type,version:Number(c.documents?.version||0)+1};rows[activeCourseIndex]=c;writeCourseDrafts(rows);renderCourses();$("courseDocumentsStatus").innerHTML=`<div class="indicator-preview">สร้างไฟล์ ${type.toUpperCase()} แล้ว ✓ ขั้นที่ 8 สำเร็จ</div>`}
@@ -593,8 +602,8 @@ function materialTeacherText(){
   if(m.pages>1)lines.push("กิจกรรมเสริมหน้าถัดไป","เกณฑ์ตรวจ: พิจารณาความสอดคล้องกับเรื่อง "+m.topic+" และตัวชี้วัด "+(m.indicator||"-")+" โดยใช้หลักฐานจากการเรียนรู้จริง");
   return lines.join("\n")
 }
-function downloadMaterialDocx(){const m=materialModel();if(!m)return;const txt=materialEditedText()||materialStudentText();saveBlob(makeDocxBlobBranded(m.title,txt,m.schoolLogo,m.teacherPhoto),safeFilename(m.title)+".docx");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด Word สำหรับนักเรียนสำเร็จ ✓</div>';toast("ดาวน์โหลด Word แล้ว ✓")}
-async function downloadMaterialPdf(){const m=materialModel();if(!m)return;const txt=materialEditedText()||materialStudentText();saveBlob(await makePdfBlobBranded(txt,m.schoolLogo,m.teacherPhoto),safeFilename(m.title)+".pdf");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด PDF สำหรับนักเรียนสำเร็จ ✓</div>';toast("ดาวน์โหลด PDF แล้ว ✓")}
+function downloadMaterialDocx(){const m=materialModel();if(!m)return;const txt=materialEditedText()||materialStudentText();saveBlob(makeDocxBlobBranded(m.title,txt,m.schoolLogo,m.teacherPhoto,m.style),safeFilename(m.title)+".docx");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด Word สำหรับนักเรียนสำเร็จ ✓</div>';toast("ดาวน์โหลด Word แล้ว ✓")}
+async function downloadMaterialPdf(){const m=materialModel();if(!m)return;const txt=materialEditedText()||materialStudentText();saveBlob(await makePdfBlobBranded(txt,m.schoolLogo,m.teacherPhoto,m.style),safeFilename(m.title)+".pdf");$("materialStudioStatus").innerHTML='<div class="indicator-preview">ดาวน์โหลด PDF สำหรับนักเรียนสำเร็จ ✓</div>';toast("ดาวน์โหลด PDF แล้ว ✓")}
 async function blobBytes(blob){return new Uint8Array(await blob.arrayBuffer())}
 async function downloadTeachingPack(){
   if(!activeWorkspacePlan)return toast("กรุณาเลือกแผนก่อน");
@@ -609,19 +618,19 @@ async function downloadTeachingPack(){
     const files=[];
     files.push(["01-"+safeFilename(planTitle)+".docx",await blobBytes(makeDocxBlobBranded(planTitle,planText,logo,teacher))]);
     files.push(["01-"+safeFilename(planTitle)+".pdf",await blobBytes(await makePdfBlobBranded(planText,logo,teacher))]);
-    files.push(["02-"+safeFilename(wm.title)+".docx",await blobBytes(makeDocxBlobBranded(wm.title,wText,wm.schoolLogo,wm.teacherPhoto))]);
-    files.push(["02-"+safeFilename(wm.title)+".pdf",await blobBytes(await makePdfBlobBranded(wText,wm.schoolLogo,wm.teacherPhoto))]);
-    files.push(["03-"+safeFilename(km.title)+".docx",await blobBytes(makeDocxBlobBranded(km.title,kText,km.schoolLogo,km.teacherPhoto))]);
-    files.push(["03-"+safeFilename(km.title)+".pdf",await blobBytes(await makePdfBlobBranded(kText,km.schoolLogo,km.teacherPhoto))]);
-    files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".docx",await blobBytes(makeDocxBlobBranded("เฉลย "+wm.title,keyText,wm.schoolLogo,wm.teacherPhoto))]);
-    files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".pdf",await blobBytes(await makePdfBlobBranded(keyText,wm.schoolLogo,wm.teacherPhoto))]);
+    files.push(["02-"+safeFilename(wm.title)+".docx",await blobBytes(makeDocxBlobBranded(wm.title,wText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
+    files.push(["02-"+safeFilename(wm.title)+".pdf",await blobBytes(await makePdfBlobBranded(wText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
+    files.push(["03-"+safeFilename(km.title)+".docx",await blobBytes(makeDocxBlobBranded(km.title,kText,km.schoolLogo,km.teacherPhoto,km.style))]);
+    files.push(["03-"+safeFilename(km.title)+".pdf",await blobBytes(await makePdfBlobBranded(kText,km.schoolLogo,km.teacherPhoto,km.style))]);
+    files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".docx",await blobBytes(makeDocxBlobBranded("เฉลย "+wm.title,keyText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
+    files.push(["04-"+safeFilename("เฉลย-"+wm.title)+".pdf",await blobBytes(await makePdfBlobBranded(keyText,wm.schoolLogo,wm.teacherPhoto,wm.style))]);
     saveBlob(zipStored(files),safeFilename("Teaching-Pack-"+materialTopic(activeWorkspacePlan))+".zip");
     toast("ดาวน์โหลด Teaching Pack แล้ว ✓")
   }catch(e){console.error(e);toast("สร้าง Teaching Pack ไม่สำเร็จ")}
   finally{materialType=prevType;materialPreviewMode=prevMode;materialEditedHtml=prevEdit}
 }
-function downloadTeacherKeyDocx(){const m=materialModel();if(!m||m.type!=="worksheet")return;saveBlob(makeDocxBlobBranded("เฉลย "+m.title,materialTeacherText(),m.schoolLogo,m.teacherPhoto),safeFilename("เฉลย-"+m.title)+".docx");toast("ดาวน์โหลด Word เฉลยครูแล้ว ✓")}
-async function downloadTeacherKeyPdf(){const m=materialModel();if(!m||m.type!=="worksheet")return;saveBlob(await makePdfBlobBranded(materialTeacherText(),m.schoolLogo,m.teacherPhoto),safeFilename("เฉลย-"+m.title)+".pdf");toast("ดาวน์โหลด PDF เฉลยครูแล้ว ✓")}
+function downloadTeacherKeyDocx(){const m=materialModel();if(!m||m.type!=="worksheet")return;saveBlob(makeDocxBlobBranded("เฉลย "+m.title,materialTeacherText(),m.schoolLogo,m.teacherPhoto,m.style),safeFilename("เฉลย-"+m.title)+".docx");toast("ดาวน์โหลด Word เฉลยครูแล้ว ✓")}
+async function downloadTeacherKeyPdf(){const m=materialModel();if(!m||m.type!=="worksheet")return;saveBlob(await makePdfBlobBranded(materialTeacherText(),m.schoolLogo,m.teacherPhoto,m.style),safeFilename("เฉลย-"+m.title)+".pdf");toast("ดาวน์โหลด PDF เฉลยครูแล้ว ✓")}
 function openCourseModal(){if($("courseSchool"))$("courseSchool").value=profile?.school_name||"";$("courseModal").hidden=false}
 function closeCourseModal(){$("courseModal").hidden=true}
 function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("courseGrade").value.trim(),subject=$("courseSubject").value.trim(),year=$("courseYear").value.trim();if(!name||!grade||!subject||!year){$("courseStatus").innerHTML='<div class="error-box">กรุณากรอกชื่อรายวิชา ระดับชั้น กลุ่มสาระ/วิชา และปีการศึกษา</div>';return}const a=courseDrafts();a.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,grade,subject,semester:$("courseSemester").value,year,hours:$("courseHours").value,school:$("courseSchool").value.trim(),created_at:new Date().toISOString()});writeCourseDrafts(a);closeCourseModal();renderCourses();toast(courseCloudReady?"บันทึกรายวิชาและเตรียมซิงก์ Cloud แล้ว ✓":"บันทึกรายวิชาในเครื่องแล้ว ✓")}
