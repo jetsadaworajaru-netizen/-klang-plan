@@ -36,10 +36,15 @@ function recordMatchesGrade(x,g){return !g||recordGrades(x).includes(g)}
 function displayGradeForRecord(x,fallback=""){return fallback||recordGrades(x)[0]||x?.grade||""}
 function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
 function avatar(v){const p={"avatar:teacher":"👩‍🏫","avatar:teacher_male":"👨‍🏫","avatar:book":"📚","avatar:star":"⭐"};if(p[v])return p[v];if(v?.startsWith("data:image/"))return `<img src="${v}" alt="">`;return "👤"}
+function makeMemberClient(url){return window.supabase.createClient(url,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}})}
+async function memberSessionWithFallback(){
+  const urls=[CFG.supabaseUrl,CFG.supabaseDirectUrl].filter((x,i,a)=>x&&a.indexOf(x)===i),errors=[];
+  for(const url of urls){try{const client=makeMemberClient(url);const {data,error}=await withTimeout(client.auth.getSession(),6000,"ตรวจสอบ Session");if(!error&&data?.session){sb=client;return data}errors.push(error?.message||"ไม่พบ Session")}catch(e){errors.push(e?.message||String(e))}}
+  throw new Error("ตรวจสอบการเข้าสู่ระบบไม่สำเร็จ: "+errors.join(" | "))
+}
 async function auth(){
   if(!window.supabase||!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
-  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}});
-  const {data}=await withTimeout(sb.auth.getSession(),8000,"ตรวจสอบการเข้าสู่ระบบ"); if(!data?.session){location.replace("/teacher.html");return false}
+  const data=await memberSessionWithFallback(); if(!data?.session){location.replace("/teacher.html");return false}
   user=data.session.user;
   const {data:p}=await withTimeout(sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),8000,"โหลดข้อมูลสมาชิก");
   if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
