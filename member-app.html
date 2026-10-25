@@ -447,12 +447,25 @@
       <button id="workspaceRubricBtn" type="button">📊 <b>Rubric</b><small>เกณฑ์ประเมิน 4 ระดับ</small></button>
       <button id="workspaceGameBtn" type="button">🎮 <b>Game Studio</b><small>เกมพร้อมใช้ในชั้นเรียน</small></button>
       <button id="workspacePackBtn" type="button">🎁 <b>Teaching Pack</b><small>แผน + ใบงาน + ใบความรู้ + แบบทดสอบ + เฉลย ZIP</small></button>
+      <button id="workspaceResourceLibraryBtn" type="button">🗃️ <b>คลังสื่อแผนนี้</b><small>เปิดงานที่บันทึกไว้กลับมาแก้ไข</small></button>
       <button id="workspaceWordBtn" type="button">📄 <b>ดาวน์โหลด Word</b><small>ไฟล์ .doc แก้ไขต่อได้</small></button>
       <button id="workspacePdfBtn" type="button">📕 <b>บันทึก PDF</b><small>Save / Print เป็น PDF</small></button>
     </div>
     <section class="reflection-box"><div class="reflection-head"><div><b>🪞 บันทึกหลังสอน</b><small>เก็บ Reflection ไว้กับแผนนี้และเปิดจากเครื่องอื่นได้</small></div></div><textarea id="workspaceReflection" rows="6" placeholder="ผลการเรียนรู้ / ปัญหาอุปสรรค / สิ่งที่ควรปรับ / แนวทางครั้งต่อไป"></textarea><button id="saveReflectionBtn" class="primary-btn" type="button">บันทึกหลังสอน</button><div id="reflectionStatus"></div></section>
     <details class="workspace-prompt-details"><summary>ดู Prompt ต้นฉบับ</summary><pre id="workspacePromptText"></pre></details>
     <button id="deleteCloudPlanBtn" class="danger-outline-btn" type="button">ลบแผนนี้</button>
+  </section>
+</div>
+
+<div id="resourceLibraryModal" class="modal" hidden>
+  <button id="resourceLibraryBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card resource-library-card">
+    <button id="closeResourceLibraryBtn" class="close-btn" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2>🗃️ คลังสื่อของแผน</h2><p id="resourceLibraryMeta">ใบงาน ใบความรู้ แบบทดสอบ Rubric และเกมที่บันทึกไว้</p></div>
+      <span id="resourceLibraryCount" class="workspace-status">0 งาน</span>
+    </div>
+    <div id="resourceLibraryList" class="resource-library-list"></div>
   </section>
 </div>
 
@@ -492,7 +505,7 @@
       <button id="downloadGameKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลยเกม</b><small>สำหรับครู</small></button>
       <button id="downloadGameKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลยเกม</b><small>สำหรับครู</small></button>
     </div>
-    <div id="gameStudioStatus"></div>
+    <button id="saveGameLibraryBtn" class="primary-btn material-save-library" type="button">💾 บันทึกเกมเข้าคลัง</button><div id="gameStudioStatus"></div>
   </section>
 </div>
 
@@ -530,7 +543,7 @@
       <button id="downloadRubricDocxBtn" class="document-export-btn" type="button"><b>📘 Word Rubric</b><small>ไฟล์ .docx แก้ไขต่อได้</small></button>
       <button id="downloadRubricPdfBtn" class="document-export-btn" type="button"><b>📕 PDF Rubric</b><small>พร้อมพิมพ์</small></button>
     </div>
-    <div id="rubricStudioStatus"></div>
+    <button id="saveRubricLibraryBtn" class="primary-btn material-save-library" type="button">💾 บันทึก Rubric เข้าคลัง</button><div id="rubricStudioStatus"></div>
   </section>
 </div>
 
@@ -566,7 +579,7 @@
       <button id="downloadQuizKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลย</b><small>แยกสำหรับครู</small></button>
       <button id="downloadQuizKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลย</b><small>แยกสำหรับครู</small></button>
     </div>
-    <div id="quizStudioStatus"></div>
+    <button id="saveQuizLibraryBtn" class="primary-btn material-save-library" type="button">💾 บันทึกแบบทดสอบเข้าคลัง</button><div id="quizStudioStatus"></div>
   </section>
 </div>
 
@@ -638,7 +651,7 @@
       <button id="downloadTeacherKeyDocxBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔑 Word เฉลยครู</b><small>เฉลยแยก ไม่ปะปนกับใบงานนักเรียน</small></button>
       <button id="downloadTeacherKeyPdfBtn" class="document-export-btn teacher-key-btn" type="button"><b>🔐 PDF เฉลยครู</b><small>พร้อมพิมพ์เก็บสำหรับครู</small></button>
     </div>
-    <div id="materialStudioStatus"></div>
+    <button id="saveMaterialLibraryBtn" class="primary-btn material-save-library" type="button">💾 บันทึกสื่อนี้เข้าคลัง</button><div id="materialStudioStatus"></div>
   </section>
 </div>
 
@@ -683,6 +696,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=941"></script>
+<script src="/member-app.js?v=942"></script>
 </body>
 </html>
