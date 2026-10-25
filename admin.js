@@ -24,6 +24,17 @@ function saveAdminGatewaySession(session){
 function readAdminGatewaySession(){
   try{return JSON.parse(localStorage.getItem("klang-admin-gateway-session")||"null")}catch{return null}
 }
+async function refreshAdminGatewaySession(session){
+  if(!session?.refresh_token)return null;
+  try{
+    const r=await fetch("/api/refresh",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({refresh_token:session.refresh_token})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)return null;
+    const next={access_token:data.access_token,refresh_token:data.refresh_token||session.refresh_token,expires_in:data.expires_in,expires_at:data.expires_at,user:data.user||session.user};
+    if(!next.access_token||!next.user)return null;
+    saveAdminGatewaySession(next);return next
+  }catch{return null}
+}
 async function gatewayLogin(email,password){
   try{
     const r=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({email,password})});
@@ -42,12 +53,18 @@ async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
     $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อมระบบฐานข้อมูล</div>';return
   }
-  const saved=readAdminGatewaySession();
+  let saved=readAdminGatewaySession();
   if(saved?.access_token&&saved?.user){
-    adminGatewaySession=saved;
-    sb=makeAdminClient(CFG.supabaseUrl,saved.access_token);
-    await useSession(saved);
-  }else{
+    if(saved.expires_at&&Number(saved.expires_at)*1000<=Date.now()+60000)saved=await refreshAdminGatewaySession(saved);
+    if(saved?.access_token){
+      adminGatewaySession=saved;
+      sb=makeAdminClient(CFG.supabaseUrl,saved.access_token);
+      await useSession(saved);
+      return
+    }
+    saveAdminGatewaySession(null);
+  }
+  {
     sb=makeAdminClient(CFG.supabaseUrl);
     showLogin();
   }
