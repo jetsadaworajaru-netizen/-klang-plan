@@ -11,12 +11,29 @@ function esc(s){return (s??"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let sessionCheckPromise=null;
+function makeAdminClient(url){
+  return window.supabase.createClient(url,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-admin-auth"}})
+}
+async function adminSignInWithFallback(email,password){
+  const attempts=[CFG.supabaseUrl,CFG.supabaseDirectUrl].filter((x,i,a)=>x&&a.indexOf(x)===i);
+  const errors=[];
+  for(const url of attempts){
+    try{
+      const client=makeAdminClient(url);
+      const {data,error}=await client.auth.signInWithPassword({email,password});
+      if(!error&&data?.session){sb=client;return {data,error:null,url}}
+      errors.push((url.includes("/api/backend")?"Proxy":"Direct")+": "+(error?.message||"เข้าสู่ระบบไม่สำเร็จ"))
+    }catch(e){errors.push((url.includes("/api/backend")?"Proxy":"Direct")+": "+(e?.message||String(e)))}
+  }
+  return {data:null,error:new Error(errors.join(" | "))}
+}
+
 
 async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
     $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อม Supabase</div>';return
   }
-  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-admin-auth"}});
+  sb=makeAdminClient(CFG.supabaseUrl);
   const {data,error}=await sb.auth.getSession();
   if(error){showLogin("อ่าน Session ไม่สำเร็จ กรุณาลองใหม่");return}
   if(data?.session)await useSession(data.session);
@@ -88,7 +105,7 @@ $("adminLoginBtn").onclick=async()=>{
   const email=$("adminEmail").value.trim(),password=$("adminPassword").value;
   if(!email||!password){showLogin("กรุณากรอกอีเมลและรหัสผ่าน");return}
   $("adminLoginBtn").disabled=true;
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  const {data,error}=await adminSignInWithFallback(email,password);
   $("adminLoginBtn").disabled=false;
   if(error){showLogin("เข้าสู่ระบบไม่สำเร็จ: "+error.message);return}
   await useSession(data.session)
