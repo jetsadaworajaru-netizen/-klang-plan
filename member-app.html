@@ -25,6 +25,7 @@
     <button class="top-tab active" data-tab="create">✨ สร้างงาน</button>
     <button class="top-tab" data-tab="courses">📚 รายวิชาของฉัน</button>
     <button class="top-tab" data-tab="work">📁 แผนของฉัน</button>
+    <button class="top-tab" data-tab="library">🗃️ คลังงาน</button>
     <button class="top-tab" data-tab="indicators">🎯 ตัวชี้วัด</button>
     <button class="top-tab" data-tab="styles">🎨 สไตล์</button>
     <button class="top-tab" data-tab="help">💬 ช่วยเหลือ</button>
@@ -240,6 +241,30 @@
       <div id="workList" class="plan-workspace-list"><div class="list-item">กำลังโหลดแผน...</div></div>
     </section>
 
+    <section id="tab-library" class="page">
+      <div class="page-head"><h1>🗃️ คลังงานของฉัน</h1><p>รวมใบงาน ใบความรู้ แบบทดสอบ Rubric และเกมจากทุกแผนไว้ในที่เดียว</p></div>
+      <section class="workspace-toolbar library-toolbar">
+        <input id="globalResourceSearch" type="search" placeholder="ค้นหาชื่องาน แผน หน่วย หรือวิชา">
+        <select id="globalResourceType">
+          <option value="">ทุกประเภท</option>
+          <option value="worksheet">ใบงาน</option>
+          <option value="knowledge">ใบความรู้</option>
+          <option value="quiz">แบบทดสอบ</option>
+          <option value="rubric">Rubric</option>
+          <option value="game">เกมการเรียนรู้</option>
+        </select>
+        <select id="globalResourceSubject"><option value="">ทุกวิชา</option></select>
+        <button id="refreshResourceLibraryBtn" class="secondary-btn" type="button">↻ รีเฟรช</button>
+      </section>
+      <div class="workspace-stats resource-library-stats">
+        <div><b id="globalResourceCount">0</b><small>งานทั้งหมด</small></div>
+        <div><b id="globalWorksheetCount">0</b><small>ใบงาน/ใบความรู้</small></div>
+        <div><b id="globalAssessmentCount">0</b><small>แบบทดสอบ/Rubric</small></div>
+        <div><b id="globalGameCount">0</b><small>เกม</small></div>
+      </div>
+      <div id="globalResourceList" class="global-resource-grid"></div>
+    </section>
+
     <section id="tab-indicators" class="page">
       <div class="page-head"><h1>🎯 คลังตัวชี้วัด</h1><p>เลือกช่วงชั้น ระดับชั้น และกลุ่มสาระก่อนค้นหาได้</p></div>
       <div class="library-filter-card">
@@ -289,6 +314,7 @@
     <button class="active" data-bottom-tab="create" type="button">✨<small>สร้างงาน</small></button>
     <button data-bottom-tab="courses" type="button">📚<small>รายวิชา</small></button>
     <button data-bottom-tab="work" type="button">📁<small>แผนของฉัน</small></button>
+    <button data-bottom-tab="library" type="button">🗃️<small>คลังงาน</small></button>
     <button data-bottom-tab="help" type="button">💬<small>ช่วยเหลือ</small></button>
   </nav>
 </div>
@@ -696,6 +722,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/member-app.js?v=942"></script>
+<script src="/member-app.js?v=943"></script>
 </body>
 </html>
