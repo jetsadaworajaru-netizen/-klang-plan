@@ -1,0 +1,9 @@
+timestamp=2026-10-25T14:56:04Z
+
+== settings ==
+curl_exit=6
+
+
+== password grant with intentionally invalid credentials ==
+curl_exit=6
+
