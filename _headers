@@ -36,3 +36,6 @@
 
 /curriculum-manifest.json
   Cache-Control: no-store, no-cache, must-revalidate
+
+/config.js
+  Cache-Control: no-store, no-cache, must-revalidate
