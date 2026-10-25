@@ -36,20 +36,45 @@ function recordMatchesGrade(x,g){return !g||recordGrades(x).includes(g)}
 function displayGradeForRecord(x,fallback=""){return fallback||recordGrades(x)[0]||x?.grade||""}
 function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
 function avatar(v){const p={"avatar:teacher":"👩‍🏫","avatar:teacher_male":"👨‍🏫","avatar:book":"📚","avatar:star":"⭐"};if(p[v])return p[v];if(v?.startsWith("data:image/"))return `<img src="${v}" alt="">`;return "👤"}
-function makeMemberClient(url){return window.supabase.createClient(url,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}})}
-async function memberSessionWithFallback(){
-  const urls=[CFG.supabaseUrl,CFG.supabaseDirectUrl].filter((x,i,a)=>x&&a.indexOf(x)===i),errors=[];
-  for(const url of urls){try{const client=makeMemberClient(url);const {data,error}=await withTimeout(client.auth.getSession(),6000,"ตรวจสอบ Session");if(!error&&data?.session){sb=client;return data}errors.push(error?.message||"ไม่พบ Session")}catch(e){errors.push(e?.message||String(e))}}
-  throw new Error("ตรวจสอบการเข้าสู่ระบบไม่สำเร็จ: "+errors.join(" | "))
+const MEMBER_GATEWAY_KEY="klang-member-gateway-session";
+function saveMemberGatewaySession(session){
+  if(session)localStorage.setItem(MEMBER_GATEWAY_KEY,JSON.stringify(session));
+  else localStorage.removeItem(MEMBER_GATEWAY_KEY)
+}
+function readMemberGatewaySession(){
+  try{return JSON.parse(localStorage.getItem(MEMBER_GATEWAY_KEY)||"null")}catch{return null}
+}
+function makeMemberClient(url,accessToken=""){
+  const opts={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}};
+  if(accessToken)opts.global={headers:{Authorization:"Bearer "+accessToken}};
+  return window.supabase.createClient(url,CFG.supabasePublishableKey||CFG.supabaseAnonKey,opts)
+}
+async function refreshMemberGatewaySession(session){
+  if(!session?.refresh_token)return null;
+  try{
+    const r=await fetch("/api/refresh",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({refresh_token:session.refresh_token})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)return null;
+    const next={access_token:data.access_token,refresh_token:data.refresh_token||session.refresh_token,expires_in:data.expires_in,expires_at:data.expires_at,user:data.user||session.user};
+    if(!next.access_token||!next.user)return null;
+    saveMemberGatewaySession(next);return next
+  }catch{return null}
 }
 async function auth(){
   if(!window.supabase||!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
-  const data=await memberSessionWithFallback(); if(!data?.session){location.replace("/teacher.html");return false}
-  user=data.session.user;
-  const {data:p}=await withTimeout(sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),8000,"โหลดข้อมูลสมาชิก");
-  if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
+  let session=readMemberGatewaySession();
+  if(!session?.access_token||!session?.user){location.replace("/teacher.html");return false}
+  if(session.expires_at&&Number(session.expires_at)*1000<=Date.now()+60000){
+    session=await refreshMemberGatewaySession(session);
+    if(!session){saveMemberGatewaySession(null);location.replace("/teacher.html");return false}
+  }
+  sb=makeMemberClient(CFG.supabaseUrl,session.access_token);
+  user=session.user;
+  const {data:p,error}=await withTimeout(sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),8000,"โหลดข้อมูลสมาชิก");
+  if(error)throw error;
+  if(!p||p.role!=="member"||p.status!=="active"){saveMemberGatewaySession(null);location.replace("/teacher.html");return false}
   if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
-    await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
+    saveMemberGatewaySession(null);location.replace("/teacher.html?expired=1");return false
   }
   profile=p;renderProfile();return true
 }
@@ -1136,7 +1161,7 @@ function bind(){
   if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
   if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
   $("saveProfileBtn").onclick=async()=>{const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};const {error}=await sb.from("profiles").update(payload).eq("id",user.id);if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;Object.assign(profile,payload);renderProfile();$("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓</div>'};
-  $("logoutBtn").onclick=async()=>{await sb.auth.signOut();location.replace("/teacher.html")};
+  $("logoutBtn").onclick=async()=>{saveMemberGatewaySession(null);location.replace("/teacher.html")};
   $$(".dest-tab").forEach(b=>b.onclick=()=>{$$(".dest-tab").forEach(x=>x.classList.toggle("active",x===b));$$(".dest-panel").forEach(x=>x.classList.toggle("active",x.id===`dest-${b.dataset.dest}`))});
   $$("[data-open]").forEach(b=>b.onclick=async()=>{await copy();window.open(b.dataset.open,"_blank","noopener")});
   $("openWordBtn").onclick=async()=>{await copy();window.open("https://www.office.com/launch/word","_blank","noopener")};
