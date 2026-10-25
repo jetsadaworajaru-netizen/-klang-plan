@@ -553,6 +553,29 @@ function resourceLibrary(){
   try{return JSON.parse(localStorage.getItem(RESOURCE_LIBRARY_KEY)||"[]").filter(x=>!user?.id||!x.user_id||x.user_id===user.id)}catch{return[]}
 }
 function writeResourceLibrary(rows){localStorage.setItem(RESOURCE_LIBRARY_KEY,JSON.stringify(rows))}
+async function loadResourceLibraryFromCloud(){
+  if(!sb||!user)return resourceLibrary();
+  try{
+    const {data,error}=await sb.from("learning_resources").select("id,client_id,course_id,unit_id,lesson_plan_id,resource_type,title,content,created_at,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(500);
+    if(error)throw error;resourceCloudReady=true;
+    const local=resourceLibrary(),by=new Map(local.map(x=>[x.id,x]));
+    for(const r of data||[]){
+      const c=r.content&&typeof r.content==="object"?r.content:{},id=c.library_id||r.client_id||r.id;
+      const item={id,user_id:user.id,plan_id:r.lesson_plan_id||null,course_id:r.course_id||null,unit_id:r.unit_id||null,type:r.resource_type,title:r.title,config:c.config||{},html:c.html||"",text:c.text||"",created_at:r.created_at,updated_at:r.updated_at,cloud_id:r.id};
+      const prev=by.get(id);if(!prev||String(item.updated_at||"")>=String(prev.updated_at||""))by.set(id,{...prev,...item})
+    }
+    const merged=[...by.values()].sort((a,b)=>String(b.updated_at||b.created_at||"").localeCompare(String(a.updated_at||a.created_at||"")));
+    writeResourceLibrary(merged);return merged
+  }catch(error){resourceCloudReady=false;console.warn("resource cloud load unavailable",error);return resourceLibrary()}
+}
+async function updateCloudResource(item){
+  if(!sb||!user||!item?.cloud_id)return false;
+  try{
+    const {error}=await sb.from("learning_resources").update({title:item.title,content:{library_id:item.id,config:item.config||{},html:item.html||"",text:item.text||""},updated_at:item.updated_at}).eq("id",item.cloud_id).eq("user_id",user.id);
+    if(error)throw error;return true
+  }catch(error){console.warn("resource cloud update unavailable",error);return false}
+}
+
 function resourceTypeName(t){return ({worksheet:"ใบงาน",knowledge:"ใบความรู้",quiz:"แบบทดสอบ",rubric:"Rubric",game:"เกมการเรียนรู้"})[t]||t}
 function resourceIcon(t){return ({worksheet:"📝",knowledge:"📚",quiz:"✅",rubric:"📊",game:"🎮"})[t]||"📄"}
 function planLibraryRows(planId){return resourceLibrary().filter(x=>x.plan_id===planId).sort((a,b)=>String(b.updated_at||b.created_at||"").localeCompare(String(a.updated_at||a.created_at||"")))}
@@ -595,6 +618,7 @@ function syncSavedResourceToCourse(item){
 }
 async function cloudSaveResource(item){
   const p=activeWorkspacePlan;if(!sb||!user||!p?.course_id)return null;
+  if(item.cloud_id){await updateCloudResource(item);return item.cloud_id}
   try{
     const payload={user_id:user.id,course_id:p.course_id,unit_id:p.unit_id||null,lesson_plan_id:p.id,resource_type:item.type,title:item.title,content:{library_id:item.id,config:item.config||{},html:item.html||"",text:item.text||""},status:"ready"};
     if(item.id&&/^[0-9a-f-]{36}$/i.test(item.id))payload.client_id=item.id;
@@ -604,11 +628,13 @@ async function cloudSaveResource(item){
 }
 async function savePlanResource(type,title,config,html,text){
   if(!activeWorkspacePlan)return toast("กรุณาเลือกแผนก่อน");
-  const rows=resourceLibrary(),now=new Date().toISOString(),id=crypto.randomUUID?crypto.randomUUID():"res-"+Date.now()+"-"+Math.random().toString(16).slice(2);
-  const item={id,user_id:user?.id||null,plan_id:activeWorkspacePlan.id,course_id:activeWorkspacePlan.course_id||null,unit_id:activeWorkspacePlan.unit_id||null,type,title,config:config||{},html:html||"",text:text||"",created_at:now,updated_at:now,cloud_id:null};
-  rows.push(item);writeResourceLibrary(rows);syncSavedResourceToCourse(item);
+  const rows=resourceLibrary(),now=new Date().toISOString();
+  let item=activeSavedResourceId?rows.find(x=>x.id===activeSavedResourceId):null;
+  if(item){Object.assign(item,{type,title,config:config||{},html:html||"",text:text||"",updated_at:now,plan_id:activeWorkspacePlan.id,course_id:activeWorkspacePlan.course_id||null,unit_id:activeWorkspacePlan.unit_id||null})}
+  else{const id=crypto.randomUUID?crypto.randomUUID():"res-"+Date.now()+"-"+Math.random().toString(16).slice(2);item={id,user_id:user?.id||null,plan_id:activeWorkspacePlan.id,course_id:activeWorkspacePlan.course_id||null,unit_id:activeWorkspacePlan.unit_id||null,type,title,config:config||{},html:html||"",text:text||"",created_at:now,updated_at:now,cloud_id:null};rows.push(item);activeSavedResourceId=id}
+  writeResourceLibrary(rows);syncSavedResourceToCourse(item);
   const cloudId=await cloudSaveResource(item);if(cloudId){item.cloud_id=cloudId;writeResourceLibrary(rows)}
-  toast("บันทึก"+resourceTypeName(type)+"เข้าคลังแล้ว ✓");return item
+  toast((item.created_at===item.updated_at?"บันทึก":"อัปเดต")+resourceTypeName(type)+"เข้าคลังแล้ว ✓");return item
 }
 async function saveCurrentMaterialLibrary(){
   const m=materialModel();if(!m)return;
