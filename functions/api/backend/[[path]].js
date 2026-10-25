@@ -1,36 +1,47 @@
 const UPSTREAM = "https://vyeemrmzlzqaycpbmuyc.supabase.co";
 
-export async function onRequest(context) {
-  const request = context.request;
-  const url = new URL(request.url);
-  const parts = context.params.path;
-  const suffix = Array.isArray(parts) ? parts.join("/") : String(parts || "");
-  const target = new URL("/" + suffix, UPSTREAM);
-  target.search = url.search;
-
-  const headers = new Headers(request.headers);
-  headers.delete("host");
-  headers.delete("cf-connecting-ip");
-  headers.delete("cf-ipcountry");
-  headers.delete("cf-ray");
-  headers.delete("cf-visitor");
-  headers.delete("x-forwarded-for");
-  headers.delete("x-forwarded-proto");
-
-  const init = { method: request.method, headers, redirect: "manual" };
-  if (!["GET", "HEAD"].includes(request.method)) init.body = request.body;
-
+export async function onRequest({ request, params }) {
   try {
-    const upstream = await fetch(target.toString(), init);
-    const out = new Headers(upstream.headers);
-    out.delete("content-length");
-    out.set("cache-control", "no-store");
-    out.set("x-klang-backend", "1");
-    return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: out });
+    const url = new URL(request.url);
+    const catchall = params.path;
+    const suffix = Array.isArray(catchall) ? catchall.join("/") : String(catchall || "");
+    const target = UPSTREAM + "/" + suffix + url.search;
+
+    const headers = new Headers(request.headers);
+    for (const name of [
+      "host","origin","referer","content-length",
+      "cf-connecting-ip","cf-ipcountry","cf-ray","cf-visitor",
+      "x-forwarded-for","x-forwarded-proto"
+    ]) headers.delete(name);
+
+    const init = {
+      method: request.method,
+      headers,
+      redirect: "manual"
+    };
+
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      init.body = await request.arrayBuffer();
+    }
+
+    const upstream = await fetch(target, init);
+    const responseHeaders = new Headers(upstream.headers);
+    responseHeaders.delete("content-length");
+    responseHeaders.set("cache-control", "no-store");
+    responseHeaders.set("x-klang-backend", "ok");
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders
+    });
   } catch (error) {
-    return new Response(JSON.stringify({error:"backend_unavailable",message:String(error?.message||"fetch failed")}), {
+    return Response.json({
+      error: "backend_proxy_error",
+      message: error instanceof Error ? error.message : String(error)
+    }, {
       status: 502,
-      headers: {"content-type":"application/json; charset=utf-8","cache-control":"no-store"}
+      headers: { "cache-control": "no-store" }
     });
   }
 }
