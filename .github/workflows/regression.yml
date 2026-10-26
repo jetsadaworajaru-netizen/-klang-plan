@@ -21,21 +21,62 @@ jobs:
         run: node scripts/regression-check.mjs
 
   public-smoke:
-    if: github.event_name == 'workflow_dispatch'
+    needs: frontend-regression
     runs-on: ubuntu-latest
     steps:
+      - name: Allow Pages deployment to settle
+        if: github.event_name == 'push'
+        run: sleep 30
+
       - name: Check Supabase Auth health
+        shell: bash
         run: |
-          curl --fail --show-error --silent \
-            -H 'apikey: sb_publishable_XRFWoASv4QIXFTHzHmAHgQ_aTRLr9eK' \
-            'https://vyeemrmzlzqaycpbmuyc.supabase.co/auth/v1/settings' >/dev/null
-      - name: Check public pages
+          set -e
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --show-error --silent --connect-timeout 10 --max-time 30 \
+              -H 'apikey: sb_publishable_XRFWoASv4QIXFTHzHmAHgQ_aTRLr9eK' \
+              'https://vyeemrmzlzqaycpbmuyc.supabase.co/auth/v1/settings' >/dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+
+      - name: Check production pages and critical assets
+        shell: bash
         run: |
+          set -e
+          check() {
+            url="$1"
+            for attempt in 1 2 3 4 5; do
+              if curl --fail --show-error --silent --location --connect-timeout 10 --max-time 30 "$url" >/dev/null; then
+                return 0
+              fi
+              sleep 10
+            done
+            return 1
+          }
           for url in \
             https://klang-plan.pages.dev/ \
             https://klang-plan.pages.dev/teacher.html \
             https://klang-plan.pages.dev/member-app.html \
-            https://klang-plan.pages.dev/admin-panel.html
+            https://klang-plan.pages.dev/admin-panel.html \
+            https://klang-plan.pages.dev/join.html \
+            https://klang-plan.pages.dev/config.js \
+            https://klang-plan.pages.dev/member-app.js \
+            https://klang-plan.pages.dev/admin.js \
+            https://klang-plan.pages.dev/data.json
           do
-            curl --fail --show-error --silent --location "$url" >/dev/null
+            check "$url"
           done
+
+      - name: Check production member runtime markers
+        shell: bash
+        run: |
+          set -e
+          curl --fail --silent --location https://klang-plan.pages.dev/member-app.js -o /tmp/member.js
+          ! grep -q '\$\$\ /tmp/member.js
+          grep -q 'function downloadTeachingPack' /tmp/member.js
+          grep -q 'function openQuizStudio' /tmp/member.js
+          grep -q 'function openRubricStudio' /tmp/member.js
+          grep -q 'function openGameStudio' /tmp/member.js
