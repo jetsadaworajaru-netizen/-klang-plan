@@ -70,19 +70,7 @@
     $("memberLoginMsg").innerHTML='<div class="warn">ระบบสมาชิกยังไม่พร้อม กรุณาติดต่อ Admin</div>';
     return;
   }
-  let sb=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-  const MEMBER_GATEWAY_KEY="klang-member-gateway-session";
-  const saveGatewaySession=session=>session?localStorage.setItem(MEMBER_GATEWAY_KEY,JSON.stringify(session)):localStorage.removeItem(MEMBER_GATEWAY_KEY);
-  const readGatewaySession=()=>{try{return JSON.parse(localStorage.getItem(MEMBER_GATEWAY_KEY)||"null")}catch{return null}};
-  const memberClient=token=>window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{headers:{Authorization:"Bearer "+token}}});
-  async function gatewayLogin(email,password){
-    const r=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({email,password})});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw new Error(data.message||data.error||("HTTP "+r.status));
-    const session={access_token:data.access_token,refresh_token:data.refresh_token,expires_in:data.expires_in,expires_at:data.expires_at,user:data.user};
-    if(!session.access_token||!session.user)throw new Error("ไม่ได้รับ Session");
-    saveGatewaySession(session);sb=memberClient(session.access_token);return session;
-  }
+  const sb=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-member-auth"}});
   const show=(text,ok=false)=>$("memberLoginMsg").innerHTML=`<div class="${ok?"ok":"warn"}">${text}</div>`;
 
   if(new URLSearchParams(location.search).get("expired")==="1"){
@@ -96,15 +84,14 @@
   }
 
   async function checkExisting(){
-    const session=readGatewaySession();
-    if(!session?.access_token||!session?.user)return;
-    if(session.expires_at&&Number(session.expires_at)*1000<=Date.now()){saveGatewaySession(null);return}
-    sb=memberClient(session.access_token);
+    const {data}=await sb.auth.getSession();
+    const session=data?.session;
+    if(!session)return;
     const {data:p}=await sb.from("profiles").select("role,status,member_id,membership_expires_at").eq("id",session.user.id).maybeSingle();
     if(p?.role==="member"&&p?.status==="active"&&(!p.membership_expires_at||new Date(p.membership_expires_at).getTime()>Date.now())){
       location.replace("/member-app.html");
     }else{
-      saveGatewaySession(null);
+      await sb.auth.signOut();
     }
   }
 
@@ -118,15 +105,14 @@
     $("memberLoginBtn").disabled=true;
     show("กำลังเข้าสู่ระบบ...",true);
     const email=`${memberId.toLowerCase()}@members.klangplan.app`;
-    let session;
-    try{session=await gatewayLogin(email,pin)}
-    catch(error){show("เข้าสู่ระบบไม่สำเร็จ: "+(error?.message||"กรุณาลองใหม่"));$("memberLoginBtn").disabled=false;return}
-    const {data:p}=await sb.from("profiles").select("role,status,member_id,membership_expires_at").eq("id",session.user.id).maybeSingle();
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pin});
+    if(error){show("Member ID หรือรหัสผ่านไม่ถูกต้อง");$("memberLoginBtn").disabled=false;return}
+    const {data:p}=await sb.from("profiles").select("role,status,member_id,membership_expires_at").eq("id",data.user.id).maybeSingle();
     if(p?.role!=="member"||p?.status!=="active"){
-      saveGatewaySession(null);show("บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
+      await sb.auth.signOut();show("บัญชีนี้ยังไม่สามารถใช้งานได้ กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
     }
     if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
-      saveGatewaySession(null);show("สิทธิ์ทดลองใช้งานของบัญชีนี้หมดอายุแล้ว กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
+      await sb.auth.signOut();show("สิทธิ์ทดลองใช้งานของบัญชีนี้หมดอายุแล้ว กรุณาติดต่อ Admin");$("memberLoginBtn").disabled=false;return;
     }
     localStorage.setItem("klangRememberMemberId",memberId);
     location.replace("/member-app.html");
