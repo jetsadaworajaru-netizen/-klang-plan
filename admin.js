@@ -1,7 +1,7 @@
 const MEMBER_PRICE=169;
 const CFG=window.KLANG_CONFIG||{};
 const $=id=>document.getElementById(id);
-let sb=null,user=null,profile=null,profiles=[],requests=[],invites=[],usage=[],adminGatewaySession=null;
+let sb=null,user=null,profile=null,profiles=[],requests=[],invites=[],usage=[];
 let currentQuickLink="";
 
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
@@ -11,63 +11,24 @@ function esc(s){return (s??"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let sessionCheckPromise=null;
-function makeAdminClient(url,accessToken=""){
-  const opts={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}};
-  if(accessToken)opts.global={headers:{Authorization:"Bearer "+accessToken}};
-  return window.supabase.createClient(url,CFG.supabasePublishableKey,opts)
+function makeAdminClient(url){
+  return window.supabase.createClient(url,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"klang-admin-auth"}})
 }
-function saveAdminGatewaySession(session){
-  adminGatewaySession=session||null;
-  if(session)localStorage.setItem("klang-admin-gateway-session",JSON.stringify(session));
-  else localStorage.removeItem("klang-admin-gateway-session")
-}
-function readAdminGatewaySession(){
-  try{return JSON.parse(localStorage.getItem("klang-admin-gateway-session")||"null")}catch{return null}
-}
-async function refreshAdminGatewaySession(session){
-  if(!session?.refresh_token)return null;
-  try{
-    const r=await fetch("/api/refresh",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({refresh_token:session.refresh_token})});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)return null;
-    const next={access_token:data.access_token,refresh_token:data.refresh_token||session.refresh_token,expires_in:data.expires_in,expires_at:data.expires_at,user:data.user||session.user};
-    if(!next.access_token||!next.user)return null;
-    saveAdminGatewaySession(next);return next
-  }catch{return null}
-}
-async function gatewayLogin(email,password){
-  try{
-    const r=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify({email,password})});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)return {data:null,error:new Error(data.message||data.error||("HTTP "+r.status))};
-    const session={access_token:data.access_token,refresh_token:data.refresh_token,expires_in:data.expires_in,expires_at:data.expires_at,user:data.user};
-    if(!session.access_token||!session.user)return {data:null,error:new Error("Auth Gateway ไม่ได้คืน Session")};
-    saveAdminGatewaySession(session);
-    sb=makeAdminClient(CFG.supabaseUrl,session.access_token);
-    return {data:{session,user:session.user},error:null}
-  }catch(e){return {data:null,error:e}}
-}
-
 
 async function init(){
   if(!CFG.supabaseUrl||!CFG.supabasePublishableKey||!window.supabase){
-    $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อมระบบฐานข้อมูล</div>';return
+    $("adminLoginMsg").innerHTML='<div style="color:#a44;margin-top:9px">ยังไม่ได้เชื่อม Supabase</div>';return
   }
-  let saved=readAdminGatewaySession();
-  if(saved?.access_token&&saved?.user){
-    if(saved.expires_at&&Number(saved.expires_at)*1000<=Date.now()+60000)saved=await refreshAdminGatewaySession(saved);
-    if(saved?.access_token){
-      adminGatewaySession=saved;
-      sb=makeAdminClient(CFG.supabaseUrl,saved.access_token);
-      await useSession(saved);
-      return
+  sb=makeAdminClient(CFG.supabaseUrl);
+  const {data,error}=await sb.auth.getSession();
+  if(error){showLogin("อ่าน Session ไม่สำเร็จ กรุณาลองใหม่");return}
+  if(data?.session)await useSession(data.session);
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==="SIGNED_OUT"){showLogin();return}
+    if((event==="SIGNED_IN"||event==="TOKEN_REFRESHED")&&session){
+      setTimeout(()=>{useSession(session).catch(console.error)},0)
     }
-    saveAdminGatewaySession(null);
-  }
-  {
-    sb=makeAdminClient(CFG.supabaseUrl);
-    showLogin();
-  }
+  })
 }
 
 async function verifyAdminAccess(){
@@ -130,12 +91,12 @@ $("adminLoginBtn").onclick=async()=>{
   const email=$("adminEmail").value.trim(),password=$("adminPassword").value;
   if(!email||!password){showLogin("กรุณากรอกอีเมลและรหัสผ่าน");return}
   $("adminLoginBtn").disabled=true;
-  const {data,error}=await gatewayLogin(email,password);
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
   $("adminLoginBtn").disabled=false;
   if(error){showLogin("เข้าสู่ระบบไม่สำเร็จ: "+error.message);return}
   await useSession(data.session)
 };
-$("logoutBtn").onclick=async()=>{saveAdminGatewaySession(null);adminGatewaySession=null;showLogin()};
+$("logoutBtn").onclick=async()=>{await sb.auth.signOut();showLogin()};
 
 $("switchToUserBtn").onclick=()=>{location.assign("/teacher.html")};
 $("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("adminLoginBtn").click()});
@@ -408,7 +369,7 @@ async function resetMemberPin(userId,memberId,fullName){
   if(confirmPin===null)return;
   if(String(confirmPin).trim()!==clean){toast("PIN ทั้งสองครั้งไม่ตรงกัน");return}
 
-  const session=adminGatewaySession||readAdminGatewaySession();
+  const {data:{session}}=await sb.auth.getSession();
   if(!session?.access_token){toast("Session Admin หมดอายุ กรุณาเข้าสู่ระบบใหม่");return}
 
   const resp=await fetch(`${CFG.supabaseUrl}/functions/v1/admin-reset-pin`,{
@@ -433,7 +394,7 @@ async function deleteMemberAccount(userId,memberId,fullName){
   const verify=prompt(`เพื่อยืนยันการลบ กรุณาพิมพ์คำว่า ลบ`);
   if(verify!=="ลบ"){toast("ยกเลิกการลบสมาชิก");return}
 
-  const session=adminGatewaySession||readAdminGatewaySession();
+  const {data:{session}}=await sb.auth.getSession();
   if(!session?.access_token){toast("Session Admin หมดอายุ กรุณาเข้าสู่ระบบใหม่");return}
 
   const resp=await fetch(`${CFG.supabaseUrl}/functions/v1/admin-delete-member`,{
