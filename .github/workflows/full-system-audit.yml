@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           set +e
+          sleep 25
           mkdir -p diagnostics
           REPORT=diagnostics/full-audit-latest.txt
           BASE="https://klang-plan.pages.dev"
@@ -73,6 +74,22 @@ jobs:
           echo "temporary_route_count=$(grep -Eo '/api/(login|refresh|backend)|/supabase/' /tmp/member.js /tmp/config.js 2>/dev/null | wc -l)" >> "$REPORT"
           echo >> "$REPORT"
 
+          echo "== DATASET AND CORE MODULES ==" >> "$REPORT"
+          curl -L -sS --max-time 60 "$BASE/data.json" -o /tmp/data.json
+          DATA_COUNT=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("/tmp/data.json","utf8"));process.stdout.write(String(d.length))' 2>/dev/null || echo parse_error)
+          echo "data_records=$DATA_COUNT" >> "$REPORT"
+          for fn in loadData generate downloadWord printPlanPdf downloadTeachingPack openQuizStudio openRubricStudio openGameStudio openMaterialStudio renderGlobalResourceLibrary duplicateActivePlan nextPlanFromActive openCourseReadiness loadResourceLibraryFromCloud; do
+            if grep -q "function $fn" /tmp/member.js || grep -q "async function $fn" /tmp/member.js; then
+              echo "core_function|$fn|PASS" >> "$REPORT"
+            else
+              echo "core_function|$fn|FAIL" >> "$REPORT"
+            fi
+          done
+          curl -L -sS --max-time 30 "$BASE/admin.js?v=954" -o /tmp/admin.js
+          echo "admin_legacy_169_count=$(grep -o '169' /tmp/admin.js | wc -l)" >> "$REPORT"
+          echo "admin_real_payment_logic=$(grep -c 'price_paid' /tmp/admin.js)" >> "$REPORT"
+          echo >> "$REPORT"
+
           echo "== SUPABASE HEALTH ==" >> "$REPORT"
           code=$(curl -sS -o /tmp/settings -w "%{http_code}" --connect-timeout 10 --max-time 30 -H "apikey: $KEY" "$SUPA/auth/v1/settings"); rc=$?
           echo "auth_settings|curl=$rc|http=$code|body=$(tr '\n' ' ' </tmp/settings | head -c 180)" >> "$REPORT"
@@ -108,6 +125,12 @@ jobs:
           assert "Production has no $$$" '! grep -q "\$\$\$" /tmp/member.js'
           assert "Production config uses correct Supabase" 'grep -q "vyeemrmzlzqaycpbmuyc.supabase.co" /tmp/config.js'
           assert "No recovery proxy in production core" '! grep -Eq "/api/(login|refresh|backend)|/supabase/" /tmp/member.js /tmp/config.js'
+          assert "Curriculum dataset has 2155 records" '[ "$DATA_COUNT" = "2155" ]'
+          assert "Admin legacy 169 removed" '! grep -q "169" /tmp/admin.js'
+          assert "Admin uses recorded price_paid" 'grep -q "price_paid" /tmp/admin.js'
+          for fn in loadData generate downloadWord printPlanPdf downloadTeachingPack openQuizStudio openRubricStudio openGameStudio openMaterialStudio renderGlobalResourceLibrary duplicateActivePlan nextPlanFromActive openCourseReadiness loadResourceLibraryFromCloud; do
+            assert "Core function $fn present" "grep -q \"function $fn\" /tmp/member.js || grep -q \"async function $fn\" /tmp/member.js"
+          done
 
           echo >> "$REPORT"
           if [ "$fail" -eq 0 ]; then
@@ -124,3 +147,5 @@ jobs:
           git add diagnostics/full-audit-latest.txt
           git commit -m "Update full system audit report [skip ci]" || exit 0
           git push
+
+# rerun-full-audit: 2026-10-26T13:10+07:00
