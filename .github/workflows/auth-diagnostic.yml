@@ -53,3 +53,5 @@ jobs:
           git add diagnostics/auth-latest.txt
           git commit -m "Update Supabase auth diagnostic" || exit 0
           git push
+
+# diagnostic-run: 2026-10-26T11:28+07:00
