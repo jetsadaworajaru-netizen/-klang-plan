@@ -1,0 +1,126 @@
+name: Klang Plan Full System Audit
+
+on:
+  push:
+    paths:
+      - ".github/workflows/full-system-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Static regression
+        run: node scripts/regression-check.mjs
+
+      - name: Production and backend audit
+        shell: bash
+        run: |
+          set +e
+          mkdir -p diagnostics
+          REPORT=diagnostics/full-audit-latest.txt
+          BASE="https://klang-plan.pages.dev"
+          SUPA="https://vyeemrmzlzqaycpbmuyc.supabase.co"
+          KEY="sb_publishable_XRFWoASv4QIXFTHzHmAHgQ_aTRLr9eK"
+
+          echo "KLANG PLAN FULL SYSTEM AUDIT" > "$REPORT"
+          echo "timestamp=$(date -u +%FT%TZ)" >> "$REPORT"
+          echo "commit=$GITHUB_SHA" >> "$REPORT"
+          echo >> "$REPORT"
+
+          check_url () {
+            label="$1"; url="$2"; expected="$3"
+            code=$(curl -L -sS -o /tmp/body -w "%{http_code}" --connect-timeout 10 --max-time 30 "$url")
+            rc=$?
+            size=$(wc -c </tmp/body 2>/dev/null || echo 0)
+            echo "$label|curl=$rc|http=$code|bytes=$size|expected=$expected" >> "$REPORT"
+          }
+
+          echo "== PUBLIC PAGES ==" >> "$REPORT"
+          check_url "home" "$BASE/" "200"
+          check_url "teacher" "$BASE/teacher.html" "200"
+          check_url "member" "$BASE/member-app.html" "200"
+          check_url "admin" "$BASE/admin-panel.html" "200"
+          check_url "join" "$BASE/join.html?invite=AUDIT-INVALID" "200"
+          echo >> "$REPORT"
+
+          echo "== PUBLIC ASSETS ==" >> "$REPORT"
+          check_url "config" "$BASE/config.js?v=951" "200"
+          check_url "member-js" "$BASE/member-app.js?v=953" "200"
+          check_url "member-css" "$BASE/member-app.css?v=944" "200"
+          check_url "admin-js" "$BASE/admin.js?v=953" "200"
+          check_url "data-json" "$BASE/data.json" "200"
+          echo >> "$REPORT"
+
+          echo "== PRODUCTION CONTENT ==" >> "$REPORT"
+          curl -L -sS --max-time 30 "$BASE/member-app.html" -o /tmp/member.html
+          curl -L -sS --max-time 30 "$BASE/member-app.js?v=953" -o /tmp/member.js
+          curl -L -sS --max-time 30 "$BASE/admin-panel.html" -o /tmp/admin.html
+          curl -L -sS --max-time 30 "$BASE/config.js?v=951" -o /tmp/config.js
+          echo "member_version=$(grep -o 'member-app.js?v=[0-9]*' /tmp/member.html | head -1)" >> "$REPORT"
+          echo "admin_version=$(grep -o 'admin.js?v=[0-9]*' /tmp/admin.html | head -1)" >> "$REPORT"
+          echo "config_member=$(grep -o 'config.js?v=[0-9]*' /tmp/member.html | head -1)" >> "$REPORT"
+          echo "triple_dollar_count=$(grep -o '\$\$\$' /tmp/member.js | wc -l)" >> "$REPORT"
+          echo "supabase_url_count=$(grep -o 'vyeemrmzlzqaycpbmuyc.supabase.co' /tmp/config.js | wc -l)" >> "$REPORT"
+          echo "temporary_route_count=$(grep -Eo '/api/(login|refresh|backend)|/supabase/' /tmp/member.js /tmp/config.js 2>/dev/null | wc -l)" >> "$REPORT"
+          echo >> "$REPORT"
+
+          echo "== SUPABASE HEALTH ==" >> "$REPORT"
+          code=$(curl -sS -o /tmp/settings -w "%{http_code}" --connect-timeout 10 --max-time 30 -H "apikey: $KEY" "$SUPA/auth/v1/settings"); rc=$?
+          echo "auth_settings|curl=$rc|http=$code|body=$(tr '\n' ' ' </tmp/settings | head -c 180)" >> "$REPORT"
+
+          code=$(curl -sS -o /tmp/token -w "%{http_code}" --connect-timeout 10 --max-time 30 -X POST -H "apikey: $KEY" -H "content-type: application/json" --data '{"email":"audit-never-create@example.invalid","password":"wrong-password"}' "$SUPA/auth/v1/token?grant_type=password"); rc=$?
+          echo "auth_invalid_login|curl=$rc|http=$code|body=$(tr '\n' ' ' </tmp/token | head -c 180)" >> "$REPORT"
+
+          code=$(curl -sS -o /tmp/rest -w "%{http_code}" --connect-timeout 10 --max-time 30 -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "$SUPA/rest/v1/profiles?select=id&limit=1"); rc=$?
+          echo "rest_profiles_anon|curl=$rc|http=$code|body=$(tr '\n' ' ' </tmp/rest | head -c 180)" >> "$REPORT"
+
+          code=$(curl -sS -o /tmp/function -w "%{http_code}" --connect-timeout 10 --max-time 30 -X POST -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "content-type: application/json" --data '{}' "$SUPA/functions/v1/join-member"); rc=$?
+          echo "join_member_invalid_request|curl=$rc|http=$code|body=$(tr '\n' ' ' </tmp/function | head -c 180)" >> "$REPORT"
+          echo >> "$REPORT"
+
+          echo "== EXPECTED ASSERTIONS ==" >> "$REPORT"
+          fail=0
+          assert () { if eval "$2"; then echo "PASS|$1" >> "$REPORT"; else echo "FAIL|$1" >> "$REPORT"; fail=1; fi; }
+
+          home_code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$BASE/")
+          teacher_code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$BASE/teacher.html")
+          member_code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$BASE/member-app.html")
+          admin_code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$BASE/admin-panel.html")
+          supa_code=$(curl -sS -o /dev/null -w "%{http_code}" -H "apikey: $KEY" "$SUPA/auth/v1/settings")
+          invalid_code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST -H "apikey: $KEY" -H "content-type: application/json" --data '{"email":"audit-never-create@example.invalid","password":"wrong-password"}' "$SUPA/auth/v1/token?grant_type=password")
+
+          assert "home HTTP 200" '[ "$home_code" = "200" ]'
+          assert "teacher HTTP 200" '[ "$teacher_code" = "200" ]'
+          assert "member HTTP 200" '[ "$member_code" = "200" ]'
+          assert "admin HTTP 200" '[ "$admin_code" = "200" ]'
+          assert "Supabase Auth settings 200" '[ "$supa_code" = "200" ]'
+          assert "Invalid login returns 400 not 5xx" '[ "$invalid_code" = "400" ]'
+          assert "Production member is v953" 'grep -q "member-app.js?v=953" /tmp/member.html'
+          assert "Production has no $$$" '! grep -q "\$\$\$" /tmp/member.js'
+          assert "Production config uses correct Supabase" 'grep -q "vyeemrmzlzqaycpbmuyc.supabase.co" /tmp/config.js'
+          assert "No recovery proxy in production core" '! grep -Eq "/api/(login|refresh|backend)|/supabase/" /tmp/member.js /tmp/config.js'
+
+          echo >> "$REPORT"
+          if [ "$fail" -eq 0 ]; then
+            echo "OVERALL=PASS" >> "$REPORT"
+          else
+            echo "OVERALL=FAIL" >> "$REPORT"
+          fi
+
+      - name: Commit audit report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/full-audit-latest.txt
+          git commit -m "Update full system audit report [skip ci]" || exit 0
+          git push
