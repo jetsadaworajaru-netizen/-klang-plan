@@ -1,0 +1,45 @@
+KLANG PLAN FULL SYSTEM AUDIT
+timestamp=2026-10-26T06:06:41Z
+commit=f792bd086f8f38c72a92cb09ef9b2d7108b0a899
+
+== PUBLIC PAGES ==
+home|curl=0|http=200|bytes=8563|expected=200
+teacher|curl=0|http=200|bytes=7916|expected=200
+member|curl=0|http=200|bytes=59582|expected=200
+admin|curl=0|http=200|bytes=16069|expected=200
+join|curl=0|http=200|bytes=4096|expected=200
+
+== PUBLIC ASSETS ==
+config|curl=0|http=200|bytes=331|expected=200
+member-js|curl=0|http=200|bytes=218189|expected=200
+member-css|curl=0|http=200|bytes=40821|expected=200
+admin-js|curl=0|http=200|bytes=32237|expected=200
+data-json|curl=0|http=200|bytes=2124655|expected=200
+
+== PRODUCTION CONTENT ==
+member_version=member-app.js?v=953
+admin_version=admin.js?v=953
+config_member=config.js?v=951
+triple_dollar_count=0
+supabase_url_count=1
+temporary_route_count=0
+
+== SUPABASE HEALTH ==
+auth_settings|curl=0|http=200|body={"external":{"anonymous_users":false,"apple":false,"azure":false,"bitbucket":false,"discord":false,"facebook":false,"snapchat":false,"figma":false,"fly":false,"github":false,"gitla
+auth_invalid_login|curl=0|http=400|body={"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}
+rest_profiles_anon|curl=0|http=200|body=[]
+join_member_invalid_request|curl=0|http=400|body={"error":"invalid_input"}
+
+== EXPECTED ASSERTIONS ==
+PASS|home HTTP 200
+PASS|teacher HTTP 200
+PASS|member HTTP 200
+PASS|admin HTTP 200
+PASS|Supabase Auth settings 200
+PASS|Invalid login returns 400 not 5xx
+PASS|Production member is v953
+PASS|Production has no 2278$
+PASS|Production config uses correct Supabase
+PASS|No recovery proxy in production core
+
+OVERALL=PASS
