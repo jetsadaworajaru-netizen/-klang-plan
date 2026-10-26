@@ -3,6 +3,20 @@ const CFG=window.KLANG_CONFIG||{};
 const $=id=>document.getElementById(id);
 let sb=null,user=null,profile=null,profiles=[],requests=[],invites=[],usage=[];
 let currentQuickLink="";
+function adminRuntimeGuard(error){
+  console.error("Klang Plan Admin runtime error",error);
+  const msg=(error&&error.message)||String(error||"เกิดข้อผิดพลาด");
+  const login=document.getElementById("adminLoginMsg");
+  const app=document.getElementById("adminApp");
+  if(app&&app.style.display!=="none"){
+    const t=document.getElementById("toast");
+    if(t){t.textContent="ระบบพบข้อผิดพลาด กรุณารีเฟรชหน้า";t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3500)}
+  }else if(login){
+    login.innerHTML='<div style="color:#a05a2c;margin-top:9px">ระบบพบข้อผิดพลาด: '+msg.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))+'</div>';
+  }
+}
+window.addEventListener("error",e=>adminRuntimeGuard(e.error||new Error(e.message||"runtime error")));
+window.addEventListener("unhandledrejection",e=>adminRuntimeGuard(e.reason||new Error("promise rejected")));
 
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
 function money(v){return v==null||v===""?"—":Number(v).toLocaleString("th-TH")+" ฿"}
