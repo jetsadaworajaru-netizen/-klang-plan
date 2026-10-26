@@ -1,4 +1,3 @@
-const MEMBER_PRICE=169;
 const CFG=window.KLANG_CONFIG||{};
 const $=id=>document.getElementById(id);
 let sb=null,user=null,profile=null,profiles=[],requests=[],invites=[],usage=[];
@@ -192,8 +191,9 @@ function renderDashboard(){
   const active=members.filter(x=>x.status==="active");
   const pending=members.filter(x=>x.status==="pending");
 
-  // รายได้ = จำนวนสมาชิกที่สมัครเข้าระบบทั้งหมด x 169 บาท
-  const revenue=members.length*MEMBER_PRICE;
+  // รายได้รวมจากยอดชำระที่บันทึกจริงของสมาชิกแต่ละคน
+  const paidRows=members.filter(x=>Number(x.price_paid)>0);
+  const revenue=paidRows.reduce((sum,x)=>sum+Number(x.price_paid||0),0);
 
   const now=new Date();
   const bangkokParts=new Intl.DateTimeFormat("en-CA",{
@@ -247,7 +247,7 @@ function renderDashboard(){
     .join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>';
 
   if($("dashboardRevenueFormula")){
-    $("dashboardRevenueFormula").textContent=`${members.length} สมาชิก × ${MEMBER_PRICE} บาท = ${money(revenue)}`
+    $("dashboardRevenueFormula").textContent=`${paidRows.length} รายการชำระเงิน = ${money(revenue)}`
   }
 }
 function pendingReq(userId){return requests.find(r=>r.user_id===userId&&r.status==="pending")}
