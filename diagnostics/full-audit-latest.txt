@@ -1,6 +1,6 @@
 KLANG PLAN FULL SYSTEM AUDIT
-timestamp=2026-10-26T06:06:41Z
-commit=f792bd086f8f38c72a92cb09ef9b2d7108b0a899
+timestamp=2026-10-26T06:09:36Z
+commit=541955d318508b45dcd148cf5c5f0ce1c7c896ec
 
 == PUBLIC PAGES ==
 home|curl=0|http=200|bytes=8563|expected=200
@@ -13,16 +13,35 @@ join|curl=0|http=200|bytes=4096|expected=200
 config|curl=0|http=200|bytes=331|expected=200
 member-js|curl=0|http=200|bytes=218189|expected=200
 member-css|curl=0|http=200|bytes=40821|expected=200
-admin-js|curl=0|http=200|bytes=32237|expected=200
+admin-js|curl=0|http=200|bytes=32302|expected=200
 data-json|curl=0|http=200|bytes=2124655|expected=200
 
 == PRODUCTION CONTENT ==
 member_version=member-app.js?v=953
-admin_version=admin.js?v=953
+admin_version=admin.js?v=954
 config_member=config.js?v=951
 triple_dollar_count=0
 supabase_url_count=1
 temporary_route_count=0
+
+== DATASET AND CORE MODULES ==
+data_records=2155
+core_function|loadData|PASS
+core_function|generate|PASS
+core_function|downloadWord|PASS
+core_function|printPlanPdf|PASS
+core_function|downloadTeachingPack|PASS
+core_function|openQuizStudio|PASS
+core_function|openRubricStudio|PASS
+core_function|openGameStudio|PASS
+core_function|openMaterialStudio|PASS
+core_function|renderGlobalResourceLibrary|PASS
+core_function|duplicateActivePlan|PASS
+core_function|nextPlanFromActive|PASS
+core_function|openCourseReadiness|PASS
+core_function|loadResourceLibraryFromCloud|PASS
+admin_legacy_169_count=0
+admin_real_payment_logic=7
 
 == SUPABASE HEALTH ==
 auth_settings|curl=0|http=200|body={"external":{"anonymous_users":false,"apple":false,"azure":false,"bitbucket":false,"discord":false,"facebook":false,"snapchat":false,"figma":false,"fly":false,"github":false,"gitla
@@ -38,8 +57,25 @@ PASS|admin HTTP 200
 PASS|Supabase Auth settings 200
 PASS|Invalid login returns 400 not 5xx
 PASS|Production member is v953
-PASS|Production has no 2278$
+PASS|Production has no 2341$
 PASS|Production config uses correct Supabase
 PASS|No recovery proxy in production core
+PASS|Curriculum dataset has 2155 records
+PASS|Admin legacy 169 removed
+PASS|Admin uses recorded price_paid
+PASS|Core function loadData present
+PASS|Core function generate present
+PASS|Core function downloadWord present
+PASS|Core function printPlanPdf present
+PASS|Core function downloadTeachingPack present
+PASS|Core function openQuizStudio present
+PASS|Core function openRubricStudio present
+PASS|Core function openGameStudio present
+PASS|Core function openMaterialStudio present
+PASS|Core function renderGlobalResourceLibrary present
+PASS|Core function duplicateActivePlan present
+PASS|Core function nextPlanFromActive present
+PASS|Core function openCourseReadiness present
+PASS|Core function loadResourceLibraryFromCloud present
 
 OVERALL=PASS
