@@ -16,7 +16,7 @@ function memberRuntimeGuard(error){
 }
 window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
 window.addEventListener("unhandledrejection",e=>memberRuntimeGuard(e.reason||new Error("promise rejected")));
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -94,7 +94,29 @@ function filteredIndicators(){
   return DATA.filter(x=>x.stage===stage&&recordMatchesGrade(x,g)&&x.subject===s&&(!q||[x.indicator,x.indicator_text,x.standard,x.domain].some(v=>String(v||"").toLowerCase().includes(q))))
 }
 function buildIndicators(){if(!$("grade").value||!$("subject").value)return;const rows=filteredIndicators();$("indicator").innerHTML="";opt($("indicator"),"","เลือกตัวชี้วัด / ความสามารถ");rows.forEach(x=>{const o=document.createElement("option");o.value=String(DATA.indexOf(x));o.textContent=`${x.indicator||x.standard||""}${x.indicator_text?" — "+x.indicator_text:""}`;$("indicator").appendChild(o)});$("indicator").disabled=false}
-function chooseIndicator(){const i=Number($("indicator").value);selected=Number.isFinite(i)?DATA[i]:null;$("indicatorPreview").innerHTML=selected?`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`:"เลือกตัวชี้วัดเพื่อดูรายละเอียด";updateSummary()}
+function indicatorSuggestions(row){
+  if(!row)return {unit:"",topic:""};
+  const unit=String(row.domain||row.subject||"").trim();
+  let topic=String(row.indicator_text||"").trim().replace(/\s+/g," ");
+  if(topic.length>120)topic=topic.slice(0,117).trim()+"...";
+  return {unit,topic}
+}
+function applyIndicatorSuggestions(row){
+  if(!row)return;
+  const unitEl=$("unitName"),topicEl=$("topic"),sug=indicatorSuggestions(row);
+  const unitNow=unitEl?.value?.trim()||"",topicNow=topicEl?.value?.trim()||"";
+  const canUnit=!unitNow||unitNow===autoUnitValue;
+  const canTopic=!topicNow||topicNow===autoTopicValue;
+  if(unitEl&&canUnit&&sug.unit){unitEl.value=sug.unit;autoUnitValue=sug.unit}
+  if(topicEl&&canTopic&&sug.topic){topicEl.value=sug.topic;autoTopicValue=sug.topic}
+}
+function chooseIndicator(){
+  const i=Number($("indicator").value);
+  selected=Number.isFinite(i)?DATA[i]:null;
+  $("indicatorPreview").innerHTML=selected?`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`:"เลือกตัวชี้วัดเพื่อดูรายละเอียด";
+  if(selected)applyIndicatorSuggestions(selected);
+  updateSummary()
+}
 function styleCard(v){
   const m=styleMeta[v]||[v,"","minimal"];
   return `<button type="button" class="style-preview-card ${v===style?"active":""}" data-style="${esc(v)}">
@@ -1128,7 +1150,11 @@ function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("cour
 function bind(){
   $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();updateSummary()});
   $("grade").onchange=buildSubjects;$("subject").onchange=buildIndicators;$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
-  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>$(id).oninput=updateSummary);
+  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>$(id).oninput=()=>{
+  if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
+  if(id==="topic"&&$("topic").value.trim()!==autoTopicValue)autoTopicValue="";
+  updateSummary()
+});
   $("affiliationType").onchange=renderAffiliation;
   $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
