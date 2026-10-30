@@ -273,7 +273,7 @@ function syncTeacherSourceControls(){
   document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.checked=r.value===planTeacherImageSource);
   if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";
 }
-function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["รูปครู",planTeacherImageLabel()],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
+function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["รูปครู",planTeacherImageLabel()],["ตำแหน่งรูปครู",planTeacherPlacementLabel()],["โลโก้",planSchoolLogoSource==="none"?"ไม่ใช้":planSchoolLogoSource==="upload"?"อัปโหลดใหม่":"จากโปรไฟล์"],["QR",planQrSource==="upload"?"ใช้ QR":"ไม่ใช้"],["สไตล์",style],["สี",palette],["ความหนาแน่น",planDesignValue("planDensity","balanced")],["ไอคอน",planDesignValue("planIconStyle","soft")]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
 function v(id){return $(id).value.trim()}
 function prompt(){
   if(!selected)return"";
@@ -287,6 +287,9 @@ function prompt(){
   const affiliation=affiliationMeta[affiliationKey]||affiliationMeta.obec;
   const customAffiliation=v("customAffiliationNote")||"ไม่มีคำอธิบายเพิ่มเติม";
   const teacherMedia=planTeacherImagePrompt();
+  const schoolLogoMedia=schoolLogoPrompt();
+  const qrMedia=qrPrompt();
+  const visualOptions=designOptionsPrompt();
   const approval=signatures?`
 D. การรับรองแผนและการลงนาม
 รูปแบบการรับรอง: ${v("approvalLayout")}
@@ -298,11 +301,12 @@ D. การรับรองแผนและการลงนาม
 
   return `คุณคือผู้เชี่ยวชาญด้านหลักสูตรไทย Instructional Design การจัดการเรียนรู้ การวัดและประเมินผล และ Educational Graphic Design
 
-สร้าง “แผนการจัดการเรียนรู้” แบบหน้าเดียว ภาษาไทย อ่านง่าย กระชับ แต่มีองค์ประกอบทางวิชาการครบถ้วน เหมาะสำหรับครูไทยนำไปใช้จริง
+สร้าง “แผนการจัดการเรียนรู้หน้าเดียว” ภาษาไทย ขนาด A4 แนวตั้ง จำนวน 1 หน้า ที่สวยงาม ทันสมัย อ่านง่าย และพร้อมพิมพ์ ต้องเป็นงานหน้าเดียวจริง ไม่ใช่เอกสารยาวที่ย่อให้ตัวหนังสือเล็กหรืออัดข้อมูลจนแน่น ให้สรุปสาระสำคัญอย่างมืออาชีพและมีองค์ประกอบทางวิชาการครบถ้วน
 
 E. สื่อประจำตัวครู/โรงเรียน
 ${teacherMedia}
-โลโก้โรงเรียน: หากครูมีโลโก้จริงในโปรไฟล์หรือแนบไฟล์ภายหลัง ให้ใช้ไฟล์จริงเท่านั้น จัดวางอย่างสุภาพ คงสัดส่วนเดิม ไม่บิดหรือดัดแปลงโลโก้
+${schoolLogoMedia}
+${qrMedia}
 
 A. ข้อมูลหลักสูตร
 หลักสูตร: ${selected.curriculum||"หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551 (รวมฉบับปรับปรุง พ.ศ. 2560)"}
@@ -366,6 +370,10 @@ F. แนวทางการออกแบบ
 คำอธิบายสไตล์: ${(styleMeta[style]||[])[1]||""}
 โทนสี: ${palette}
 แนวทางเพิ่มเติมจากผู้ใช้: ${customStyle}
+
+ตัวเลือกการตกแต่งที่ครูเลือก (ต้องปฏิบัติตามจริง)
+${visualOptions}
+
 - ใช้ Typography ภาษาไทยอ่านง่าย
 - มี Visual hierarchy ชัดเจน
 - ออกแบบให้ดูเป็น “แผนการจัดการเรียนรู้หน้าเดียว” จริง ไม่ใช่โปสเตอร์ทั่วไป
