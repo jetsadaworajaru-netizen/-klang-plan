@@ -16,7 +16,7 @@ function memberRuntimeGuard(error){
 }
 window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
 window.addEventListener("unhandledrejection",e=>memberRuntimeGuard(e.reason||new Error("promise rejected")));
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null;
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -103,7 +103,7 @@ function renderProfile(){
   $("profileOrganization").value=d.organization;
   $("profileProvince").value=d.province;
   $("profileStudentCount").value=d.student_count;
-  if($("profilePhotoPreview"))$("profilePhotoPreview").innerHTML=profile.avatar_url?.startsWith("data:image/")?profileImageHtml(profile.avatar_url,"รูปโปรไฟล์"):'<span>'+avatar(profile.avatar_url)+'</span>';
+  renderProfilePhotoEditor();
   if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");
   if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน")
 }
@@ -428,6 +428,52 @@ async function sendHelp(){const msg=v("helpMessage");if(!msg)return $("helpStatu
 function openProfile(){$("profileModal").hidden=false;renderProfile()}
 function closeProfile(){$("profileModal").hidden=true}
 async function compress(file){return new Promise((res,rej)=>{const rd=new FileReader(),im=new Image();rd.onload=()=>im.src=rd.result;rd.onerror=rej;im.onload=()=>{const c=document.createElement("canvas"),n=256;c.width=c.height=n;const s=Math.min(im.width,im.height),x=(im.width-s)/2,y=(im.height-s)/2;c.getContext("2d").drawImage(im,x,y,s,s,0,0,n,n);res(c.toDataURL("image/jpeg",.78))};im.onerror=rej;rd.readAsDataURL(file)})}
+function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(file)})}
+function syncProfilePhotoControlValues(){
+  if($("profilePhotoZoom"))$("profilePhotoZoom").value=String(Math.round(profilePhotoZoom*100));
+  if($("profilePhotoX"))$("profilePhotoX").value=String(Math.round(profilePhotoX));
+  if($("profilePhotoY"))$("profilePhotoY").value=String(Math.round(profilePhotoY))
+}
+function profilePhotoTransformStyle(){
+  return `transform:translate(${profilePhotoX/2}%,${profilePhotoY/2}%) scale(${profilePhotoZoom});transform-origin:center center;`
+}
+function renderProfilePhotoEditor(){
+  const box=$("profilePhotoPreview");if(!box)return;
+  const src=profilePhotoSource||profile?.avatar_url||"";
+  if(src?.startsWith("data:image/")){
+    box.innerHTML=`<img id="profilePhotoEditorImage" src="${src}" alt="รูปโปรไฟล์" style="${profilePhotoTransformStyle()}">`;
+  }else{
+    box.innerHTML='<span>'+avatar(profile?.avatar_url)+'</span>'
+  }
+  syncProfilePhotoControlValues()
+}
+function resetProfilePhotoEditor(){
+  profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;renderProfilePhotoEditor()
+}
+function cropProfilePhotoDataUrl(src,zoom=1,x=0,y=0){
+  return new Promise((res,rej)=>{
+    if(!src?.startsWith("data:image/"))return res(src||"");
+    const im=new Image();
+    im.onload=()=>{
+      const size=512,c=document.createElement("canvas");c.width=c.height=size;
+      const ctx=c.getContext("2d"),base=Math.max(size/im.width,size/im.height),scale=base*zoom;
+      const w=im.width*scale,h=im.height*scale;
+      const dx=(size-w)/2+(x/100)*(size*.45),dy=(size-h)/2+(y/100)*(size*.45);
+      ctx.fillStyle="#fff";ctx.fillRect(0,0,size,size);ctx.drawImage(im,dx,dy,w,h);
+      res(c.toDataURL("image/jpeg",.86))
+    };
+    im.onerror=rej;im.src=src
+  })
+}
+function bindProfilePhotoDrag(){
+  const box=$("profilePhotoPreview");if(!box)return;
+  const start=e=>{if(!(profilePhotoSource||profile?.avatar_url)?.startsWith?.("data:image/"))return;profilePhotoDragging=true;const p=e.touches?.[0]||e;profilePhotoDragStart={x:p.clientX,y:p.clientY,ox:profilePhotoX,oy:profilePhotoY};e.preventDefault()};
+  const move=e=>{if(!profilePhotoDragging||!profilePhotoDragStart)return;const p=e.touches?.[0]||e;const r=box.getBoundingClientRect(),dx=(p.clientX-profilePhotoDragStart.x)/(r.width||1)*200,dy=(p.clientY-profilePhotoDragStart.y)/(r.height||1)*200;profilePhotoX=Math.max(-100,Math.min(100,profilePhotoDragStart.ox+dx));profilePhotoY=Math.max(-100,Math.min(100,profilePhotoDragStart.oy+dy));renderProfilePhotoEditor();e.preventDefault()};
+  const end=()=>{profilePhotoDragging=false;profilePhotoDragStart=null};
+  box.onmousedown=start;box.onmousemove=move;window.addEventListener("mouseup",end);
+  box.ontouchstart=start;box.ontouchmove=move;box.ontouchend=end
+}
+
 
 const COURSE_DRAFT_KEY="klang-v92-course-drafts";
 let activeCourseIndex=null,courseCloudReady=false,courseSyncBusy=false,activeCourseLessonContext=null;
@@ -1209,12 +1255,18 @@ function bind(){
   $$("[data-help-type]").forEach(b=>b.onclick=()=>{$$(" [data-help-type]".trim()).forEach(x=>x.classList.toggle("active",x===b));$("helpType").value=b.dataset.helpType});$("sendHelpBtn").onclick=sendHelp;
   if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>openMaterialStudio("worksheet");if($("workspaceKnowledgeBtn"))$("workspaceKnowledgeBtn").onclick=()=>openMaterialStudio("knowledge");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=openQuizStudio;if($("workspaceRubricBtn"))$("workspaceRubricBtn").onclick=openRubricStudio;if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=openGameStudio;if($("workspacePackBtn"))$("workspacePackBtn").onclick=downloadTeachingPack;if($("workspaceResourceLibraryBtn"))$("workspaceResourceLibraryBtn").onclick=openResourceLibrary;if($("globalResourceSearch"))$("globalResourceSearch").oninput=renderGlobalResourceLibrary;if($("globalResourceType"))$("globalResourceType").onchange=renderGlobalResourceLibrary;if($("globalResourceSubject"))$("globalResourceSubject").onchange=renderGlobalResourceLibrary;if($("refreshResourceLibraryBtn"))$("refreshResourceLibraryBtn").onclick=()=>{populateGlobalResourceSubjects();renderGlobalResourceLibrary()};if($("closeResourceLibraryBtn"))$("closeResourceLibraryBtn").onclick=closeResourceLibrary;if($("resourceLibraryBackdrop"))$("resourceLibraryBackdrop").onclick=closeResourceLibrary;if($("saveMaterialLibraryBtn"))$("saveMaterialLibraryBtn").onclick=saveCurrentMaterialLibrary;if($("saveQuizLibraryBtn"))$("saveQuizLibraryBtn").onclick=saveCurrentQuizLibrary;if($("saveRubricLibraryBtn"))$("saveRubricLibraryBtn").onclick=saveCurrentRubricLibrary;if($("saveGameLibraryBtn"))$("saveGameLibraryBtn").onclick=saveCurrentGameLibrary;if($("closeGameStudioBtn"))$("closeGameStudioBtn").onclick=closeGameStudio;if($("gameStudioBackdrop"))$("gameStudioBackdrop").onclick=closeGameStudio;if($("gameType"))$("gameType").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameCount"))$("gameCount").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameMode"))$("gameMode").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameStudentViewBtn"))$("gameStudentViewBtn").onclick=()=>{gameViewMode="student";gameEditedHtml="";gameEditing=false;renderGamePreview()};if($("gameKeyViewBtn"))$("gameKeyViewBtn").onclick=()=>{gameViewMode="key";gameEditedHtml="";gameEditing=false;renderGamePreview()};if($("toggleGameEditBtn"))$("toggleGameEditBtn").onclick=toggleGameEdit;if($("gamePreview"))$("gamePreview").oninput=()=>{if(gameEditing){gameEditedHtml=$("gamePreview").innerHTML;scheduleResourceAutosave("game")}};if($("downloadGameDocxBtn"))$("downloadGameDocxBtn").onclick=downloadGameDocx;if($("downloadGamePdfBtn"))$("downloadGamePdfBtn").onclick=downloadGamePdf;if($("downloadGameKeyDocxBtn"))$("downloadGameKeyDocxBtn").onclick=downloadGameKeyDocx;if($("downloadGameKeyPdfBtn"))$("downloadGameKeyPdfBtn").onclick=downloadGameKeyPdf;if($("closeRubricStudioBtn"))$("closeRubricStudioBtn").onclick=closeRubricStudio;if($("rubricStudioBackdrop"))$("rubricStudioBackdrop").onclick=closeRubricStudio;if($("rubricType"))$("rubricType").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("rubricCriteriaCount"))$("rubricCriteriaCount").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("rubricMaxScore"))$("rubricMaxScore").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("toggleRubricEditBtn"))$("toggleRubricEditBtn").onclick=toggleRubricEdit;if($("rubricPreview"))$("rubricPreview").oninput=()=>{if(rubricEditing){rubricEditedHtml=$("rubricPreview").innerHTML;scheduleResourceAutosave("rubric")}};if($("downloadRubricDocxBtn"))$("downloadRubricDocxBtn").onclick=downloadRubricDocx;if($("downloadRubricPdfBtn"))$("downloadRubricPdfBtn").onclick=downloadRubricPdf;if($("closeQuizStudioBtn"))$("closeQuizStudioBtn").onclick=closeQuizStudio;if($("quizStudioBackdrop"))$("quizStudioBackdrop").onclick=closeQuizStudio;if($("quizCount"))$("quizCount").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizDifficulty"))$("quizDifficulty").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizType"))$("quizType").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizStudentViewBtn"))$("quizStudentViewBtn").onclick=()=>{quizViewMode="student";quizEditedHtml="";renderQuizPreview()};if($("quizKeyViewBtn"))$("quizKeyViewBtn").onclick=()=>{quizViewMode="key";quizEditedHtml="";renderQuizPreview()};if($("toggleQuizEditBtn"))$("toggleQuizEditBtn").onclick=toggleQuizEdit;if($("quizPreview"))$("quizPreview").oninput=()=>{if(quizEditing){quizEditedHtml=$("quizPreview").innerHTML;scheduleResourceAutosave("quiz")}};if($("downloadQuizDocxBtn"))$("downloadQuizDocxBtn").onclick=downloadQuizDocx;if($("downloadQuizPdfBtn"))$("downloadQuizPdfBtn").onclick=downloadQuizPdf;if($("downloadQuizKeyDocxBtn"))$("downloadQuizKeyDocxBtn").onclick=downloadQuizKeyDocx;if($("downloadQuizKeyPdfBtn"))$("downloadQuizKeyPdfBtn").onclick=downloadQuizKeyPdf;if($("closeMaterialStudioBtn"))$("closeMaterialStudioBtn").onclick=closeMaterialStudio;if($("materialStudioBackdrop"))$("materialStudioBackdrop").onclick=closeMaterialStudio;if($("materialTypeWorksheet"))$("materialTypeWorksheet").onclick=()=>{materialType="worksheet";renderMaterialPreview()};if($("materialTypeKnowledge"))$("materialTypeKnowledge").onclick=()=>{materialType="knowledge";renderMaterialPreview()};nodes("[data-material-style]").forEach(b=>b.onclick=()=>{materialStyle=b.dataset.materialStyle;renderMaterialPreview();scheduleResourceAutosave("material")});if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").oninput=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialTaskCount"))$("materialTaskCount").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialPageCount"))$("materialPageCount").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialVisualCards"))$("materialVisualCards").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("toggleMaterialEditBtn"))$("toggleMaterialEditBtn").onclick=toggleMaterialEdit;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").onclick=resetMaterialEdit;if($("materialPreview"))$("materialPreview").oninput=()=>{if(materialEditing){materialEditedHtml=$("materialPreview").innerHTML;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").hidden=false;scheduleResourceAutosave("material")}};if($("previewStudentMaterialBtn"))$("previewStudentMaterialBtn").onclick=()=>{materialPreviewMode="student";materialEditedHtml="";materialEditing=false;renderMaterialPreview()};if($("previewTeacherKeyBtn"))$("previewTeacherKeyBtn").onclick=()=>{materialPreviewMode="teacher";materialEditedHtml="";materialEditing=false;renderMaterialPreview()};if($("downloadTeacherKeyDocxBtn"))$("downloadTeacherKeyDocxBtn").onclick=downloadTeacherKeyDocx;if($("downloadTeacherKeyPdfBtn"))$("downloadTeacherKeyPdfBtn").onclick=downloadTeacherKeyPdf;if($("downloadMaterialDocxBtn"))$("downloadMaterialDocxBtn").onclick=downloadMaterialDocx;if($("downloadMaterialPdfBtn"))$("downloadMaterialPdfBtn").onclick=downloadMaterialPdf;if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};if($("duplicatePlanBtn"))$("duplicatePlanBtn").onclick=duplicateActivePlan;if($("nextPlanBtn"))$("nextPlanBtn").onclick=nextPlanFromActive;
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
-  $$("[data-avatar]").forEach(b=>b.onclick=()=>{profile.avatar_url=b.dataset.avatar;renderProfile()});
-  $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile();$("profileStatus").innerHTML='<div class="indicator-preview">เลือกรูปโปรไฟล์แล้ว กด “บันทึกโปรไฟล์” เพื่อยืนยัน</div>'}};
+  $("[data-avatar]").forEach(b=>b.onclick=()=>{profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;profile.avatar_url=b.dataset.avatar;renderProfile()});
+  $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profilePhotoSource=await fileToDataUrl(f);resetProfilePhotoEditor();$("profileStatus").innerHTML='<div class="indicator-preview">เลือกรูปแล้ว ลาก/ซูม/เลื่อนได้ จากนั้นกด “บันทึกโปรไฟล์”</div>'}};
   if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
   if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
+  if($("profilePhotoZoom"))$("profilePhotoZoom").oninput=e=>{profilePhotoZoom=Number(e.target.value||100)/100;renderProfilePhotoEditor()};
+  if($("profilePhotoX"))$("profilePhotoX").oninput=e=>{profilePhotoX=Number(e.target.value||0);renderProfilePhotoEditor()};
+  if($("profilePhotoY"))$("profilePhotoY").oninput=e=>{profilePhotoY=Number(e.target.value||0);renderProfilePhotoEditor()};
+  if($("resetProfilePhotoBtn"))$("resetProfilePhotoBtn").onclick=resetProfilePhotoEditor;
+  bindProfilePhotoDrag();
   $("saveProfileBtn").onclick=async()=>{
-  const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};
+  const adjustedAvatar=profilePhotoSource?await cropProfilePhotoDataUrl(profilePhotoSource,profilePhotoZoom,profilePhotoX,profilePhotoY):(profile.avatar_url||null);
+  const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:adjustedAvatar,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};
   const metadata={full_name:payload.full_name,school_name:payload.school_name,teacher_position:v("profileTeacherPosition")||"",affiliation_type:$("profileAffiliationType").value||"obec",organization:v("profileOrganization")||"",province:v("profileProvince")||"",student_count:v("profileStudentCount")?Number(v("profileStudentCount")):null};
   $("saveProfileBtn").disabled=true;
   const [profileResult,authResult]=await Promise.all([
@@ -1224,7 +1276,7 @@ function bind(){
   $("saveProfileBtn").disabled=false;
   const error=profileResult.error||authResult.error;
   if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;
-  Object.assign(profile,payload);user={...user,user_metadata:{...(user.user_metadata||{}),...metadata}};
+  Object.assign(profile,payload);profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;user={...user,user_metadata:{...(user.user_metadata||{}),...metadata}};
   renderProfile();applyTeacherDefaults(true);
   $("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓ ข้อมูลผู้สอนถูกตั้งเป็นค่าเริ่มต้นสำหรับแผนใหม่</div>'
 };
