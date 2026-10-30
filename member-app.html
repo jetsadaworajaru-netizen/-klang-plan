@@ -10,6 +10,20 @@
 <link rel="stylesheet" href="/member-app.css?v=959">
 <style>
 #planDesignOptions{margin-top:18px}
+</style><style>
+.ai-attachment-kit{margin:12px 0 14px;padding:14px;border:1px solid #dce8f2;border-radius:16px;background:#f8fbfe}
+.ai-attachment-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.ai-attachment-head b,.ai-attachment-head small{display:block}.ai-attachment-head small{color:#7b8c9d;margin-top:2px}
+.ai-attachment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ai-file-card{display:grid;grid-template-columns:64px 1fr;grid-template-rows:auto auto;gap:6px 10px;align-items:center;padding:10px;border:1px solid #dce8f2;border-radius:13px;background:#fff}
+.ai-file-preview{grid-row:1/3;width:64px;height:64px;border-radius:10px;border:1px dashed #cbd9e6;background:#f4f8fb;display:grid;place-items:center;overflow:hidden;color:#8a9aaa;font-size:.76rem;text-align:center}
+.ai-file-preview img{width:100%;height:100%;object-fit:contain}
+.ai-file-card b,.ai-file-card small{display:block}.ai-file-card small{color:#8191a0;margin-top:2px}
+.ai-file-card button,.ai-upload-btn{justify-self:start;border:1px solid #d5e2ee;background:#fff;border-radius:9px;padding:6px 9px;font-weight:700;font-size:.8rem;cursor:pointer}
+.ai-file-card button:disabled{opacity:.45;cursor:not-allowed}
+.ai-upload-btn{display:inline-flex;align-items:center}
+.ai-attachment-tip{margin-top:10px;padding:8px 10px;border-radius:10px;background:#eef6ff;color:#47647d;font-size:.84rem}
+@media(max-width:820px){.ai-attachment-grid{grid-template-columns:1fr}.ai-attachment-head{align-items:flex-start;flex-direction:column}}
 </style></head>
 <body>
 <div id="appShell" class="app-shell is-loading">
@@ -186,6 +200,32 @@
 
         <div id="promptWrap" class="prompt-wrap" hidden>
           <div class="prompt-head"><h3>Prompt พร้อมใช้</h3><button id="copyPromptBtn" class="secondary-btn" type="button">📋 คัดลอก</button></div>
+
+          <section id="aiAttachmentKit" class="ai-attachment-kit">
+            <div class="ai-attachment-head">
+              <div><b>📎 ชุดไฟล์แนบสำหรับสร้างภาพ</b><small>ระบบเตรียมรูปครูและโลโก้จากโปรไฟล์ให้ อัปโหลด QR เพิ่มได้ถ้าต้องการ</small></div>
+              <button id="downloadAiPackBtn" class="secondary-btn" type="button">⬇️ ดาวน์โหลดชุดแนบ</button>
+            </div>
+            <div class="ai-attachment-grid">
+              <article class="ai-file-card">
+                <div id="aiTeacherPreview" class="ai-file-preview">ไม่มีรูปครู</div>
+                <div><b>01 · รูปครู</b><small id="aiTeacherStatus">ดึงจากโปรไฟล์อัตโนมัติ</small></div>
+                <button id="downloadTeacherRefBtn" type="button">ดาวน์โหลด</button>
+              </article>
+              <article class="ai-file-card">
+                <div id="aiLogoPreview" class="ai-file-preview">ไม่มีโลโก้</div>
+                <div><b>02 · โลโก้โรงเรียน</b><small id="aiLogoStatus">ดึงจากโปรไฟล์อัตโนมัติ</small></div>
+                <button id="downloadLogoRefBtn" type="button">ดาวน์โหลด</button>
+              </article>
+              <article class="ai-file-card">
+                <div id="aiQrPreview" class="ai-file-preview">QR</div>
+                <div><b>03 · QR Code</b><small id="aiQrStatus">ไม่บังคับ</small></div>
+                <label class="ai-upload-btn">อัปโหลด QR<input id="aiQrUpload" type="file" accept="image/*" hidden></label>
+              </article>
+            </div>
+            <div class="ai-attachment-tip">วิธีใช้: ดาวน์โหลดชุดแนบ → เปิด ChatGPT/Gemini → แนบไฟล์ที่ต้องการ → วาง Prompt → สร้างภาพ</div>
+          </section>
+
           <pre id="promptText"></pre>
 
           <section class="after-section">
@@ -777,6 +817,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=965"></script>
+<script src="/member-app.js?v=966"></script>
 </body>
 </html>
