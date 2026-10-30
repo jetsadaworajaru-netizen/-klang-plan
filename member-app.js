@@ -427,7 +427,7 @@ async function buildDirectPlanCanvas(){
   const ctx=c.getContext("2d"),W=c.width,H=c.height,d=directPreviewData(),th=directTheme();
   const model=methodModel(d.method,d.topic),phases=model.phases;
   const contentLoad=directContentLoad(d,phases),textScale=adaptiveScaleFromLoad(contentLoad,phases.length);
-  const FS=(n,min=10,max=60)=>Math.max(min,Math.min(max,Math.round(n*textScale)));
+  const needApproval=!!$("includeSignatures")?.checked;
   ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
 
   const bg=planDesignValue("planBackground","clean");
@@ -443,8 +443,8 @@ async function buildDirectPlanCanvas(){
 
   // Header — compact but readable
   let y=36;
-  ctx.fillStyle=th.ink;ctx.font="800 "+FS(48,42,54)+"px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText("แผนการจัดการเรียนรู้",W/2,y+44);
-  ctx.font="600 "+FS(22,19,25)+"px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;ctx.fillText(d.subject+" • ชั้น "+d.g+" • ภาคเรียน "+d.sem+"/"+d.year,W/2,y+78);
+  ctx.fillStyle=th.ink;ctx.font="800 "+adaptiveFS(48,42,54)+"px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText("แผนการจัดการเรียนรู้",W/2,y+44);
+  ctx.font="600 "+adaptiveFS(22,19,25)+"px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;ctx.fillText(d.subject+" • ชั้น "+d.g+" • ภาคเรียน "+d.sem+"/"+d.year,W/2,y+78);
   ctx.textAlign="left";
 
   const teacherSrc=profile?.teacher_photo_url||profile?.avatar_url||"";
@@ -457,16 +457,27 @@ async function buildDirectPlanCanvas(){
   const hasLogo=await drawCoverImage(ctx,logoSrc,W-M-102,mediaY+20,76,76);
   const infoX=M+(hasTeacher?126:26);
   ctx.fillStyle=th.primary;ctx.font="700 15px Tahoma, Arial, sans-serif";ctx.fillText("ผู้สอน",infoX,mediaY+25);
-  ctx.fillStyle=th.ink;ctx.font="800 "+FS(24,21,27)+"px Tahoma, Arial, sans-serif";ctx.fillText(d.teacher,infoX,mediaY+50);
-  ctx.font="500 "+FS(17,15,20)+"px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;
+  ctx.fillStyle=th.ink;ctx.font="800 "+adaptiveFS(24,21,27)+"px Tahoma, Arial, sans-serif";ctx.fillText(d.teacher,infoX,mediaY+50);
+  ctx.font="500 "+adaptiveFS(17,15,20)+"px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;
   ctx.fillText([d.position,d.school].filter(Boolean).join(" • "),infoX,mediaY+76);
   ctx.fillText([d.org,v("province")].filter(Boolean).join(" • "),infoX,mediaY+98);
   y=mediaY+134;
 
-  // 1-2: curriculum + essence
-  const h1=Math.round(230*(textScale>1.06?1.08:textScale<.96?.96:1));
+  // A4 Fill Layout: distribute all remaining vertical space across sections 1–9.
+  const h1Base=230,h2Base=205;
+  const h3Base=phases.length<=5?210:phases.length<=7?230:240;
+  const h4Base=158,h5Base=190,footerBase=needApproval?250:190;
+  const remainingHeight=H-y-38;
+  const gapTotal=G*5;
+  const baselineTotal=h1Base+h2Base+h3Base+h4Base+h5Base+footerBase;
+  const availableForCards=Math.max(900,remainingHeight-gapTotal);
+  const pageFillScale=Math.max(.88,Math.min(1.18,availableForCards/baselineTotal));
+  const bodyScale=Math.max(.90,Math.min(1.16,pageFillScale));
+  const pageTextBoost=Math.max(.96,Math.min(1.08,bodyScale));
+  const adaptiveFS=(n,min=10,max=60)=>Math.max(min,Math.min(max,Math.round(n*textScale*pageTextBoost)));
+  const h1=Math.round(h1Base*bodyScale);
   fillRound(ctx,M,y,col,h1,cardFill,th.line,cardR);drawSectionTitle(ctx,1,"ข้อมูลหลักสูตรและข้อมูลพื้นฐาน",M+18,y+14,col-36,th);
-  ctx.fillStyle=th.ink;ctx.font="600 "+FS(18,16,21)+"px Tahoma, Arial, sans-serif";
+  ctx.fillStyle=th.ink;ctx.font="600 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";
   const leftRows=[
     ["หน่วย",d.unit],["เรื่อง",d.topic],["เวลา",d.duration],["รูปแบบ",d.method],
     ["มาตรฐาน",d.standard],["ตัวชี้วัด",d.indicator],
@@ -476,28 +487,27 @@ async function buildDirectPlanCanvas(){
   leftRows.forEach(([k,val],i)=>{ctx.fillStyle=th.muted;ctx.fillText(k+" :",M+24,yy);ctx.fillStyle=th.ink;ctx.fillText(String(val||"-").slice(0,40),M+134,yy);yy+=20});
 
   fillRound(ctx,M+col+G,y,col,h1,cardFill,th.line,cardR);drawSectionTitle(ctx,2,"สาระสำคัญ / ความคิดรวบยอด",M+col+G+18,y+14,col-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(18,15,21)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.essence,M+col+G+24,y+68,col-48,22,4);
-  ctx.fillStyle=th.primary;ctx.font="700 "+FS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("ข้อความตัวชี้วัด",M+col+G+24,y+166);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(17,15,20)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.indicatorText||"-",M+col+G+24,y+190,col-48,21,2);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(18,15,21)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.essence,M+col+G+24,y+68,col-48,22,4);
+  ctx.fillStyle=th.primary;ctx.font="700 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("ข้อความตัวชี้วัด",M+col+G+24,y+166);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(17,15,20)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.indicatorText||"-",M+col+G+24,y+190,col-48,21,2);
   y+=h1+G;
 
   // 3-4: objectives + learning content
-  const h2=Math.round(205*(textScale>1.06?1.08:textScale<.96?.96:1));
+  const h2=Math.round(h2Base*bodyScale);
   fillRound(ctx,M,y,col,h2,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,3,"จุดประสงค์การเรียนรู้",M+18,y+14,col-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(18,15,21)+"px Tahoma, Arial, sans-serif";drawBulletList(ctx,d.objectives,M+24,y+68,col-48,20,3);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(18,15,21)+"px Tahoma, Arial, sans-serif";drawBulletList(ctx,d.objectives,M+24,y+68,col-48,20,3);
 
   fillRound(ctx,M+col+G,y,col,h2,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,4,"สาระ / สมรรถนะ / คุณลักษณะ",M+col+G+18,y+14,col-36,th);
-  ctx.fillStyle=th.primary;ctx.font="700 "+FS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("สาระการเรียนรู้",M+col+G+24,y+66);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(17,15,20)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.topic+" — "+(d.indicatorText||"สาระตามตัวชี้วัด"),M+col+G+24,y+90,col-48,19,2);
-  ctx.fillStyle=th.primary;ctx.font="700 "+FS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("สมรรถนะ",M+col+G+24,y+144);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("การสื่อสาร • การคิด • การใช้ทักษะชีวิต",M+col+G+138,y+144);
-  ctx.fillStyle=th.primary;ctx.font="700 "+FS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("คุณลักษณะ",M+col+G+24,y+176);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("ใฝ่เรียนรู้ • มุ่งมั่นในการทำงาน • มีวินัย",M+col+G+138,y+176);
+  ctx.fillStyle=th.primary;ctx.font="700 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("สาระการเรียนรู้",M+col+G+24,y+66);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(17,15,20)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.topic+" — "+(d.indicatorText||"สาระตามตัวชี้วัด"),M+col+G+24,y+90,col-48,19,2);
+  ctx.fillStyle=th.primary;ctx.font="700 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("สมรรถนะ",M+col+G+24,y+144);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("การสื่อสาร • การคิด • การใช้ทักษะชีวิต",M+col+G+138,y+144);
+  ctx.fillStyle=th.primary;ctx.font="700 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";ctx.fillText("คุณลักษณะ",M+col+G+24,y+176);
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("ใฝ่เรียนรู้ • มุ่งมั่นในการทำงาน • มีวินัย",M+col+G+138,y+176);
   y+=h2+G;
 
   // 5: learning activities — method-specific, visually ordered
-  const h3Base=phases.length<=5?210:phases.length<=7?230:240;
-  const h3=Math.round(h3Base*(textScale>1.06?1.10:textScale<.96?.96:1));
+  const h3=Math.round(h3Base*bodyScale);
   fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);
   drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+model.title+")",M+18,y+14,contentW-36,th);
 
@@ -508,8 +518,8 @@ async function buildDirectPlanCanvas(){
       fillRound(ctx,x,stageY,cardW,h3-76,"#FFFFFF",th.line,14);
       fillRound(ctx,x+12,stageY+12,34,34,i===0?th.primary:i===1?th.secondary:th.accent,null,10);
       ctx.fillStyle="#fff";ctx.font="800 14px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+29,stageY+34);ctx.textAlign="left";
-      ctx.fillStyle=th.ink;ctx.font="700 "+FS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+56,stageY+30);
-      ctx.fillStyle=th.muted;ctx.font="500 "+FS(13,11,16)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+14,stageY+68,cardW-28,17,4);
+      ctx.fillStyle=th.ink;ctx.font="700 "+adaptiveFS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+56,stageY+30);
+      ctx.fillStyle=th.muted;ctx.font="500 "+adaptiveFS(13,11,16)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+14,stageY+68,cardW-28,17,4);
     });
   }else if(phases.length<=5){
     const gap=8,cardW=(contentW-32-gap*(phases.length-1))/phases.length,stageY=y+62,cardH=h3-76;
@@ -518,8 +528,8 @@ async function buildDirectPlanCanvas(){
       fillRound(ctx,x,stageY,cardW,cardH,"#FFFFFF",th.line,13);
       fillRound(ctx,x+10,stageY+10,Math.min(46,cardW-20),30,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,9);
       ctx.fillStyle="#fff";ctx.font="800 11px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+10+Math.min(46,cardW-20)/2,stageY+30);ctx.textAlign="left";
-      ctx.fillStyle=th.ink;ctx.font="700 "+FS(13,11,16)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[1],x+10,stageY+56,cardW-20,16,2);
-      ctx.fillStyle=th.muted;ctx.font="500 "+FS(11,10,14)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+10,stageY+92,cardW-20,14,3);
+      ctx.fillStyle=th.ink;ctx.font="700 "+adaptiveFS(13,11,16)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[1],x+10,stageY+56,cardW-20,16,2);
+      ctx.fillStyle=th.muted;ctx.font="500 "+adaptiveFS(11,10,14)+"px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+10,stageY+92,cardW-20,14,3);
       if(i<phases.length-1){
         ctx.fillStyle=th.primary;ctx.font="800 18px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText("›",x+cardW+gap/2,stageY+cardH/2+6);ctx.textAlign="left";
       }
@@ -551,11 +561,11 @@ async function buildDirectPlanCanvas(){
       ctx.textAlign="left";
 
       ctx.fillStyle=th.ink;
-      ctx.font="700 "+FS(12.5,11,15)+"px Tahoma, Arial, sans-serif";
+      ctx.font="700 "+adaptiveFS(12.5,11,15)+"px Tahoma, Arial, sans-serif";
       ctx.fillText(st[1],x+18+badgeW,cy+25);
 
       ctx.fillStyle=th.muted;
-      ctx.font="500 "+FS(10.5,9.5,13)+"px Tahoma, Arial, sans-serif";
+      ctx.font="500 "+adaptiveFS(10.5,9.5,13)+"px Tahoma, Arial, sans-serif";
       drawWrapped(ctx,st[2],x+10,cy+47,cw-20,13,2);
 
       if(i<phases.length-1){
@@ -570,11 +580,11 @@ async function buildDirectPlanCanvas(){
   y+=h3+G;
 
   // 6-7: allocate width according to content weight
-  const h4=Math.round(158*(textScale>1.06?1.07:textScale<.96?.96:1));
+  const h4=Math.round(h4Base*bodyScale);
   const leftW=Math.round(contentW*.58),rightW=contentW-leftW-G;
   fillRound(ctx,M,y,leftW,h4,"#FFFFFF",th.line,cardR);
   drawSectionTitle(ctx,6,"คำถามสำคัญ / สื่อ / ชิ้นงาน",M+18,y+14,leftW-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(15,13,18)+"px Tahoma, Arial, sans-serif";
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(15,13,18)+"px Tahoma, Arial, sans-serif";
   drawBulletList(ctx,[
     "คำถาม: วันนี้เราได้เรียนรู้อะไรจากเรื่อง "+d.topic+"?",
     "การนำไปใช้: ความรู้นี้นำไปใช้ในชีวิตจริงอย่างไร?",
@@ -585,7 +595,7 @@ async function buildDirectPlanCanvas(){
   const rx=M+leftW+G;
   fillRound(ctx,rx,y,rightW,h4,"#FFFFFF",th.line,cardR);
   drawSectionTitle(ctx,7,"ความแตกต่างระหว่างผู้เรียน",rx+18,y+14,rightW-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 "+FS(14,12,17)+"px Tahoma, Arial, sans-serif";
+  ctx.fillStyle=th.ink;ctx.font="500 "+adaptiveFS(14,12,17)+"px Tahoma, Arial, sans-serif";
   drawBulletList(ctx,[
     "จัดกลุ่มยืดหยุ่นตามความพร้อมของผู้เรียน",
     "ใช้สื่อหลายรูปแบบและตัวอย่างที่หลากหลาย",
@@ -594,7 +604,7 @@ async function buildDirectPlanCanvas(){
   y+=h4+G;
 
   // 8: assessment
-  const h5=Math.round(190*(textScale>1.06?1.06:textScale<.96?.96:1));
+  const h5=Math.round(h5Base*bodyScale);
   fillRound(ctx,M,y,contentW,h5,th.soft,th.line,cardR);drawSectionTitle(ctx,8,"การวัดและประเมินผล",M+18,y+14,contentW-36,th);
   const tx=M+22,ty=y+62,tw=contentW-44,rowH=28,cols=[.36,.20,.24,.20],headers=["จุดประสงค์","วิธีวัด","เครื่องมือ","เกณฑ์ผ่าน"];
   let cx=tx;ctx.font="700 15px Tahoma, Arial, sans-serif";
@@ -604,40 +614,37 @@ async function buildDirectPlanCanvas(){
     [d.objectives[1],"สังเกตการปฏิบัติ","แบบสังเกต","ระดับพอใช้ขึ้นไป"],
     [d.objectives[2],"สังเกตพฤติกรรม","แบบประเมิน","ผ่านเกณฑ์"]
   ];
-  ctx.font="500 "+FS(13,11,16)+"px Tahoma, Arial, sans-serif";
+  ctx.font="500 "+adaptiveFS(13,11,16)+"px Tahoma, Arial, sans-serif";
   rows.forEach((r,ri)=>{let x=tx;const yy2=ty+rowH*(ri+1);r.forEach((val,i)=>{const ww=tw*cols[i];ctx.fillStyle="#fff";ctx.fillRect(x,yy2,ww,rowH);ctx.strokeStyle=th.line;ctx.strokeRect(x,yy2,ww,rowH);ctx.fillStyle=th.ink;const txt=String(val||"");ctx.fillText(txt.length>42?txt.slice(0,41)+"…":txt,x+6,yy2+19);x+=ww})});
   y+=h5+G;
 
   // 9: reflection + signatures — guaranteed to stay inside A4
-  const needApproval=!!$("includeSignatures")?.checked;
-  const footerTarget=needApproval?250:190;
-  const availableFooter=H-y-38;
-  const footerH=Math.max(176,Math.min(footerTarget,availableFooter));
+  const footerH=Math.max(176,H-y-38);
   fillRound(ctx,M,y,contentW,footerH,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,9,"บันทึกหลังสอน / การรับรองแผน",M+18,y+14,contentW-36,th);
   const splitX=M+contentW*.60;
   ctx.strokeStyle=th.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(splitX,y+68);ctx.lineTo(splitX,y+footerH-24);ctx.stroke();
 
-  ctx.fillStyle=th.muted;ctx.font="500 "+FS(16,14,19)+"px Tahoma, Arial, sans-serif";
+  ctx.fillStyle=th.muted;ctx.font="500 "+adaptiveFS(16,14,19)+"px Tahoma, Arial, sans-serif";
   ctx.fillText("ผลการเรียนรู้: ....................................................................................",M+24,y+82);
   ctx.fillText("ปัญหา/อุปสรรค: .................................................................................",M+24,y+116);
   ctx.fillText("แนวทางพัฒนา: ....................................................................................",M+24,y+150);
   ctx.fillText("ข้อเสนอแนะเพิ่มเติม: ...........................................................................",M+24,y+184);
 
   const signX=splitX+24,signW=W-M-signX;
-  fillRound(ctx,signX-8,y+68,150,34,th.soft,null,10);ctx.fillStyle=th.primary;ctx.font="700 "+FS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("ลงชื่อผู้สอน",signX,y+91);
-  ctx.fillStyle=th.muted;ctx.font="500 "+FS(15,13,18)+"px Tahoma, Arial, sans-serif";
+  fillRound(ctx,signX-8,y+68,150,34,th.soft,null,10);ctx.fillStyle=th.primary;ctx.font="700 "+adaptiveFS(16,14,19)+"px Tahoma, Arial, sans-serif";ctx.fillText("ลงชื่อผู้สอน",signX,y+91);
+  ctx.fillStyle=th.muted;ctx.font="500 "+adaptiveFS(15,13,18)+"px Tahoma, Arial, sans-serif";
   ctx.fillText("ลงชื่อ ................................................",signX,y+106);
   ctx.fillText("( "+d.teacher+" )",signX,y+132);
   ctx.fillText("วันที่ ........ / ........ / ........",signX,y+158);
   if($("includeSignatures")?.checked){
-    ctx.fillStyle=th.ink;ctx.font="700 "+FS(17,15,20)+"px Tahoma, Arial, sans-serif";ctx.fillText("ความเห็นผู้รับรอง",signX,y+188);
-    ctx.fillStyle=th.muted;ctx.font="500 "+FS(15,13,18)+"px Tahoma, Arial, sans-serif";ctx.fillText("ลงชื่อ ................................................",signX,y+214);
+    ctx.fillStyle=th.ink;ctx.font="700 "+adaptiveFS(17,15,20)+"px Tahoma, Arial, sans-serif";ctx.fillText("ความเห็นผู้รับรอง",signX,y+188);
+    ctx.fillStyle=th.muted;ctx.font="500 "+adaptiveFS(15,13,18)+"px Tahoma, Arial, sans-serif";ctx.fillText("ลงชื่อ ................................................",signX,y+214);
     ctx.fillText("ตำแหน่ง .............................................",signX,y+238);
   }
 
-  ctx.fillStyle=th.primary;ctx.font="600 "+FS(14,12,16)+"px Tahoma, Arial, sans-serif";ctx.fillText("Klang Plan · แผนการจัดการเรียนรู้หน้าเดียว A4",M,Math.min(H-18,y+footerH+18));
+  ctx.fillStyle=th.primary;ctx.font="600 "+adaptiveFS(14,12,16)+"px Tahoma, Arial, sans-serif";ctx.fillText("Klang Plan · แผนการจัดการเรียนรู้หน้าเดียว A4",M,Math.min(H-18,y+footerH+18));
 
-  if($("directPreviewStyleName"))$("directPreviewStyleName").textContent=((styleMeta[style]||[])[0]||style)+" · Auto fit "+Math.round(textScale*100)+"%";
+  if($("directPreviewStyleName"))$("directPreviewStyleName").textContent=((styleMeta[style]||[])[0]||style)+" · A4 Fill "+Math.round(pageFillScale*100)+"%";
 }
 function renderDirectPlanPreview(){
   cancelAnimationFrame(directPreviewRaf);
