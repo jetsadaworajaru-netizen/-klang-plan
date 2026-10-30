@@ -250,6 +250,29 @@ function renderAffiliation(){
   if($("customAffiliationWrap"))$("customAffiliationWrap").hidden=key!=="custom";
   updateSummary()
 }
+function planDesignValue(id,fallback=""){return $(id)?.value||fallback}
+function planTeacherPlacementLabel(){const m={header:"หัวเอกสาร",side:"มุมข้างข้อมูลผู้สอน",footer:"ส่วนท้ายเอกสาร"};return m[planDesignValue("planTeacherPlacement","header")]||"หัวเอกสาร"}
+function schoolLogoPrompt(){
+  if(planSchoolLogoSource==="none")return "โลโก้โรงเรียน: ไม่แสดงโลโก้ และห้ามสร้างโลโก้ขึ้นมาเอง";
+  if(planSchoolLogoSource==="upload")return planSchoolLogoData?"โลโก้โรงเรียน: ใช้ไฟล์โลโก้ที่ครูอัปโหลดสำหรับแผนนี้เท่านั้น ต้องคงรูปทรง สี สัดส่วน และรายละเอียดต้นฉบับ ห้ามบิด ดัดแปลง หรือสร้างใหม่":"โลโก้โรงเรียน: ครูเลือกอัปโหลดใหม่แต่ยังไม่มีไฟล์ จึงห้ามสร้างโลโก้สมมติ";
+  return profile?.school_logo_url?"โลโก้โรงเรียน: ใช้โลโก้จากโปรไฟล์ของครู คงรูปทรง สี สัดส่วน และรายละเอียดต้นฉบับ ห้ามบิดหรือดัดแปลง":"โลโก้โรงเรียน: เลือกใช้จากโปรไฟล์แต่ยังไม่มีไฟล์จริง จึงห้ามสร้างโลโก้สมมติ";
+}
+function qrPrompt(){
+  if(planQrSource!=="upload")return "QR Code: ไม่ใช้";
+  return planQrData?"QR Code: ใช้ QR Code ที่ครูอัปโหลดเท่านั้น ต้องคงภาพต้นฉบับ ไม่ตกแต่งทับ ไม่บิดเบือน มีพื้นที่ว่างรอบโค้ด และต้องสแกนได้จริง":"QR Code: ครูเลือกใช้ QR แต่ยังไม่มีไฟล์ จึงยังไม่ต้องแสดง QR";
+}
+function designOptionsPrompt(){
+  const density={balanced:"สมดุล สวย อ่านง่าย และมีพื้นที่ว่างพอดี",airy:"โปร่ง โล่ง มีพื้นที่ว่างมากขึ้น และลดความหนาแน่นของข้อความ",compact:"กระชับ ใช้พื้นที่คุ้มค่า แต่ยังอ่านง่ายและห้ามย่อจนตัวเล็ก"}[planDesignValue("planDensity","balanced")];
+  const icons={soft:"ไอคอน Soft Rounded ทันสมัย ขนาดเล็กและสม่ำเสมอ",line:"ไอคอนเส้น Outline เรียบ สุภาพ เป็นทางการ",flat:"ไอคอน Flat Color สดใสแต่ไม่รบกวนเนื้อหา","3d":"ไอคอน 3D Education ใช้เฉพาะจุดสำคัญ ไม่มากเกินไป",none:"ไม่ใช้ไอคอน เน้น Typography และเส้นแบ่ง"}[planDesignValue("planIconStyle","soft")];
+  const bg={clean:"พื้นขาวสะอาด เน้นความชัดและพิมพ์ง่าย",soft:"พื้นหลังไล่เฉดสีอ่อนมาก ไม่รบกวนตัวอักษร",geometric:"พื้นหลังมีลายเรขาคณิตบางมากเฉพาะขอบหรือมุม",thai:"ใช้ลายไทยร่วมสมัยบางมากเฉพาะขอบหรือหัวเรื่อง"}[planDesignValue("planBackground","clean")];
+  const frame={rounded:"ใช้กล่อง Section มุมโค้งสมัยใหม่",formal:"ใช้กรอบเส้นเรียบทางการและเป็นระเบียบ",minimal:"ใช้เส้นคั่นบางและพื้นที่ว่างแทนกล่องหนัก",none:"ไม่ใช้กรอบ Section ใช้ระยะห่างและ Typography แยกส่วน"}[planDesignValue("planSectionFrame","rounded")];
+  const decor={low:"ตกแต่งน้อย เรียบ สุภาพ เหมาะเอกสารราชการ",medium:"ตกแต่งพอดี ดูสวยทันสมัยแต่ไม่รก",high:"ตกแต่งเด่นแบบอินโฟกราฟิก แต่ต้องคุมจำนวนองค์ประกอบและไม่แย่งเนื้อหา"}[planDesignValue("planDecorationLevel","medium")];
+  return ["ความหนาแน่น: "+density,"รูปแบบไอคอน: "+icons,"พื้นหลัง: "+bg,"กรอบ Section: "+frame,"ระดับการตกแต่ง: "+decor,"ตำแหน่งรูปครู: "+planTeacherPlacementLabel()].join("\n");
+}
+function syncTeacherSourceControls(){
+  document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.checked=r.value===planTeacherImageSource);
+  if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";
+}
 function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["รูปครู",planTeacherImageLabel()],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
 function v(id){return $(id).value.trim()}
 function prompt(){
