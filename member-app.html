@@ -10,15 +10,15 @@
 <link rel="stylesheet" href="/member-app.css?v=959">
 <style>
 #planDesignOptions{margin-top:18px}
-.plan-media-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 12px;max-width:760px}
-.plan-media-options label{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:9px 12px;min-height:42px;border:1px solid #d8e5ef;border-radius:10px;background:#fff;font-size:.9rem;font-weight:700;line-height:1.25;cursor:pointer;white-space:nowrap;word-break:normal;overflow-wrap:normal}
+.plan-media-options{display:grid!important;grid-template-columns:repeat(3,minmax(180px,1fr))!important;gap:8px;margin:6px 0 12px;width:100%!important;max-width:none!important}
+.plan-media-options label{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:100%!important;min-width:0!important;padding:8px 10px!important;min-height:42px;border:1px solid #d8e5ef;border-radius:10px;background:#fff;font-size:.88rem;font-weight:700;line-height:1.25;cursor:pointer;white-space:normal!important;word-break:keep-all!important;overflow-wrap:normal!important}
 .plan-media-options label:has(input:checked){border-color:#5e78f5;background:#f5f7ff;box-shadow:0 0 0 2px rgba(94,120,245,.08)}
-.plan-media-options input[type="radio"]{margin:0;flex:0 0 auto}
-#planDesignOptions .subhead{margin-top:14px;margin-bottom:6px;font-size:1rem}
+.plan-media-options input[type="radio"]{margin:0!important;flex:0 0 auto!important;width:16px!important;height:16px!important}
+#planDesignOptions .subhead{margin-top:12px;margin-bottom:6px;font-size:1rem}
 #planTeacherStyleUploadWrap,#planSchoolLogoUploadWrap,#planQrUploadWrap{margin-top:4px}
 #planTeacherStyleUploadWrap .field-label,#planSchoolLogoUploadWrap .field-label,#planQrUploadWrap .field-label{margin-bottom:0}
-@media(max-width:900px){.plan-media-options{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.plan-media-options{grid-template-columns:1fr}.plan-media-options label{white-space:normal}}
+@media(max-width:760px){.plan-media-options{grid-template-columns:1fr 1fr!important}}
+@media(max-width:520px){.plan-media-options{grid-template-columns:1fr!important}}
 </style></head>
 <body>
 <div id="appShell" class="app-shell is-loading">
