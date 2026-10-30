@@ -263,6 +263,87 @@ function directTheme(){
   const p=palettes[palette]||palettes["ฟ้า–ม่วง–ทอง"];
   return {primary:p[0],secondary:p[1],accent:p[2],soft:p[3],ink:"#183B56",muted:"#60788A",line:"#D7E3EC"};
 }
+
+function methodModel(method,topic="บทเรียน"){
+  const m=String(method||"Active Learning").trim();
+  const models={
+    "5E":{
+      title:"5E Instructional Model",
+      source:"BSCS 5E",
+      phases:[
+        ["Engage","สร้างความสนใจ","กระตุ้นความสนใจ เชื่อมโยงความรู้เดิม และตั้งคำถามเกี่ยวกับ "+topic],
+        ["Explore","สำรวจและค้นหา","ผู้เรียนสำรวจ ทดลอง สืบค้น หรือทำกิจกรรมเพื่อสร้างประสบการณ์ร่วม"],
+        ["Explain","อธิบาย","ผู้เรียนอธิบายข้อค้นพบ แลกเปลี่ยนเหตุผล และครูช่วยจัดระบบแนวคิดให้ถูกต้อง"],
+        ["Elaborate","ขยายความรู้","ประยุกต์ใช้แนวคิดในสถานการณ์ใหม่หรือภาระงานที่ซับซ้อนขึ้น"],
+        ["Evaluate","ประเมิน","ประเมินความเข้าใจ ทักษะ และการสะท้อนความก้าวหน้าของผู้เรียน"]
+      ]
+    },
+    "GPAS 5 Steps":{
+      title:"GPAS 5 Steps",
+      source:"GPAS 5 Steps",
+      phases:[
+        ["G","Gathering / รวบรวมข้อมูล","สังเกต ตั้งคำถาม รวบรวมและเลือกข้อมูลที่เกี่ยวข้องกับ "+topic],
+        ["P","Processing / จัดกระทำข้อมูล","คิดวิเคราะห์ เปรียบเทียบ เชื่อมโยง และสรุปความรู้จากข้อมูล"],
+        ["A1","Applying & Constructing","ลงมือปฏิบัติ ประยุกต์ใช้ และสรุปความรู้หลังการปฏิบัติ"],
+        ["A2","Applying Communication","สื่อสาร นำเสนอ แลกเปลี่ยนผลงานและความคิดอย่างมีเหตุผล"],
+        ["S","Self-Regulating","ประเมินตนเอง สะท้อนผล และเพิ่มคุณค่าจากการนำความรู้ไปใช้"]
+      ]
+    },
+    "PBL":{
+      title:"Problem-Based Learning",
+      source:"Problem-Based Learning",
+      phases:[
+        ["1","เผชิญปัญหา","นำเสนอสถานการณ์ปัญหาที่สัมพันธ์กับ "+topic+" และกระตุ้นการตั้งคำถาม"],
+        ["2","วิเคราะห์และวางแผน","ระบุสิ่งที่รู้ สิ่งที่ต้องเรียนรู้ สมมติฐาน และแผนการค้นคว้า"],
+        ["3","ศึกษาค้นคว้า","ผู้เรียนสืบค้น ทดลอง เก็บข้อมูล และเรียนรู้ด้วยตนเอง/ร่วมกัน"],
+        ["4","สังเคราะห์ทางแก้","นำข้อมูลมาวิเคราะห์ สร้างคำอธิบายหรือแนวทางแก้ปัญหา"],
+        ["5","นำเสนอและสะท้อน","นำเสนอวิธีแก้ปัญหา ประเมินเหตุผล ผลงาน และสะท้อนการเรียนรู้"]
+      ]
+    },
+    "STEM":{
+      title:"STEM — Engineering Design Process",
+      source:"Engineering Design Process",
+      phases:[
+        ["Ask","ระบุปัญหา","ระบุความต้องการ ปัญหา และข้อจำกัดที่เกี่ยวข้องกับ "+topic],
+        ["Research","ค้นคว้า","ศึกษาข้อมูล ความรู้ และแนวทางที่มีอยู่เพื่อเข้าใจปัญหา"],
+        ["Imagine","คิดทางเลือก","ระดมความคิดและสร้างแนวทางแก้ปัญหาหลายทาง"],
+        ["Plan","วางแผน","เลือกแนวทางที่เหมาะสม กำหนดขั้นตอน วัสดุ และเกณฑ์ความสำเร็จ"],
+        ["Create","สร้างต้นแบบ","ลงมือสร้างชิ้นงาน/ต้นแบบตามแผนและใช้ความรู้ STEM"],
+        ["Test","ทดสอบ","ทดสอบ เก็บข้อมูล และประเมินว่าต้นแบบแก้ปัญหาได้เพียงใด"],
+        ["Improve","ปรับปรุง","ใช้ผลทดสอบและข้อเสนอแนะเพื่อปรับแบบ แล้วทดสอบซ้ำ"]
+      ]
+    },
+    "Project-based Learning":{
+      title:"Project-based Learning (PjBL)",
+      source:"Gold Standard PBL",
+      phases:[
+        ["1","Launch / Driving Question","เปิดโครงงานด้วยปัญหาหรือคำถามท้าทายที่มีความหมายเกี่ยวกับ "+topic],
+        ["2","Build Knowledge & Skills","สืบค้น สร้างความรู้ ฝึกทักษะ และใช้แหล่งข้อมูลอย่างต่อเนื่อง"],
+        ["3","Develop Product","วางแผนและพัฒนาผลงาน/คำตอบ โดยมีเสียงและทางเลือกของผู้เรียน"],
+        ["4","Critique & Revision","รับข้อเสนอแนะ ตรวจคุณภาพ และปรับปรุงผลงานตามเกณฑ์"],
+        ["5","Public Product / Present","เผยแพร่หรือนำเสนอผลงานและคำตอบต่อผู้รับฟังที่เหมาะสม"],
+        ["6","Reflect & Evaluate","สะท้อนกระบวนการ ความรู้ ทักษะ ความร่วมมือ และประเมินผล"]
+      ]
+    },
+    "Active Learning":{
+      title:"Active Learning",
+      source:"Active Learning",
+      phases:[
+        ["A","กระตุ้นและเชื่อมโยง","ใช้คำถาม/สถานการณ์เพื่อเชื่อมความรู้เดิม กำหนดเป้าหมาย และให้ผู้เรียนมีส่วนร่วม"],
+        ["B","ลงมือเรียนรู้","ผู้เรียนลงมือคิด ปฏิบัติ อภิปราย ร่วมมือ และใช้หลักฐานสร้างความเข้าใจ"],
+        ["C","สรุปและสะท้อน","ผู้เรียนสรุปองค์ความรู้ นำไปใช้ รับข้อมูลย้อนกลับ และสะท้อนการเรียนรู้"]
+      ]
+    }
+  };
+  return models[m]||models["Active Learning"];
+}
+function methodPromptGuide(method,topic,duration){
+  const model=methodModel(method,topic),n=model.phases.length;
+  return "รูปแบบที่เลือก: "+model.title+"\nต้องใช้ขั้นตอนของรูปแบบนี้ให้ครบ "+n+" ขั้นตามลำดับ ห้ามยุบเป็น 3 ขั้นทั่วไป:\n"+
+    model.phases.map((p,i)=>(i+1)+". "+p[0]+" — "+p[1]+": "+p[2]).join("\n")+
+    "\nให้กระจายเวลา "+(duration||"ตามเวลาที่กำหนด")+" อย่างสมเหตุสมผลตามกิจกรรมจริง และคงลำดับขั้นของรูปแบบ";
+}
+
 function directPreviewData(){
   const g=$("grade")?.value||selected?.grade||"-";
   const subject=$("subject")?.value||selected?.subject||"-";
@@ -397,16 +478,34 @@ async function buildDirectPlanCanvas(){
   ctx.fillStyle=th.ink;ctx.font="500 16px Tahoma, Arial, sans-serif";ctx.fillText("ใฝ่เรียนรู้ • มุ่งมั่นในการทำงาน • มีวินัย",M+col+G+138,y+176);
   y+=h2+G;
 
-  // 5: learning activities
+  // 5: learning activities — method-specific, academically aligned
   const h3=235;
-  fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+d.method+")",M+18,y+14,contentW-36,th);
-  const thirds=(contentW-48)/3,stageY=y+66;
-  const stages=[
-    ["A","ขั้นนำเข้าสู่บทเรียน","10 นาที","ทบทวนประสบการณ์เดิม เชื่อมโยงเข้าสู่เรื่อง "+d.topic],
-    ["B","ขั้นเรียนรู้ / ปฏิบัติ","40 นาที","ผู้เรียนลงมือทำกิจกรรมตาม "+d.method+" แลกเปลี่ยน ตรวจสอบ และประยุกต์ใช้ความรู้"],
-    ["C","ขั้นสรุป / สะท้อนผล","10 นาที","ร่วมสรุปสาระสำคัญ นำเสนอผลงาน และสะท้อนสิ่งที่ได้เรียนรู้"]
-  ];
-  stages.forEach((st,i)=>{const x=M+16+i*(thirds+8);fillRound(ctx,x,stageY,thirds,160,"#FFFFFF",th.line,14);fillRound(ctx,x+12,stageY+12,32,32,i===0?th.primary:i===1?th.secondary:th.accent,null,10);ctx.fillStyle="#fff";ctx.font="800 18px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+28,stageY+34);ctx.textAlign="left";ctx.fillStyle=th.ink;ctx.font="700 17px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+52,stageY+28);ctx.fillStyle=th.muted;ctx.font="600 15px Tahoma, Arial, sans-serif";ctx.fillText(st[2],x+52,stageY+51);ctx.fillStyle=th.ink;ctx.font="500 15px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[3],x+16,stageY+76,thirds-32,19,3)});
+  const model=methodModel(d.method,d.topic);
+  fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);
+  drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+model.title+")",M+18,y+14,contentW-36,th);
+  const phases=model.phases;
+  if(phases.length<=3){
+    const thirds=(contentW-48)/3,stageY=y+66;
+    phases.forEach((st,i)=>{
+      const x=M+16+i*(thirds+8);
+      fillRound(ctx,x,stageY,thirds,160,"#FFFFFF",th.line,14);
+      fillRound(ctx,x+12,stageY+12,32,32,i===0?th.primary:i===1?th.secondary:th.accent,null,10);
+      ctx.fillStyle="#fff";ctx.font="800 16px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+28,stageY+33);ctx.textAlign="left";
+      ctx.fillStyle=th.ink;ctx.font="700 16px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+52,stageY+28);
+      ctx.fillStyle=th.ink;ctx.font="500 14px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+16,stageY+66,thirds-32,18,4);
+    });
+  }else{
+    const cols=2,gapX=10,rowGap=8,innerX=M+16,top=y+62,cardW=(contentW-42)/2;
+    const rows=Math.ceil(phases.length/2),cardH=Math.floor((h3-78-(rows-1)*rowGap)/rows);
+    phases.forEach((st,i)=>{
+      const cc=i%2,rr=Math.floor(i/2),x=innerX+cc*(cardW+gapX),cy=top+rr*(cardH+rowGap);
+      fillRound(ctx,x,cy,cardW,cardH,"#FFFFFF",th.line,12);
+      fillRound(ctx,x+10,cy+8,38,30,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,9);
+      ctx.fillStyle="#fff";ctx.font="800 13px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+29,cy+28);ctx.textAlign="left";
+      ctx.fillStyle=th.ink;ctx.font="700 14px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+58,cy+26);
+      ctx.fillStyle=th.muted;ctx.font="500 12px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+12,cy+48,cardW-24,15,2);
+    });
+  }
   y+=h3+G;
 
   // 6-7: question/media/task + differentiation
@@ -543,7 +642,7 @@ D. การรับรองแผนและการลงนาม
 3. ข้อมูลหลักสูตร: มาตรฐาน / ตัวชี้วัด / หน่วย / เรื่อง / เวลา / รูปแบบการสอน
 4. สาระสำคัญ + จุดประสงค์การเรียนรู้
 5. สาระการเรียนรู้ + สมรรถนะ + คุณลักษณะ + ชิ้นงาน/ภาระงาน
-6. กิจกรรมการเรียนรู้ 3 ขั้น: นำเข้า → เรียนรู้/ปฏิบัติ → สรุป/สะท้อนผล พร้อมเวลา
+6. กิจกรรมการเรียนรู้: แสดงขั้นตอนเฉพาะของรูปแบบการจัดการเรียนรู้ที่เลือกให้ครบทุกขั้นตามลำดับ พร้อมเวลา; ห้ามบังคับยุบเป็น 3 ขั้น
 7. คำถามสำคัญ + สื่อ/อุปกรณ์/แหล่งเรียนรู้
 8. การวัดและประเมินผลเป็นตาราง 4 คอลัมน์: จุดประสงค์ | วิธีวัด | เครื่องมือ | เกณฑ์ผ่าน
 9. ส่วนท้าย: ความแตกต่างระหว่างผู้เรียน + บันทึกหลังสอน + ลงชื่อ/QR ตามที่เลือก
@@ -576,6 +675,10 @@ B. ข้อมูลพื้นฐานของแผน
 เรื่อง: ${v("topic")||"-"}
 เวลา: ${v("duration")||"1 ชั่วโมง"}
 รูปแบบการจัดการเรียนรู้: ${v("method")||"Active Learning"}
+
+กรอบขั้นตอนการจัดการเรียนรู้ (บังคับใช้ตามรูปแบบที่เลือก)
+${methodPromptGuide(v("method")||"Active Learning",v("topic")||selected.indicator_text||"บทเรียน",v("duration")||"1 ชั่วโมง")}
+
 ภาคเรียน: ${sem}
 ปีการศึกษา: ${year}
 วันที่สอน: ${teachingDate}
@@ -606,7 +709,7 @@ E. องค์ประกอบทางวิชาการที่ต้�
 8. สมรรถนะสำคัญของผู้เรียนที่เกี่ยวข้อง
 9. คุณลักษณะอันพึงประสงค์ที่เกี่ยวข้อง
 10. ชิ้นงาน / ภาระงาน หรือหลักฐานการเรียนรู้
-11. กิจกรรมการเรียนรู้ตามรูปแบบ ${v("method")||"Active Learning"} โดยแบ่งเป็น ขั้นนำเข้าสู่บทเรียน → ขั้นเรียนรู้/ปฏิบัติ → ขั้นสรุปและสะท้อนผล พร้อมระบุเวลาโดยประมาณ
+11. กิจกรรมการเรียนรู้ตามรูปแบบ ${v("method")||"Active Learning"} ต้องใช้ขั้นตอนเฉพาะของรูปแบบที่เลือกให้ครบถ้วนตามส่วน “กรอบขั้นตอนการจัดการเรียนรู้” ด้านล่าง พร้อมระบุเวลาโดยประมาณ
 12. คำถามสำคัญ / คำถามกระตุ้นคิดอย่างน้อย 1–2 ข้อ
 13. สื่อ / อุปกรณ์ / แหล่งเรียนรู้
 14. การวัดและประเมินผล โดยต้องมีครบ: จุดประสงค์ → วิธีวัด → เครื่องมือ → เกณฑ์ผ่าน
