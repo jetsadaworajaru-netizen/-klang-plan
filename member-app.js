@@ -61,10 +61,51 @@ async function auth(){
   if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
     await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
   }
-  profile=p;renderProfile();return true
+  profile=p;renderProfile();applyTeacherDefaults(true);return true
 }
 function profileImageHtml(v,label){return v?.startsWith("data:image/")?'<img src="'+v+'" alt="'+esc(label||"")+'">':'<span>ยังไม่ได้อัปโหลด</span>'}
-function renderProfile(){$("profileName").textContent=profile.full_name||"โปรไฟล์";$("profileMemberId").textContent=profile.member_id||"สมาชิก";$("profileAvatar").innerHTML=avatar(profile.avatar_url);$("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);$("profileIdText").textContent=profile.member_id||"สมาชิก";$("profileDisplayName").value=profile.full_name||"";$("profileSchool").value=profile.school_name||"";if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน")}
+function teacherDefaults(){
+  const m=user?.user_metadata||{};
+  return {
+    full_name:profile?.full_name||m.full_name||"",
+    teacher_position:m.teacher_position||"",
+    school_name:profile?.school_name||m.school_name||"",
+    affiliation_type:m.affiliation_type||"obec",
+    organization:m.organization||"",
+    province:m.province||"",
+    student_count:m.student_count==null?"":String(m.student_count)
+  }
+}
+function applyTeacherDefaults(force=false){
+  const d=teacherDefaults();
+  const set=(id,val)=>{const el=$(id);if(el&&(force||!String(el.value||"").trim()))el.value=val||""};
+  set("teacherName",d.full_name);
+  set("teacherPosition",d.teacher_position);
+  set("schoolName",d.school_name);
+  if($("affiliationType")&&(force||!$("affiliationType").dataset.userChanged))$("affiliationType").value=d.affiliation_type||"obec";
+  set("organization",d.organization);
+  set("province",d.province);
+  set("studentCount",d.student_count);
+  if($("teacherSignatureName")&&(force||!$("teacherSignatureName").value.trim()))$("teacherSignatureName").value=d.full_name||"";
+  renderAffiliation();updateSummary()
+}
+function renderProfile(){
+  const d=teacherDefaults();
+  $("profileName").textContent=d.full_name||"โปรไฟล์";
+  $("profileMemberId").textContent=profile.member_id||"สมาชิก";
+  $("profileAvatar").innerHTML=avatar(profile.avatar_url);
+  $("profileAvatarLarge").innerHTML=avatar(profile.avatar_url);
+  $("profileIdText").textContent=profile.member_id||"สมาชิก";
+  $("profileDisplayName").value=d.full_name;
+  $("profileTeacherPosition").value=d.teacher_position;
+  $("profileSchool").value=d.school_name;
+  $("profileAffiliationType").value=d.affiliation_type;
+  $("profileOrganization").value=d.organization;
+  $("profileProvince").value=d.province;
+  $("profileStudentCount").value=d.student_count;
+  if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");
+  if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน")
+}
 async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
 if(!Array.isArray(DATA)||DATA.length!==2155)throw new Error("Curriculum dataset integrity check failed");
 buildGrades();
@@ -1155,7 +1196,7 @@ function bind(){
   if(id==="topic"&&$("topic").value.trim()!==autoTopicValue)autoTopicValue="";
   updateSummary()
 });
-  $("affiliationType").onchange=renderAffiliation;
+  $("affiliationType").onchange=()=>{$("affiliationType").dataset.userChanged="1";renderAffiliation()};
   $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
   if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("syncCoursesBtn"))$("syncCoursesBtn").onclick=()=>syncCoursesToCloud();if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
@@ -1171,7 +1212,21 @@ function bind(){
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.avatar_url=await compress(f);renderProfile()}};
   if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
   if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
-  $("saveProfileBtn").onclick=async()=>{const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};const {error}=await sb.from("profiles").update(payload).eq("id",user.id);if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;Object.assign(profile,payload);renderProfile();$("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓</div>'};
+  $("saveProfileBtn").onclick=async()=>{
+  const payload={full_name:v("profileDisplayName"),school_name:v("profileSchool")||null,avatar_url:profile.avatar_url||null,teacher_photo_url:profile.teacher_photo_url||null,school_logo_url:profile.school_logo_url||null};
+  const metadata={full_name:payload.full_name,school_name:payload.school_name,teacher_position:v("profileTeacherPosition")||"",affiliation_type:$("profileAffiliationType").value||"obec",organization:v("profileOrganization")||"",province:v("profileProvince")||"",student_count:v("profileStudentCount")?Number(v("profileStudentCount")):null};
+  $("saveProfileBtn").disabled=true;
+  const [profileResult,authResult]=await Promise.all([
+    sb.from("profiles").update(payload).eq("id",user.id),
+    sb.auth.updateUser({data:metadata})
+  ]);
+  $("saveProfileBtn").disabled=false;
+  const error=profileResult.error||authResult.error;
+  if(error)return $("profileStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;
+  Object.assign(profile,payload);user={...user,user_metadata:{...(user.user_metadata||{}),...metadata}};
+  renderProfile();applyTeacherDefaults(true);
+  $("profileStatus").innerHTML='<div class="indicator-preview">บันทึกแล้ว ✓ ข้อมูลผู้สอนถูกตั้งเป็นค่าเริ่มต้นสำหรับแผนใหม่</div>'
+};
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut();location.replace("/teacher.html")};
   $$(".dest-tab").forEach(b=>b.onclick=()=>{$$(".dest-tab").forEach(x=>x.classList.toggle("active",x===b));$$(".dest-panel").forEach(x=>x.classList.toggle("active",x.id===`dest-${b.dataset.dest}`))});
   $$("[data-open]").forEach(b=>b.onclick=async()=>{await copy();window.open(b.dataset.open,"_blank","noopener")});
