@@ -106,11 +106,10 @@ function renderProfile(){
   renderProfilePhotoEditor();
   if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");
   if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน");
-  ensurePlanTeacherImagePicker()
 }
 
 function planTeacherImageLabel(){
-  return planTeacherImageSource==="upload"?"อัปโหลดรูปใหม่สำหรับแผนนี้":planTeacherImageSource==="none"?"ไม่แสดงรูปครู":"ใช้รูปโปรไฟล์"
+  return planTeacherImageSource==="upload"?"อัปโหลดรูปใหม่สำหรับแผนนี้":planTeacherImageSource==="none"?"ไม่แสดงรูปครู":"ใช้รูปโปรไฟล์ (ต้องแนบไฟล์จริงเมื่อใช้ Prompt ภายนอก)"
 }
 function currentPlanTeacherImage(){
   if(planTeacherImageSource==="none")return "";
@@ -144,30 +143,7 @@ function renderPlanTeacherImagePicker(){
   const preview=$("planTeacherImagePreview"),src=currentPlanTeacherImage();
   if(preview)preview.innerHTML=src?'<img src="'+src+'" alt="ตัวอย่างรูปครู">':'<span>ไม่มีรูปครูที่จะแสดง</span>';
 }
-function ensurePlanTeacherImagePicker(){
-  const step=$("step3"),anchor=step?.querySelector(".form-grid");if(!step||!anchor)return;
-  if(!$("planTeacherImageBlock")){
-    const box=document.createElement("div");
-    box.id="planTeacherImageBlock";box.className="optional-block plan-teacher-image-block";
-    box.innerHTML='<div class="plan-teacher-image-head"><div><b>🖼️ รูปครูในแผนหน้าเดียว</b><small>เลือกรูปที่จะใช้กับแผนนี้และคำสั่ง Prompt</small></div></div>'
-      +'<div class="plan-teacher-image-options">'
-      +'<label><input type="radio" name="planTeacherImageSource" value="profile"> <span><b>ใช้รูปโปรไฟล์</b><small>ใช้รูปที่บันทึกไว้ในโปรไฟล์ครู</small></span></label>'
-      +'<label><input type="radio" name="planTeacherImageSource" value="upload"> <span><b>อัปโหลดรูปใหม่</b><small>ใช้เฉพาะแผนนี้ ไม่ทับรูปโปรไฟล์</small></span></label>'
-      +'<label><input type="radio" name="planTeacherImageSource" value="none"> <span><b>ไม่แสดงรูปครู</b><small>เหมาะกับแผนที่ต้องการพื้นที่เนื้อหามากขึ้น</small></span></label>'
-      +'</div>'
-      +'<div id="planTeacherUploadWrap" class="plan-teacher-upload" hidden><label>📷 เลือกรูปสำหรับแผนนี้<input id="planTeacherPhotoUpload" type="file" accept="image/*"></label></div>'
-      +'<div class="plan-teacher-image-preview-row"><div id="planTeacherImagePreview" class="plan-teacher-image-preview"></div><small id="planTeacherImageHint"></small></div>';
-    anchor.insertAdjacentElement("afterend",box);
-    if(!document.getElementById("planTeacherImagePickerStyle")){
-      const st=document.createElement("style");st.id="planTeacherImagePickerStyle";
-      st.textContent='.plan-teacher-image-block{margin-top:16px}.plan-teacher-image-head b,.plan-teacher-image-head small{display:block}.plan-teacher-image-head small{color:#73879a;margin-top:2px}.plan-teacher-image-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.plan-teacher-image-options label{display:flex;gap:8px;align-items:flex-start;margin:0;padding:12px;border:1px solid #d8e5ef;border-radius:14px;background:#fff;cursor:pointer}.plan-teacher-image-options label:has(input:checked){border-color:#5d8df4;box-shadow:0 0 0 3px rgba(93,141,244,.10);background:#f7f9ff}.plan-teacher-image-options input{margin-top:4px}.plan-teacher-image-options b,.plan-teacher-image-options small{display:block}.plan-teacher-image-options small{font-weight:500;color:#7b8c9b;margin-top:2px}.plan-teacher-upload{margin:10px 0}.plan-teacher-upload label{display:grid;gap:6px}.plan-teacher-image-preview-row{display:flex;align-items:center;gap:12px}.plan-teacher-image-preview{width:78px;height:78px;border-radius:16px;border:1px dashed #cbdbe8;background:#f8fbfe;display:grid;place-items:center;overflow:hidden;flex:0 0 78px;color:#8a9aaa;font-size:.7rem;text-align:center;padding:4px}.plan-teacher-image-preview img{width:100%;height:100%;object-fit:cover}.plan-teacher-image-preview-row>small{color:#6f8193}@media(max-width:720px){.plan-teacher-image-options{grid-template-columns:1fr}.plan-teacher-image-preview-row{align-items:flex-start}}';
-      document.head.appendChild(st)
-    }
-    document.querySelectorAll('input[name="planTeacherImageSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;renderPlanTeacherImagePicker();syncTeacherSourceControls();updateSummary()});
-    $("planTeacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);renderPlanTeacherImagePicker();updateSummary()}
-  }
-  renderPlanTeacherImagePicker()
-}
+function ensurePlanTeacherImagePicker(){}
 
 async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
 if(!Array.isArray(DATA)||DATA.length!==2155)throw new Error("Curriculum dataset integrity check failed");
@@ -1435,8 +1411,8 @@ function bind(){
   updateSummary()
 });
   ["planDensity","planIconStyle","planBackground","planSectionFrame","planDecorationLevel","planTeacherPlacement"].forEach(id=>{if($(id))$(id).onchange=updateSummary});
-  document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";renderPlanTeacherImagePicker();syncTeacherSourceControls();updateSummary()});
-  if($("planTeacherStyleUpload"))$("planTeacherStyleUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);planTeacherImageSource="upload";renderPlanTeacherImagePicker();syncTeacherSourceControls();updateSummary()};
+  document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";syncTeacherSourceControls();updateSummary()});
+  if($("planTeacherStyleUpload"))$("planTeacherStyleUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);planTeacherImageSource="upload";syncTeacherSourceControls();updateSummary()};
   document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.onchange=()=>{planSchoolLogoSource=r.value;if($("planSchoolLogoUploadWrap"))$("planSchoolLogoUploadWrap").hidden=planSchoolLogoSource!=="upload";updateSummary()});
   if($("planSchoolLogoUpload"))$("planSchoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planSchoolLogoData=await fileToDataUrl(f);planSchoolLogoSource="upload";document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
   document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.onchange=()=>{planQrSource=r.value;if($("planQrUploadWrap"))$("planQrUploadWrap").hidden=planQrSource!=="upload";updateSummary()});
