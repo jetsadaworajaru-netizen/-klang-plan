@@ -249,7 +249,220 @@ function syncTeacherSourceControls(){
   document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.checked=r.value===planTeacherImageSource);
   if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";
 }
-function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["สไตล์",style],["สี",palette],["ความหนาแน่น",planDesignValue("planDensity","balanced")],["ไอคอน",planDesignValue("planIconStyle","soft")]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
+
+let directPreviewRaf=0;
+function directTheme(){
+  const palettes={
+    "ฟ้า–ม่วง–ทอง":["#246BCE","#6552E8","#F2B735","#EEF5FF"],
+    "กรมท่า–ทอง":["#173B67","#B4872E","#E1B84C","#F6F2E8"],
+    "มิ้นต์–ฟ้า":["#278C7C","#3F8EDB","#82D6C8","#EFFAF8"],
+    "ส้ม–ครีม":["#E87A27","#D9A441","#F1B45C","#FFF7E9"],
+    "ชมพู–ฟ้า":["#D85F93","#4F8EDB","#F39BC0","#FFF0F7"],
+    "เขียว–ทอง":["#2F7D52","#B78B32","#D6B85D","#F3F8F1"]
+  };
+  const p=palettes[palette]||palettes["ฟ้า–ม่วง–ทอง"];
+  return {primary:p[0],secondary:p[1],accent:p[2],soft:p[3],ink:"#183B56",muted:"#60788A",line:"#D7E3EC"};
+}
+function directPreviewData(){
+  const g=$("grade")?.value||selected?.grade||"-";
+  const subject=$("subject")?.value||selected?.subject||"-";
+  const unit=v("unitName")||selected?.domain||"-";
+  const topic=v("topic")||selected?.indicator_text||"หัวข้อการเรียนรู้";
+  const duration=v("duration")||"1 ชั่วโมง";
+  const method=v("method")||"Active Learning";
+  const sem=v("semester")||"-",year=v("academicYear")||"-";
+  const teacher=v("teacherName")||profile?.full_name||"ครูผู้สอน";
+  const position=v("teacherPosition")||profile?.teacher_position||"";
+  const school=v("schoolName")||profile?.school_name||"";
+  const org=v("organization")||profile?.organization||"";
+  const indicator=selected?.indicator||"-";
+  const indicatorText=selected?.indicator_text||"";
+  const standard=selected?.standard||"-";
+  const essence=indicatorText?("มุ่งให้ผู้เรียนเข้าใจและสามารถ "+indicatorText.replace(/^สามารถ\s*/,"")):("เรียนรู้เรื่อง "+topic+" ผ่านกิจกรรมที่เน้นผู้เรียนเป็นสำคัญ");
+  const objectives=[
+    indicatorText?("อธิบายสาระสำคัญที่เกี่ยวข้องกับ "+topic+" ได้"):"อธิบายความรู้สำคัญของบทเรียนได้",
+    "ปฏิบัติกิจกรรมตามขั้นตอนและประยุกต์ใช้ความรู้ได้",
+    "มีส่วนร่วมในการเรียนรู้และสะท้อนผลการเรียนรู้ของตนเองได้"
+  ];
+  return {g,subject,unit,topic,duration,method,sem,year,teacher,position,school,org,indicator,indicatorText,standard,essence,objectives};
+}
+function roundRectPath(ctx,x,y,w,h,r=18){
+  const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+}
+function fillRound(ctx,x,y,w,h,fill,stroke=null,r=18){
+  roundRectPath(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}
+}
+function fitTextLines(ctx,text,maxWidth,maxLines=4){
+  const src=String(text||"").replace(/\s+/g," ").trim();if(!src)return [""];
+  const words=src.split(" ");const lines=[];let line="";
+  for(const word of words){
+    const test=line?line+" "+word:word;
+    if(ctx.measureText(test).width<=maxWidth){line=test;continue}
+    if(line)lines.push(line);
+    line=word;
+    if(lines.length>=maxLines-1)break;
+  }
+  if(line&&lines.length<maxLines)lines.push(line);
+  if(lines.length===maxLines){
+    let last=lines[maxLines-1];
+    while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
+    if(last!==lines[maxLines-1]||words.join(" ").length>lines.join(" ").length)lines[maxLines-1]=last+"…";
+  }
+  return lines;
+}
+function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=4){
+  const lines=fitTextLines(ctx,text,maxWidth,maxLines);lines.forEach((ln,i)=>ctx.fillText(ln,x,y+i*lineHeight));return y+lines.length*lineHeight;
+}
+function drawBulletList(ctx,items,x,y,maxWidth,lineHeight=26,maxItems=4){
+  let yy=y;for(const item of items.slice(0,maxItems)){ctx.fillText("•",x,yy);yy=drawWrapped(ctx,item,x+20,yy,maxWidth-20,lineHeight,2)+4}return yy;
+}
+function drawSectionTitle(ctx,n,title,x,y,w,theme){
+  fillRound(ctx,x,y,42,42,theme.primary,null,12);ctx.fillStyle="#fff";ctx.font="700 23px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(String(n),x+21,y+29);ctx.textAlign="left";
+  ctx.fillStyle=theme.ink;ctx.font="700 25px Tahoma, Arial, sans-serif";ctx.fillText(title,x+54,y+29);
+  ctx.strokeStyle=theme.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+54,y+38);ctx.lineTo(x+w,y+38);ctx.stroke();
+}
+async function drawCoverImage(ctx,src,x,y,w,h){
+  if(!src||!String(src).startsWith("data:image/"))return false;
+  const im=await loadCanvasImage(src);if(!im)return false;
+  const scale=Math.max(w/im.width,h/im.height),sw=w/scale,sh=h/scale,sx=(im.width-sw)/2,sy=(im.height-sh)/2;
+  ctx.save();roundRectPath(ctx,x,y,w,h,16);ctx.clip();ctx.drawImage(im,sx,sy,sw,sh,x,y,w,h);ctx.restore();return true;
+}
+async function buildDirectPlanCanvas(){
+  const c=$("directPlanCanvas");if(!c||!selected)return;
+  const ctx=c.getContext("2d"),W=c.width,H=c.height,d=directPreviewData(),th=directTheme();
+  ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
+
+  const bg=planDesignValue("planBackground","clean");
+  if(bg==="soft"){const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,th.soft);g.addColorStop(.45,"#fff");g.addColorStop(1,th.soft);ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  else if(bg==="geometric"){ctx.fillStyle=th.soft;ctx.globalAlpha=.55;for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(80+i*165,70+(i%2)*30,34,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+  else if(bg==="thai"){ctx.fillStyle=th.soft;ctx.globalAlpha=.7;for(let i=0;i<12;i++){ctx.save();ctx.translate(i*110,28);ctx.rotate(Math.PI/4);ctx.fillRect(0,0,18,18);ctx.restore()}ctx.globalAlpha=1}
+
+  ctx.fillStyle=th.primary;ctx.fillRect(0,0,W,18);
+  const M=54,G=22,contentW=W-M*2,col=(contentW-G)/2;
+  const density=planDesignValue("planDensity","balanced"),compact=density==="compact",airy=density==="airy";
+  const cardR=planDesignValue("planSectionFrame","rounded")==="formal"?4:planDesignValue("planSectionFrame","rounded")==="minimal"?10:20;
+  const cardFill=planDesignValue("planSectionFrame","rounded")==="none"?"#FFFFFF":(airy?"#FFFFFF":th.soft);
+
+  // Header
+  let y=52;
+  ctx.fillStyle=th.ink;ctx.font="800 52px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText("แผนการจัดการเรียนรู้",W/2,y+48);
+  ctx.font="600 24px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;ctx.fillText(d.subject+" • ชั้น "+d.g+" • ภาคเรียน "+d.sem+"/"+d.year,W/2,y+84);
+  ctx.textAlign="left";
+
+  const teacherSrc=profile?.teacher_photo_url||profile?.avatar_url||"";
+  const logoSrc=profile?.school_logo_url||"";
+  const mediaY=y+108;
+  fillRound(ctx,M,mediaY,contentW,126,"#FFFFFF",th.line,18);
+  const hasTeacher=await drawCoverImage(ctx,teacherSrc,M+16,mediaY+14,98,98);
+  const hasLogo=await drawCoverImage(ctx,logoSrc,W-M-104,mediaY+18,88,88);
+  ctx.fillStyle=th.ink;ctx.font="700 24px Tahoma, Arial, sans-serif";ctx.fillText(d.teacher,M+(hasTeacher?132:22),mediaY+40);
+  ctx.font="500 20px Tahoma, Arial, sans-serif";ctx.fillStyle=th.muted;
+  ctx.fillText([d.position,d.school].filter(Boolean).join(" • "),M+(hasTeacher?132:22),mediaY+72);
+  ctx.fillText([d.org,v("province")].filter(Boolean).join(" • "),M+(hasTeacher?132:22),mediaY+100);
+  y=mediaY+148;
+
+  // row 1
+  const h1=274;
+  fillRound(ctx,M,y,col,h1,cardFill,th.line,cardR);drawSectionTitle(ctx,1,"ข้อมูลหลักสูตรและข้อมูลพื้นฐาน",M+18,y+16,col-36,th);
+  ctx.fillStyle=th.ink;ctx.font="600 20px Tahoma, Arial, sans-serif";
+  const leftRows=[["หน่วย",d.unit],["เรื่อง",d.topic],["เวลา",d.duration],["รูปแบบ",d.method],["มาตรฐาน",d.standard],["ตัวชี้วัด",d.indicator]];
+  let yy=y+72;leftRows.forEach(([k,val])=>{ctx.fillStyle=th.muted;ctx.fillText(k+" :",M+24,yy);ctx.fillStyle=th.ink;ctx.fillText(String(val||"-").slice(0,45),M+142,yy);yy+=31});
+
+  fillRound(ctx,M+col+G,y,col,h1,cardFill,th.line,cardR);drawSectionTitle(ctx,2,"สาระสำคัญ / ความคิดรวบยอด",M+col+G+18,y+16,col-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 21px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.essence,M+col+G+24,y+78,col-48,29,5);
+  ctx.fillStyle=th.primary;ctx.font="700 20px Tahoma, Arial, sans-serif";ctx.fillText("ข้อความตัวชี้วัด",M+col+G+24,y+194);
+  ctx.fillStyle=th.ink;ctx.font="500 19px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.indicatorText||"-",M+col+G+24,y+225,col-48,27,2);
+  y+=h1+G;
+
+  // row 2
+  const h2=260;
+  fillRound(ctx,M,y,col,h2,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,3,"จุดประสงค์การเรียนรู้",M+18,y+16,col-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 20px Tahoma, Arial, sans-serif";drawBulletList(ctx,d.objectives,M+24,y+76,col-48,27,3);
+
+  fillRound(ctx,M+col+G,y,col,h2,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,4,"สาระ / สมรรถนะ / คุณลักษณะ",M+col+G+18,y+16,col-36,th);
+  ctx.fillStyle=th.primary;ctx.font="700 20px Tahoma, Arial, sans-serif";ctx.fillText("สาระการเรียนรู้",M+col+G+24,y+78);
+  ctx.fillStyle=th.ink;ctx.font="500 19px Tahoma, Arial, sans-serif";drawWrapped(ctx,d.topic+" — "+(d.indicatorText||"สาระตามตัวชี้วัด"),M+col+G+24,y+106,col-48,26,2);
+  ctx.fillStyle=th.primary;ctx.font="700 20px Tahoma, Arial, sans-serif";ctx.fillText("สมรรถนะ",M+col+G+24,y+174);
+  ctx.fillStyle=th.ink;ctx.font="500 18px Tahoma, Arial, sans-serif";ctx.fillText("การสื่อสาร • การคิด • การใช้ทักษะชีวิต",M+col+G+24,y+202);
+  ctx.fillStyle=th.primary;ctx.font="700 20px Tahoma, Arial, sans-serif";ctx.fillText("คุณลักษณะ",M+col+G+24,y+232);
+  ctx.fillStyle=th.ink;ctx.font="500 18px Tahoma, Arial, sans-serif";ctx.fillText("ใฝ่เรียนรู้ • มุ่งมั่นในการทำงาน • มีวินัย",M+col+G+150,y+232);
+  y+=h2+G;
+
+  // Activity full width
+  const h3=286;
+  fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+d.method+")",M+18,y+16,contentW-36,th);
+  const thirds=(contentW-48)/3,stageY=y+78;
+  const stages=[
+    ["A","ขั้นนำเข้าสู่บทเรียน","10 นาที","ทบทวนประสบการณ์เดิม เชื่อมโยงเข้าสู่เรื่อง "+d.topic],
+    ["B","ขั้นเรียนรู้ / ปฏิบัติ","40 นาที","ผู้เรียนเรียนรู้และลงมือทำกิจกรรมตาม "+d.method+" แลกเปลี่ยนและตรวจสอบความเข้าใจ"],
+    ["C","ขั้นสรุป / สะท้อนผล","10 นาที","ร่วมสรุปสาระสำคัญ นำเสนอผลงาน และสะท้อนสิ่งที่ได้เรียนรู้"]
+  ];
+  stages.forEach((st,i)=>{const x=M+18+i*(thirds+6);fillRound(ctx,x,stageY,thirds,176,"#FFFFFF",th.line,16);fillRound(ctx,x+14,stageY+14,36,36,i===0?th.primary:i===1?th.secondary:th.accent,null,12);ctx.fillStyle="#fff";ctx.font="800 20px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+32,stageY+40);ctx.textAlign="left";ctx.fillStyle=th.ink;ctx.font="700 19px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+60,stageY+32);ctx.fillStyle=th.muted;ctx.font="600 17px Tahoma, Arial, sans-serif";ctx.fillText(st[2],x+60,stageY+58);ctx.fillStyle=th.ink;ctx.font="500 17px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[3],x+16,stageY+90,thirds-32,24,3)});
+  y+=h3+G;
+
+  // row 3
+  const h4=220;
+  fillRound(ctx,M,y,col,h4,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,6,"คำถามสำคัญ / สื่อ / ชิ้นงาน",M+18,y+16,col-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 18px Tahoma, Arial, sans-serif";
+  drawBulletList(ctx,["วันนี้เราได้เรียนรู้อะไรจากเรื่อง "+d.topic+"?","ความรู้นี้นำไปใช้ในชีวิตจริงอย่างไร?","สื่อ: ใบงาน / บัตรภาพ / สื่อดิจิทัลตามความเหมาะสม","ชิ้นงาน: ผลงานหรือภาระงานจากกิจกรรม"],M+24,y+72,col-48,25,4);
+
+  fillRound(ctx,M+col+G,y,col,h4,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,7,"ความแตกต่างระหว่างผู้เรียน",M+col+G+18,y+16,col-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 18px Tahoma, Arial, sans-serif";drawBulletList(ctx,["จัดกลุ่มยืดหยุ่นตามความพร้อมของผู้เรียน","ใช้สื่อหลายรูปแบบและตัวอย่างที่หลากหลาย","ให้คำแนะนำเพิ่มเติมแก่ผู้เรียนที่ต้องการความช่วยเหลือ"],M+col+G+24,y+74,col-48,26,3);
+  y+=h4+G;
+
+  // Assessment
+  const h5=248;
+  fillRound(ctx,M,y,contentW,h5,th.soft,th.line,cardR);drawSectionTitle(ctx,8,"การวัดและประเมินผล",M+18,y+16,contentW-36,th);
+  const tx=M+24,ty=y+74,tw=contentW-48,rowH=39,cols=[.36,.20,.24,.20],headers=["จุดประสงค์","วิธีวัด","เครื่องมือ","เกณฑ์ผ่าน"];
+  let cx=tx;ctx.font="700 17px Tahoma, Arial, sans-serif";headers.forEach((hd,i)=>{const ww=tw*cols[i];ctx.fillStyle=i===0?th.primary:th.secondary;ctx.fillRect(cx,ty,ww,rowH);ctx.fillStyle="#fff";ctx.fillText(hd,cx+10,ty+26);cx+=ww});
+  const rows=[
+    [d.objectives[0],"ถาม-ตอบ / ตรวจงาน","แบบตรวจ / ใบงาน","≥ 70%"],
+    [d.objectives[1],"สังเกตการปฏิบัติ","แบบสังเกต","ระดับพอใช้ขึ้นไป"],
+    [d.objectives[2],"สังเกตพฤติกรรม","แบบประเมิน","ผ่านเกณฑ์ที่กำหนด"]
+  ];
+  ctx.font="500 15px Tahoma, Arial, sans-serif";rows.forEach((r,ri)=>{let x=tx;const yy2=ty+rowH*(ri+1);r.forEach((val,i)=>{const ww=tw*cols[i];ctx.fillStyle="#fff";ctx.fillRect(x,yy2,ww,rowH);ctx.strokeStyle=th.line;ctx.strokeRect(x,yy2,ww,rowH);ctx.fillStyle=th.ink;const txt=String(val||"");ctx.fillText(txt.length>38?txt.slice(0,37)+"…":txt,x+8,yy2+25);x+=ww})});
+  y+=h5+G;
+
+  // footer / reflection
+  const footerH=Math.max(130,H-y-62);
+  fillRound(ctx,M,y,contentW,footerH,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,9,"บันทึกหลังสอน",M+18,y+16,contentW-36,th);
+  ctx.fillStyle=th.muted;ctx.font="500 18px Tahoma, Arial, sans-serif";
+  ctx.fillText("ผลการเรียนรู้: ............................................................................................................................",M+24,y+82);
+  ctx.fillText("ปัญหา/อุปสรรค: .........................................................................................................................",M+24,y+116);
+  ctx.fillText("แนวทางพัฒนา: ............................................................................................................................",M+24,y+150);
+  ctx.fillStyle=th.primary;ctx.font="600 15px Tahoma, Arial, sans-serif";ctx.fillText("Klang Plan · แผนการจัดการเรียนรู้หน้าเดียว A4",M,H-28);
+
+  if($("directPreviewStyleName"))$("directPreviewStyleName").textContent=(styleMeta[style]||[])[0]||style;
+}
+function renderDirectPlanPreview(){
+  cancelAnimationFrame(directPreviewRaf);
+  directPreviewRaf=requestAnimationFrame(()=>{buildDirectPlanCanvas().catch(err=>console.warn("direct preview",err))});
+}
+function canvasJpegBytes(canvas){
+  const b64=canvas.toDataURL("image/jpeg",.94).split(",")[1],bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes
+}
+function singleImagePdfBlob(canvas){
+  const im={bytes:canvasJpegBytes(canvas),w:canvas.width,h:canvas.height},te=new TextEncoder(),parts=[],offsets=[0];let len=0;
+  const add=x=>{const b=typeof x==="string"?te.encode(x):x;parts.push(b);len+=b.length};
+  add("%PDF-1.4\n%KLANG-A4\n");
+  const obj=(n,body)=>{offsets[n]=len;add(n+" 0 obj\n");add(body);add("\nendobj\n")};
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2,"<< /Type /Pages /Count 1 /Kids [3 0 R] >>");
+  obj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im1 4 0 R >> >> /Contents 5 0 R >>");
+  offsets[4]=len;add("4 0 obj\n<< /Type /XObject /Subtype /Image /Width "+im.w+" /Height "+im.h+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+im.bytes.length+" >>\nstream\n");add(im.bytes);add("\nendstream\nendobj\n");
+  const stream="q\n595.28 0 0 841.89 0 0 cm\n/Im1 Do\nQ\n";obj(5,"<< /Length "+te.encode(stream).length+" >>\nstream\n"+stream+"endstream");
+  const xref=len;add("xref\n0 6\n0000000000 65535 f \n");for(let i=1;i<=5;i++)add(String(offsets[i]||0).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");
+  return new Blob(parts,{type:"application/pdf"})
+}
+async function downloadDirectPlanPdf(){
+  if(!selected)return toast("กรุณาเลือกตัวชี้วัดก่อน");
+  await buildDirectPlanCanvas();
+  const c=$("directPlanCanvas");if(!c)return;
+  const name=safeFilename("แผนหน้าเดียว-"+(v("topic")||selected?.indicator||"Klang-Plan"))+".pdf";
+  saveBlob(singleImagePdfBlob(c),name);toast("ดาวน์โหลด PDF A4 แล้ว ✓")
+}
+
+function updateSummary(){renderDirectPlanPreview();const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["สไตล์",style],["สี",palette],["ความหนาแน่น",planDesignValue("planDensity","balanced")],["ไอคอน",planDesignValue("planIconStyle","soft")]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
 function v(id){return $(id).value.trim()}
 function prompt(){
   if(!selected)return"";
@@ -1457,6 +1670,8 @@ function bind(){
   syncTeacherSourceControls();
   $("affiliationType").onchange=()=>{$("affiliationType").dataset.userChanged="1";renderAffiliation()};
   $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
+  if($("refreshDirectPreviewBtn"))$("refreshDirectPreviewBtn").onclick=renderDirectPlanPreview;
+  if($("downloadDirectPlanPdfBtn"))$("downloadDirectPlanPdfBtn").onclick=downloadDirectPlanPdf;
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(profileTeacherRef(),"Teacher-Reference");
   if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(profileLogoRef(),"School-Logo");
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
