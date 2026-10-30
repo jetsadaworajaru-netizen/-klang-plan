@@ -10,11 +10,14 @@
 <link rel="stylesheet" href="/member-app.css?v=959">
 <style>
 #planDesignOptions{margin-top:18px}
-.plan-media-options{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 14px}
-.plan-media-options label{display:flex;align-items:center;gap:7px;padding:10px 12px;border:1px solid #d8e5ef;border-radius:12px;background:#fff;font-weight:700;cursor:pointer}
-.plan-media-options label:has(input:checked){border-color:#5e78f5;background:#f5f7ff;box-shadow:0 0 0 3px rgba(94,120,245,.08)}
-#planDesignOptions .subhead{margin-top:18px;margin-bottom:8px}
-@media(max-width:720px){.plan-media-options{display:grid;grid-template-columns:1fr}.plan-media-options label{width:100%}}
+.plan-media-options{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.plan-media-options label{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;min-height:38px;border:1px solid #d8e5ef;border-radius:10px;background:#fff;font-size:.88rem;font-weight:700;line-height:1.25;cursor:pointer}
+.plan-media-options label:has(input:checked){border-color:#5e78f5;background:#f5f7ff;box-shadow:0 0 0 2px rgba(94,120,245,.08)}
+.plan-media-options input[type="radio"]{margin:0;flex:0 0 auto}
+#planDesignOptions .subhead{margin-top:12px;margin-bottom:6px;font-size:1rem}
+#planTeacherStyleUploadWrap,#planSchoolLogoUploadWrap,#planQrUploadWrap{margin-top:4px}
+#planTeacherStyleUploadWrap .field-label,#planSchoolLogoUploadWrap .field-label,#planQrUploadWrap .field-label{margin-bottom:0}
+@media(max-width:720px){.plan-media-options{display:flex;flex-wrap:wrap}.plan-media-options label{width:auto;flex:1 1 140px;justify-content:flex-start}}
 </style></head>
 <body>
 <div id="appShell" class="app-shell is-loading">
@@ -804,6 +807,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=961"></script>
+<script src="/member-app.js?v=962"></script>
 </body>
 </html>
