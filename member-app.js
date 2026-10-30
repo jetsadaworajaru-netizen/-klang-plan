@@ -478,44 +478,72 @@ async function buildDirectPlanCanvas(){
   ctx.fillStyle=th.ink;ctx.font="500 16px Tahoma, Arial, sans-serif";ctx.fillText("ใฝ่เรียนรู้ • มุ่งมั่นในการทำงาน • มีวินัย",M+col+G+138,y+176);
   y+=h2+G;
 
-  // 5: learning activities — method-specific, academically aligned
-  const h3=235;
+  // 5: learning activities — method-specific, visually ordered
   const model=methodModel(d.method,d.topic);
+  const phases=model.phases;
+  const h3=phases.length<=5?210:235;
   fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);
   drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+model.title+")",M+18,y+14,contentW-36,th);
-  const phases=model.phases;
+
   if(phases.length<=3){
-    const thirds=(contentW-48)/3,stageY=y+66;
+    const gap=10,cardW=(contentW-32-gap*2)/3,stageY=y+62;
     phases.forEach((st,i)=>{
-      const x=M+16+i*(thirds+8);
-      fillRound(ctx,x,stageY,thirds,160,"#FFFFFF",th.line,14);
-      fillRound(ctx,x+12,stageY+12,32,32,i===0?th.primary:i===1?th.secondary:th.accent,null,10);
-      ctx.fillStyle="#fff";ctx.font="800 16px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+28,stageY+33);ctx.textAlign="left";
-      ctx.fillStyle=th.ink;ctx.font="700 16px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+52,stageY+28);
-      ctx.fillStyle=th.ink;ctx.font="500 14px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+16,stageY+66,thirds-32,18,4);
+      const x=M+16+i*(cardW+gap);
+      fillRound(ctx,x,stageY,cardW,h3-76,"#FFFFFF",th.line,14);
+      fillRound(ctx,x+12,stageY+12,34,34,i===0?th.primary:i===1?th.secondary:th.accent,null,10);
+      ctx.fillStyle="#fff";ctx.font="800 14px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+29,stageY+34);ctx.textAlign="left";
+      ctx.fillStyle=th.ink;ctx.font="700 16px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+56,stageY+30);
+      ctx.fillStyle=th.muted;ctx.font="500 13px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+14,stageY+68,cardW-28,17,4);
+    });
+  }else if(phases.length<=5){
+    const gap=8,cardW=(contentW-32-gap*(phases.length-1))/phases.length,stageY=y+62,cardH=h3-76;
+    phases.forEach((st,i)=>{
+      const x=M+16+i*(cardW+gap);
+      fillRound(ctx,x,stageY,cardW,cardH,"#FFFFFF",th.line,13);
+      fillRound(ctx,x+10,stageY+10,Math.min(46,cardW-20),30,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,9);
+      ctx.fillStyle="#fff";ctx.font="800 11px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+10+Math.min(46,cardW-20)/2,stageY+30);ctx.textAlign="left";
+      ctx.fillStyle=th.ink;ctx.font="700 13px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[1],x+10,stageY+56,cardW-20,16,2);
+      ctx.fillStyle=th.muted;ctx.font="500 11px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+10,stageY+92,cardW-20,14,3);
+      if(i<phases.length-1){
+        ctx.fillStyle=th.primary;ctx.font="800 18px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText("›",x+cardW+gap/2,stageY+cardH/2+6);ctx.textAlign="left";
+      }
     });
   }else{
-    const cols=2,gapX=10,rowGap=8,innerX=M+16,top=y+62,cardW=(contentW-42)/2;
-    const rows=Math.ceil(phases.length/2),cardH=Math.floor((h3-78-(rows-1)*rowGap)/rows);
+    const cols=4,gapX=8,rowGap=8,innerX=M+16,top=y+60,cardW=(contentW-32-gapX*(cols-1))/cols;
+    const rows=Math.ceil(phases.length/cols),cardH=Math.floor((h3-74-(rows-1)*rowGap)/rows);
     phases.forEach((st,i)=>{
-      const cc=i%2,rr=Math.floor(i/2),x=innerX+cc*(cardW+gapX),cy=top+rr*(cardH+rowGap);
-      fillRound(ctx,x,cy,cardW,cardH,"#FFFFFF",th.line,12);
-      fillRound(ctx,x+10,cy+8,38,30,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,9);
-      ctx.fillStyle="#fff";ctx.font="800 13px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+29,cy+28);ctx.textAlign="left";
-      ctx.fillStyle=th.ink;ctx.font="700 14px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+58,cy+26);
-      ctx.fillStyle=th.muted;ctx.font="500 12px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+12,cy+48,cardW-24,15,2);
+      const cc=i%cols,rr=Math.floor(i/cols),x=innerX+cc*(cardW+gapX),cy=top+rr*(cardH+rowGap);
+      fillRound(ctx,x,cy,cardW,cardH,"#FFFFFF",th.line,11);
+      fillRound(ctx,x+8,cy+8,38,28,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,8);
+      ctx.fillStyle="#fff";ctx.font="800 11px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+27,cy+27);ctx.textAlign="left";
+      ctx.fillStyle=th.ink;ctx.font="700 12px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+54,cy+24);
+      ctx.fillStyle=th.muted;ctx.font="500 10.5px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+10,cy+44,cardW-20,13,2);
     });
   }
   y+=h3+G;
 
-  // 6-7: question/media/task + differentiation
-  const h4=170;
-  fillRound(ctx,M,y,col,h4,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,6,"คำถามสำคัญ / สื่อ / ชิ้นงาน",M+18,y+14,col-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 16px Tahoma, Arial, sans-serif";
-  drawBulletList(ctx,["วันนี้เราได้เรียนรู้อะไรจากเรื่อง "+d.topic+"?","ความรู้นี้นำไปใช้ในชีวิตจริงอย่างไร?","สื่อ: ใบงาน / บัตรภาพ / สื่อดิจิทัล","ชิ้นงาน: ผลงานหรือภาระงานจากกิจกรรม"],M+24,y+66,col-48,18,4);
+  // 6-7: allocate width according to content weight
+  const h4=158;
+  const leftW=Math.round(contentW*.58),rightW=contentW-leftW-G;
+  fillRound(ctx,M,y,leftW,h4,"#FFFFFF",th.line,cardR);
+  drawSectionTitle(ctx,6,"คำถามสำคัญ / สื่อ / ชิ้นงาน",M+18,y+14,leftW-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 15px Tahoma, Arial, sans-serif";
+  drawBulletList(ctx,[
+    "คำถาม: วันนี้เราได้เรียนรู้อะไรจากเรื่อง "+d.topic+"?",
+    "การนำไปใช้: ความรู้นี้นำไปใช้ในชีวิตจริงอย่างไร?",
+    "สื่อ: ใบงาน / บัตรภาพ / สื่อดิจิทัล",
+    "ชิ้นงาน: ผลงานหรือภาระงานจากกิจกรรม"
+  ],M+24,y+64,leftW-48,17,4);
 
-  fillRound(ctx,M+col+G,y,col,h4,"#FFFFFF",th.line,cardR);drawSectionTitle(ctx,7,"ความแตกต่างระหว่างผู้เรียน",M+col+G+18,y+14,col-36,th);
-  ctx.fillStyle=th.ink;ctx.font="500 16px Tahoma, Arial, sans-serif";drawBulletList(ctx,["จัดกลุ่มยืดหยุ่นตามความพร้อมของผู้เรียน","ใช้สื่อหลายรูปแบบและตัวอย่างที่หลากหลาย","ให้คำแนะนำเพิ่มเติมแก่ผู้เรียนที่ต้องการความช่วยเหลือ"],M+col+G+24,y+68,col-48,18,3);
+  const rx=M+leftW+G;
+  fillRound(ctx,rx,y,rightW,h4,"#FFFFFF",th.line,cardR);
+  drawSectionTitle(ctx,7,"ความแตกต่างระหว่างผู้เรียน",rx+18,y+14,rightW-36,th);
+  ctx.fillStyle=th.ink;ctx.font="500 14px Tahoma, Arial, sans-serif";
+  drawBulletList(ctx,[
+    "จัดกลุ่มยืดหยุ่นตามความพร้อมของผู้เรียน",
+    "ใช้สื่อหลายรูปแบบและตัวอย่างที่หลากหลาย",
+    "เสริมคำแนะนำเฉพาะรายเมื่อจำเป็น"
+  ],rx+24,y+64,rightW-48,18,3);
   y+=h4+G;
 
   // 8: assessment
