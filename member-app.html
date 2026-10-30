@@ -8,7 +8,14 @@
   <link rel="apple-touch-icon" href="/favicon.png?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/member-app.css?v=959">
-</head>
+<style>
+#planDesignOptions{margin-top:18px}
+.plan-media-options{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 14px}
+.plan-media-options label{display:flex;align-items:center;gap:7px;padding:10px 12px;border:1px solid #d8e5ef;border-radius:12px;background:#fff;font-weight:700;cursor:pointer}
+.plan-media-options label:has(input:checked){border-color:#5e78f5;background:#f5f7ff;box-shadow:0 0 0 3px rgba(94,120,245,.08)}
+#planDesignOptions .subhead{margin-top:18px;margin-bottom:8px}
+@media(max-width:720px){.plan-media-options{display:grid;grid-template-columns:1fr}.plan-media-options label{width:100%}}
+</style></head>
 <body>
 <div id="appShell" class="app-shell is-loading">
   <header class="topbar">
@@ -160,6 +167,43 @@
 
         <h3 class="subhead">โทนสี</h3>
         <div id="paletteGrid" class="choice-grid palette-grid"></div>
+
+        <div class="optional-block" id="planDesignOptions">
+          <div class="toggle-row">
+            <div><b>🎛️ ตัวเลือกตกแต่งแผนหน้าเดียว</b><small>ทุกตัวเลือกจะถูกนำไปใช้สร้าง Prompt อัตโนมัติ</small></div>
+          </div>
+          <div class="form-grid">
+            <label>ความหนาแน่นของหน้า<select id="planDensity"><option value="balanced" selected>สมดุล — สวยและอ่านง่าย</option><option value="airy">โปร่ง — พื้นที่ว่างเยอะ</option><option value="compact">กระชับ — ข้อมูลแน่นขึ้นเล็กน้อย</option></select></label>
+            <label>รูปแบบไอคอน<select id="planIconStyle"><option value="soft" selected>Soft Rounded — ทันสมัย</option><option value="line">Outline — เรียบทางการ</option><option value="flat">Flat Color — สดใส</option><option value="3d">3D — มีมิติ</option><option value="none">ไม่ใช้ไอคอน</option></select></label>
+            <label>พื้นหลัง<select id="planBackground"><option value="clean" selected>พื้นขาวสะอาด</option><option value="soft">ไล่เฉดสีอ่อน</option><option value="geometric">ลายเรขาคณิตบาง ๆ</option><option value="thai">ลายไทยร่วมสมัยบาง ๆ</option></select></label>
+            <label>กรอบ Section<select id="planSectionFrame"><option value="rounded" selected>กล่องมุมโค้งสมัยใหม่</option><option value="formal">กรอบเส้นทางการ</option><option value="minimal">เส้นคั่นมินิมอล</option><option value="none">ไม่ใช้กรอบ</option></select></label>
+            <label>ระดับการตกแต่ง<select id="planDecorationLevel"><option value="medium" selected>พอดี — สวยแต่ไม่รก</option><option value="low">น้อย — เรียบทางการ</option><option value="high">มาก — อินโฟกราฟิกเด่น</option></select></label>
+            <label>ตำแหน่งรูปครู<select id="planTeacherPlacement"><option value="header" selected>หัวเอกสาร</option><option value="side">มุมข้างข้อมูลผู้สอน</option><option value="footer">ส่วนท้ายเอกสาร</option></select></label>
+          </div>
+
+          <h3 class="subhead">รูปครูสำหรับแผนนี้</h3>
+          <div class="plan-media-options">
+            <label><input type="radio" name="planTeacherImageStyleSource" value="profile" checked> ใช้รูปโปรไฟล์</label>
+            <label><input type="radio" name="planTeacherImageStyleSource" value="upload"> อัปโหลดรูปใหม่</label>
+            <label><input type="radio" name="planTeacherImageStyleSource" value="none"> ไม่แสดงรูปครู</label>
+          </div>
+          <div id="planTeacherStyleUploadWrap" hidden><label class="field-label">อัปโหลดรูปครูสำหรับแผนนี้<input id="planTeacherStyleUpload" type="file" accept="image/*"></label></div>
+
+          <h3 class="subhead">โลโก้โรงเรียน</h3>
+          <div class="plan-media-options">
+            <label><input type="radio" name="planSchoolLogoSource" value="profile" checked> ใช้โลโก้จากโปรไฟล์</label>
+            <label><input type="radio" name="planSchoolLogoSource" value="upload"> อัปโหลดโลโก้ใหม่</label>
+            <label><input type="radio" name="planSchoolLogoSource" value="none"> ไม่แสดงโลโก้</label>
+          </div>
+          <div id="planSchoolLogoUploadWrap" hidden><label class="field-label">อัปโหลดโลโก้สำหรับแผนนี้<input id="planSchoolLogoUpload" type="file" accept="image/*"></label></div>
+
+          <h3 class="subhead">QR Code (ไม่บังคับ)</h3>
+          <div class="plan-media-options">
+            <label><input type="radio" name="planQrSource" value="none" checked> ไม่ใช้ QR</label>
+            <label><input type="radio" name="planQrSource" value="upload"> อัปโหลด QR Code</label>
+          </div>
+          <div id="planQrUploadWrap" hidden><label class="field-label">อัปโหลด QR Code<input id="planQrUpload" type="file" accept="image/*"></label><small>Prompt จะกำชับให้คง QR ต้นฉบับและต้องสแกนได้</small></div>
+        </div>
       </section>
 
       <section id="step5" class="card final-card">
