@@ -133,3 +133,68 @@
 .profile-avatar-editor{display:grid;grid-template-columns:1fr 96px auto;gap:12px;align-items:center;margin:12px 0;padding:12px;border:1px solid #dbe6ee;border-radius:14px;background:#f8fbfd}
 .profile-avatar-editor b{display:block;color:#163f63}.profile-avatar-editor small{display:block;color:#7c8d9c;margin-top:3px;line-height:1.4}.profile-photo-preview{width:84px;height:84px;border-radius:50%;overflow:hidden;background:#edf3f7;display:grid;place-items:center;font-size:2rem;border:1px solid #d4e0e8}.profile-photo-preview img{width:100%;height:100%;object-fit:cover}.profile-upload-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border:1px solid #cddde8;border-radius:10px;background:#fff;font-weight:800;cursor:pointer;white-space:nowrap}.avatar-row-label{font-size:.78rem;color:#718292;align-self:center}
 @media(max-width:620px){.profile-avatar-editor{grid-template-columns:1fr 84px}.profile-upload-btn{grid-column:1/-1}.profile-photo-preview{width:76px;height:76px}}
+
+/* Interactive affordance — clickable controls/cards */
+button,
+[role="button"],
+.stage-btn,
+.choice-btn,
+.style-preview-card,
+.top-tab,
+.progress-pill,
+.dest-tab,
+.continue-grid button,
+.destination-grid button,
+.help-type-grid button,
+[data-style],
+[data-palette],
+[data-open],
+[data-bottom-tab],
+[data-avatar],
+[data-lib-index],
+[data-global-open],
+[data-global-delete],
+[data-open-resource],
+[data-delete-resource],
+.profile-card,
+.workspace-action-card,
+.resource-library-item button,
+.global-resource-actions button,
+.profile-upload-btn,
+.avatar-row button {
+  cursor:pointer;
+}
+
+.style-preview-card,
+.choice-btn,
+.stage-btn,
+.top-tab,
+.progress-pill,
+.workspace-action-card,
+.continue-grid button,
+.destination-grid button,
+.help-type-grid button {
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+}
+
+@media (hover:hover) and (pointer:fine){
+  .style-preview-card:hover,
+  .choice-btn:hover,
+  .stage-btn:hover,
+  .top-tab:hover,
+  .progress-pill:hover,
+  .workspace-action-card:hover,
+  .continue-grid button:hover,
+  .destination-grid button:hover,
+  .help-type-grid button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(35,72,105,.10);
+    border-color:#9bb8df;
+  }
+  .style-preview-card:active,
+  .choice-btn:active,
+  .stage-btn:active,
+  .workspace-action-card:active{
+    transform:translateY(0);
+  }
+}
