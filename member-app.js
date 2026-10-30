@@ -481,7 +481,7 @@ async function buildDirectPlanCanvas(){
   // 5: learning activities — method-specific, visually ordered
   const model=methodModel(d.method,d.topic);
   const phases=model.phases;
-  const h3=phases.length<=5?210:235;
+  const h3=phases.length<=5?210:phases.length<=7?230:240;
   fillRound(ctx,M,y,contentW,h3,th.soft,th.line,cardR);
   drawSectionTitle(ctx,5,"กิจกรรมการเรียนรู้ ("+model.title+")",M+18,y+14,contentW-36,th);
 
@@ -509,15 +509,46 @@ async function buildDirectPlanCanvas(){
       }
     });
   }else{
-    const cols=4,gapX=8,rowGap=8,innerX=M+16,top=y+60,cardW=(contentW-32-gapX*(cols-1))/cols;
-    const rows=Math.ceil(phases.length/cols),cardH=Math.floor((h3-74-(rows-1)*rowGap)/rows);
+    const gapX=10,rowGap=10,top=y+62;
+    const firstCount=4,secondCount=phases.length-firstCount;
+    const cardH=70;
+    const firstW=(contentW-32-gapX*(firstCount-1))/firstCount;
+    const secondW=secondCount>0?(contentW-32-gapX*(secondCount-1))/secondCount:firstW;
     phases.forEach((st,i)=>{
-      const cc=i%cols,rr=Math.floor(i/cols),x=innerX+cc*(cardW+gapX),cy=top+rr*(cardH+rowGap);
-      fillRound(ctx,x,cy,cardW,cardH,"#FFFFFF",th.line,11);
-      fillRound(ctx,x+8,cy+8,38,28,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,8);
-      ctx.fillStyle="#fff";ctx.font="800 11px Tahoma, Arial, sans-serif";ctx.textAlign="center";ctx.fillText(st[0],x+27,cy+27);ctx.textAlign="left";
-      ctx.fillStyle=th.ink;ctx.font="700 12px Tahoma, Arial, sans-serif";ctx.fillText(st[1],x+54,cy+24);
-      ctx.fillStyle=th.muted;ctx.font="500 10.5px Tahoma, Arial, sans-serif";drawWrapped(ctx,st[2],x+10,cy+44,cardW-20,13,2);
+      const second=i>=firstCount;
+      const idx=second?i-firstCount:i;
+      const count=second?secondCount:firstCount;
+      const cw=second?secondW:firstW;
+      const totalW=count*cw+(count-1)*gapX;
+      const startX=M+(contentW-totalW)/2;
+      const x=startX+idx*(cw+gapX);
+      const cy=top+(second?cardH+rowGap:0);
+
+      fillRound(ctx,x,cy,cw,cardH,"#FFFFFF",th.line,12);
+
+      const badgeW=Math.min(54,cw-18);
+      fillRound(ctx,x+9,cy+9,badgeW,25,i%3===0?th.primary:i%3===1?th.secondary:th.accent,null,8);
+      ctx.fillStyle="#fff";
+      ctx.font="800 10px Tahoma, Arial, sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(st[0],x+9+badgeW/2,cy+26);
+      ctx.textAlign="left";
+
+      ctx.fillStyle=th.ink;
+      ctx.font="700 12.5px Tahoma, Arial, sans-serif";
+      ctx.fillText(st[1],x+18+badgeW,cy+25);
+
+      ctx.fillStyle=th.muted;
+      ctx.font="500 10.5px Tahoma, Arial, sans-serif";
+      drawWrapped(ctx,st[2],x+10,cy+47,cw-20,13,2);
+
+      if(i<phases.length-1){
+        ctx.fillStyle=th.primary;
+        ctx.font="800 16px Tahoma, Arial, sans-serif";
+        ctx.textAlign="center";
+        if(!second && i<firstCount-1) ctx.fillText("›",x+cw+gapX/2,cy+cardH/2+5);
+        ctx.textAlign="left";
+      }
     });
   }
   y+=h3+G;
