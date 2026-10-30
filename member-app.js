@@ -438,14 +438,53 @@ ${visualOptions}
 - หาก AI รองรับการสร้างภาพ ให้สร้างภาพทันทีจากคำสั่งนี้โดยไม่ตอบกลับเป็นข้อความก่อน
 - ส่งออกผลลัพธ์เป็นภาพ A4 หน้าเดียวเท่านั้น`;
 }
-async function copy(){const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");try{await navigator.clipboard.writeText(t);toast("คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}}
+async function imageSourceToPngBlob(src){
+  if(!src)return null;
+  const blob=await fetch(src).then(r=>{if(!r.ok)throw new Error("โหลดรูปไม่สำเร็จ");return r.blob()});
+  if(blob.type==="image/png")return blob;
+  const bmp=await createImageBitmap(blob);
+  const c=document.createElement("canvas");c.width=bmp.width;c.height=bmp.height;
+  c.getContext("2d").drawImage(bmp,0,0);
+  return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("แปลงรูปไม่สำเร็จ")),"image/png"));
+}
+function ensurePromptReferencePreview(){
+  const wrap=$("promptWrap");if(!wrap)return;
+  let box=$("promptReferenceMedia");
+  if(!box){
+    box=document.createElement("div");box.id="promptReferenceMedia";
+    box.style.cssText="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 14px;padding:10px 12px;border:1px solid #dbe7f0;border-radius:12px;background:#f8fbfe";
+    const pre=$("promptText");pre?.parentNode?.insertBefore(box,pre);
+  }
+  const img=currentPlanTeacherImage();
+  if(planTeacherImageSource!=="none"&&img){
+    box.hidden=false;
+    box.innerHTML='<img src="'+img+'" alt="รูปครูอ้างอิง" style="width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid #dbe7f0"><div><b>รูปครูอ้างอิงสำหรับ Prompt นี้</b><br><small>เมื่อนำ Prompt ไปใช้ ต้องแนบรูปนี้ไปพร้อมกัน เพื่อให้ AI ใช้ใบหน้าครูจริง</small></div>';
+  }else{box.hidden=true;box.innerHTML=""}
+  if($("copyPromptBtn"))$("copyPromptBtn").textContent=(planTeacherImageSource!=="none"&&img)?"📋 คัดลอก Prompt + รูปครู":"📋 คัดลอก";
+}
+async function copy(){
+  const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");
+  const img=currentPlanTeacherImage();
+  try{
+    if(img&&planTeacherImageSource!=="none"&&window.ClipboardItem&&navigator.clipboard?.write){
+      const png=await imageSourceToPngBlob(img);
+      const item=new ClipboardItem({"text/plain":new Blob([t],{type:"text/plain"}),"image/png":png});
+      await navigator.clipboard.write([item]);
+      toast("คัดลอก Prompt + รูปครูแล้ว ✓");return;
+    }
+    await navigator.clipboard.writeText(t);
+    toast(img&&planTeacherImageSource!=="none"?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓");
+  }catch(e){
+    try{await navigator.clipboard.writeText(t);toast(img?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}
+  }
+}
 async function saveWork(t){
   const payload={user_id:user.id,title:v("topic")||selected?.indicator||"แผนการจัดการเรียนรู้",stage,grade:$("grade").value||null,subject:$("subject").value||null,domain:selected?.domain||null,standard:selected?.standard||null,indicator:selected?.indicator||null,indicator_text:selected?.indicator_text||null,unit_name:v("unitName")||null,topic:v("topic")||null,duration:v("duration")||null,method:v("method")||null,semester:$("semester")?.value||null,academic_year:v("academicYear")||null,teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,affiliation_type:$("affiliationType")?.value||"obec",organization:v("organization")||null,teacher_name:v("teacherName")||null,school_name:v("schoolName")||null,style,palette,prompt_text:t,status:"ready"};if(activeCourseLessonContext){const c=courseDrafts()[activeCourseLessonContext.courseIndex],u=c?.learning_units?.units?.[activeCourseLessonContext.unitIndex];if(c?._cloud_id)payload.course_id=c._cloud_id;if(u?._cloud_id)payload.unit_id=u._cloud_id}
   const {data,error}=await sb.from("lesson_plans").insert(payload).select("*").single();
   if(error){console.warn("cloud save",error);return null}
   cloudPlans.unshift(data);if(activeCourseLessonContext){const rows=courseDrafts(),c=rows[activeCourseLessonContext.courseIndex];if(c){c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({type:"lesson_plan",unit_id:activeCourseLessonContext.unitClientId||null,lesson_plan_id:data.id,title:data.title,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[activeCourseLessonContext.courseIndex]=c;writeCourseDrafts(rows);renderCourses()}}renderWork();return data
 }
-async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
+async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
   const items=[
     ["worksheet","📝","สร้าง Prompt ใบงาน","ใบงานพร้อมคำชี้แจง/พื้นที่ตอบ"],
