@@ -697,8 +697,23 @@
       <button data-avatar="avatar:star" type="button">⭐</button>
       <label>📷 รูปจริง<input id="profilePhoto" type="file" accept="image/*" hidden></label>
     </div>
-    <label>ชื่อที่แสดง<input id="profileDisplayName" type="text"></label>
-    <label>โรงเรียน<input id="profileSchool" type="text"></label>
+    <label>ชื่อผู้สอน<input id="profileDisplayName" type="text" placeholder="ชื่อ-สกุล"></label>
+    <label>ตำแหน่ง<input id="profileTeacherPosition" type="text" placeholder="เช่น ครู"></label>
+    <label>โรงเรียน<input id="profileSchool" type="text" placeholder="ชื่อโรงเรียน"></label>
+    <label>สังกัด / ระบบการศึกษา
+      <select id="profileAffiliationType">
+        <option value="obec">สพฐ. / กระทรวงศึกษาธิการ</option>
+        <option value="bma">กรุงเทพมหานคร (กทม.)</option>
+        <option value="local">อปท. / เทศบาล / อบจ. / อบต.</option>
+        <option value="private">โรงเรียนเอกชน / สช.</option>
+        <option value="university">โรงเรียนสาธิต / มหาวิทยาลัย</option>
+        <option value="custom">อื่น ๆ / กำหนดเอง</option>
+      </select>
+    </label>
+    <label>หน่วยงาน / สังกัดที่แสดงในแผน<input id="profileOrganization" type="text" placeholder="เช่น สำนักการศึกษา กรุงเทพมหานคร"></label>
+    <label>จังหวัด<input id="profileProvince" type="text" placeholder="เช่น กรุงเทพมหานคร"></label>
+    <label>จำนวนนักเรียนเริ่มต้น<input id="profileStudentCount" type="number" min="0" inputmode="numeric" placeholder="เช่น 30"></label>
+    <small class="profile-default-note">ข้อมูลนี้จะถูกเติมอัตโนมัติในแบบฟอร์มสร้างแผนทุกครั้ง และยังแก้เฉพาะแผนได้</small>
     <div class="profile-media-grid">
       <label>รูปครู
         <input id="teacherPhotoUpload" type="file" accept="image/*">
@@ -723,6 +738,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=955"></script>
+<script src="/member-app.js?v=956"></script>
 </body>
 </html>
