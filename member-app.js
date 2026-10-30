@@ -115,7 +115,7 @@ function planTeacherImageLabel(){
 function currentPlanTeacherImage(){
   if(planTeacherImageSource==="none")return "";
   if(planTeacherImageSource==="upload")return planTeacherImageData||"";
-  const src=profile?.avatar_url||profile?.teacher_photo_url||"";
+  const src=profile?.teacher_photo_url||profile?.avatar_url||"";
   return src&&String(src).startsWith("avatar:")?"":src
 }
 function planTeacherImagePrompt(){
@@ -126,7 +126,7 @@ function planTeacherImagePrompt(){
       :"รูปครูสำหรับแผนนี้: ครูเลือกอัปโหลดรูปใหม่ แต่ยังไม่ได้เลือกรูป จึงห้ามสร้างรูปครูขึ้นมาเองจนกว่าจะมีไฟล์ภาพจริง"
   }
   return currentPlanTeacherImage()
-    ?"รูปครูสำหรับแผนนี้: ใช้รูปโปรไฟล์ของครูเป็นภาพอ้างอิง คงใบหน้า บุคลิก และสัดส่วนเดิม ห้ามเปลี่ยนใบหน้า ห้ามสร้างบุคคลใหม่ และเมื่อนำ Prompt ไปใช้กับ AI ให้แนบรูปโปรไฟล์นี้ไปพร้อม Prompt"
+    ?"รูปครูสำหรับแผนนี้: ใช้รูปครูจริงจากโปรไฟล์ของครูเป็นภาพอ้างอิงหลักของผลงานนี้ ระบบเลือกภาพนี้ให้แล้ว ต้องใช้บุคคลคนเดิม คงใบหน้า ทรงผม บุคลิก โทนผิว และสัดส่วนเดิม ห้ามเปลี่ยนใบหน้า ห้ามสร้างบุคคลใหม่ ห้ามใช้ภาพครูอื่น และให้ถือภาพโปรไฟล์นี้เป็น Reference Image ของ Prompt นี้โดยตรง"
     :"รูปครูสำหรับแผนนี้: เลือกใช้รูปโปรไฟล์ แต่โปรไฟล์ยังไม่มีไฟล์ภาพจริง จึงห้ามสร้างรูปครูขึ้นมาเอง"
 }
 function renderPlanTeacherImagePicker(){
@@ -287,6 +287,10 @@ function prompt(){
   const affiliation=affiliationMeta[affiliationKey]||affiliationMeta.obec;
   const customAffiliation=v("customAffiliationNote")||"ไม่มีคำอธิบายเพิ่มเติม";
   const teacherMedia=planTeacherImagePrompt();
+  const teacherImageRef=currentPlanTeacherImage();
+  const teacherImageReferenceNote=teacherImageRef&&String(teacherImageRef).startsWith("data:image/")
+    ?"ภาพครูอ้างอิงจากโปรไฟล์: ระบบมีไฟล์ภาพจริงของครูสำหรับงานนี้แล้ว ให้ใช้ภาพดังกล่าวเป็น Reference Image ของการสร้างภาพ ห้ามแทนที่ด้วยบุคคลอื่น"
+    :"ภาพครูอ้างอิงจากโปรไฟล์: "+(planTeacherImageSource==="none"?"ไม่ใช้รูปครู":"หากไม่มีไฟล์ภาพจริง ห้ามสร้างใบหน้าครูสมมติ");
   const schoolLogoMedia=schoolLogoPrompt();
   const qrMedia=qrPrompt();
   const visualOptions=designOptionsPrompt();
@@ -329,6 +333,7 @@ D. การรับรองแผนและการลงนาม
 
 E. สื่อประจำตัวครู/โรงเรียน
 ${teacherMedia}
+${teacherImageReferenceNote}
 ${schoolLogoMedia}
 ${qrMedia}
 
