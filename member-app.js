@@ -428,6 +428,8 @@ async function buildDirectPlanCanvas(){
   const model=methodModel(d.method,d.topic),phases=model.phases;
   const contentLoad=directContentLoad(d,phases),textScale=adaptiveScaleFromLoad(contentLoad,phases.length);
   const needApproval=!!$("includeSignatures")?.checked;
+  let pageTextBoost=1;
+  const adaptiveFS=(n,min=10,max=60)=>Math.max(min,Math.min(max,Math.round(n*textScale*pageTextBoost)));
   ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
 
   const bg=planDesignValue("planBackground","clean");
@@ -473,8 +475,7 @@ async function buildDirectPlanCanvas(){
   const availableForCards=Math.max(900,remainingHeight-gapTotal);
   const pageFillScale=Math.max(.88,Math.min(1.18,availableForCards/baselineTotal));
   const bodyScale=Math.max(.90,Math.min(1.16,pageFillScale));
-  const pageTextBoost=Math.max(.96,Math.min(1.08,bodyScale));
-  const adaptiveFS=(n,min=10,max=60)=>Math.max(min,Math.min(max,Math.round(n*textScale*pageTextBoost)));
+  pageTextBoost=Math.max(.96,Math.min(1.08,bodyScale));
   const h1=Math.round(h1Base*bodyScale);
   fillRound(ctx,M,y,col,h1,cardFill,th.line,cardR);drawSectionTitle(ctx,1,"ข้อมูลหลักสูตรและข้อมูลพื้นฐาน",M+18,y+14,col-36,th);
   ctx.fillStyle=th.ink;ctx.font="600 "+adaptiveFS(18,16,21)+"px Tahoma, Arial, sans-serif";
