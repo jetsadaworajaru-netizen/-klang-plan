@@ -690,12 +690,22 @@
       <div id="profileAvatarLarge" class="profile-avatar large">👤</div>
       <div><h2>โปรไฟล์สมาชิก</h2><p id="profileIdText">KP-M------</p></div>
     </div>
+    <div class="profile-avatar-editor">
+      <div>
+        <b>รูปโปรไฟล์</b>
+        <small>ใช้แสดงมุมขวาบนและหน้าโปรไฟล์สมาชิก</small>
+      </div>
+      <div id="profilePhotoPreview" class="profile-photo-preview">ยังไม่ได้เลือกรูป</div>
+      <label class="profile-upload-btn">📷 เลือกรูปโปรไฟล์
+        <input id="profilePhoto" type="file" accept="image/*" hidden>
+      </label>
+    </div>
     <div class="avatar-row">
+      <span class="avatar-row-label">หรือเลือกไอคอน</span>
       <button data-avatar="avatar:teacher" type="button">👩‍🏫</button>
       <button data-avatar="avatar:teacher_male" type="button">👨‍🏫</button>
       <button data-avatar="avatar:book" type="button">📚</button>
       <button data-avatar="avatar:star" type="button">⭐</button>
-      <label>📷 รูปจริง<input id="profilePhoto" type="file" accept="image/*" hidden></label>
     </div>
     <label>ชื่อผู้สอน<input id="profileDisplayName" type="text" placeholder="ชื่อ-สกุล"></label>
     <label>ตำแหน่ง<input id="profileTeacherPosition" type="text" placeholder="เช่น ครู"></label>
@@ -738,6 +748,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=956"></script>
+<script src="/member-app.js?v=957"></script>
 </body>
 </html>
