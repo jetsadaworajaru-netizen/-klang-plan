@@ -16,7 +16,7 @@ function memberRuntimeGuard(error){
 }
 window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
 window.addEventListener("unhandledrejection",e=>memberRuntimeGuard(e.reason||new Error("promise rejected")));
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null;
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="profile",planTeacherImageData="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -105,8 +105,70 @@ function renderProfile(){
   $("profileStudentCount").value=d.student_count;
   renderProfilePhotoEditor();
   if($("teacherPhotoPreview"))$("teacherPhotoPreview").innerHTML=profileImageHtml(profile.teacher_photo_url||profile.avatar_url,"รูปครู");
-  if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน")
+  if($("schoolLogoPreview"))$("schoolLogoPreview").innerHTML=profileImageHtml(profile.school_logo_url,"โลโก้โรงเรียน");
+  ensurePlanTeacherImagePicker()
 }
+
+function planTeacherImageLabel(){
+  return planTeacherImageSource==="upload"?"อัปโหลดรูปใหม่สำหรับแผนนี้":planTeacherImageSource==="none"?"ไม่แสดงรูปครู":"ใช้รูปโปรไฟล์"
+}
+function currentPlanTeacherImage(){
+  if(planTeacherImageSource==="none")return "";
+  if(planTeacherImageSource==="upload")return planTeacherImageData||"";
+  const src=profile?.avatar_url||profile?.teacher_photo_url||"";
+  return src&&String(src).startsWith("avatar:")?"":src
+}
+function planTeacherImagePrompt(){
+  if(planTeacherImageSource==="none")return "รูปครูสำหรับแผนนี้: ไม่แสดงรูปครู และห้ามสร้างบุคคลหรือรูปครูขึ้นมาใหม่";
+  if(planTeacherImageSource==="upload"){
+    return planTeacherImageData
+      ?"รูปครูสำหรับแผนนี้: ใช้รูปที่ครูอัปโหลดใหม่สำหรับแผนนี้เป็นภาพอ้างอิงเท่านั้น คงใบหน้า บุคลิก และสัดส่วนเดิม ห้ามเปลี่ยนใบหน้า ห้ามสร้างบุคคลใหม่ และเมื่อนำ Prompt ไปใช้กับ AI ให้แนบรูปนี้ไปพร้อม Prompt"
+      :"รูปครูสำหรับแผนนี้: ครูเลือกอัปโหลดรูปใหม่ แต่ยังไม่ได้เลือกรูป จึงห้ามสร้างรูปครูขึ้นมาเองจนกว่าจะมีไฟล์ภาพจริง"
+  }
+  return currentPlanTeacherImage()
+    ?"รูปครูสำหรับแผนนี้: ใช้รูปโปรไฟล์ของครูเป็นภาพอ้างอิง คงใบหน้า บุคลิก และสัดส่วนเดิม ห้ามเปลี่ยนใบหน้า ห้ามสร้างบุคคลใหม่ และเมื่อนำ Prompt ไปใช้กับ AI ให้แนบรูปโปรไฟล์นี้ไปพร้อม Prompt"
+    :"รูปครูสำหรับแผนนี้: เลือกใช้รูปโปรไฟล์ แต่โปรไฟล์ยังไม่มีไฟล์ภาพจริง จึงห้ามสร้างรูปครูขึ้นมาเอง"
+}
+function renderPlanTeacherImagePicker(){
+  const box=$("planTeacherImageBlock");if(!box)return;
+  document.querySelectorAll('input[name="planTeacherImageSource"]').forEach(r=>r.checked=r.value===planTeacherImageSource);
+  const uploadWrap=$("planTeacherUploadWrap");if(uploadWrap)uploadWrap.hidden=planTeacherImageSource!=="upload";
+  const hint=$("planTeacherImageHint");
+  if(hint){
+    hint.textContent=planTeacherImageSource==="profile"
+      ?(currentPlanTeacherImage()?"ระบบจะใช้รูปโปรไฟล์ปัจจุบันของครู":"ยังไม่มีรูปโปรไฟล์แบบภาพ กรุณาเพิ่มในโปรไฟล์หรือเลือกอัปโหลดรูปใหม่")
+      :planTeacherImageSource==="upload"
+        ?(planTeacherImageData?"ใช้รูปใหม่เฉพาะแผนนี้ ไม่เปลี่ยนรูปโปรไฟล์หลัก":"เลือกรูปใหม่สำหรับแผนนี้")
+        :"แผนหน้าเดียวและ Prompt จะไม่ใช้รูปครู"
+  }
+  const preview=$("planTeacherImagePreview"),src=currentPlanTeacherImage();
+  if(preview)preview.innerHTML=src?'<img src="'+src+'" alt="ตัวอย่างรูปครู">':'<span>ไม่มีรูปครูที่จะแสดง</span>';
+}
+function ensurePlanTeacherImagePicker(){
+  const step=$("step3"),anchor=step?.querySelector(".form-grid");if(!step||!anchor)return;
+  if(!$("planTeacherImageBlock")){
+    const box=document.createElement("div");
+    box.id="planTeacherImageBlock";box.className="optional-block plan-teacher-image-block";
+    box.innerHTML='<div class="plan-teacher-image-head"><div><b>🖼️ รูปครูในแผนหน้าเดียว</b><small>เลือกรูปที่จะใช้กับแผนนี้และคำสั่ง Prompt</small></div></div>'
+      +'<div class="plan-teacher-image-options">'
+      +'<label><input type="radio" name="planTeacherImageSource" value="profile"> <span><b>ใช้รูปโปรไฟล์</b><small>ใช้รูปที่บันทึกไว้ในโปรไฟล์ครู</small></span></label>'
+      +'<label><input type="radio" name="planTeacherImageSource" value="upload"> <span><b>อัปโหลดรูปใหม่</b><small>ใช้เฉพาะแผนนี้ ไม่ทับรูปโปรไฟล์</small></span></label>'
+      +'<label><input type="radio" name="planTeacherImageSource" value="none"> <span><b>ไม่แสดงรูปครู</b><small>เหมาะกับแผนที่ต้องการพื้นที่เนื้อหามากขึ้น</small></span></label>'
+      +'</div>'
+      +'<div id="planTeacherUploadWrap" class="plan-teacher-upload" hidden><label>📷 เลือกรูปสำหรับแผนนี้<input id="planTeacherPhotoUpload" type="file" accept="image/*"></label></div>'
+      +'<div class="plan-teacher-image-preview-row"><div id="planTeacherImagePreview" class="plan-teacher-image-preview"></div><small id="planTeacherImageHint"></small></div>';
+    anchor.insertAdjacentElement("afterend",box);
+    if(!document.getElementById("planTeacherImagePickerStyle")){
+      const st=document.createElement("style");st.id="planTeacherImagePickerStyle";
+      st.textContent='.plan-teacher-image-block{margin-top:16px}.plan-teacher-image-head b,.plan-teacher-image-head small{display:block}.plan-teacher-image-head small{color:#73879a;margin-top:2px}.plan-teacher-image-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.plan-teacher-image-options label{display:flex;gap:8px;align-items:flex-start;margin:0;padding:12px;border:1px solid #d8e5ef;border-radius:14px;background:#fff;cursor:pointer}.plan-teacher-image-options label:has(input:checked){border-color:#5d8df4;box-shadow:0 0 0 3px rgba(93,141,244,.10);background:#f7f9ff}.plan-teacher-image-options input{margin-top:4px}.plan-teacher-image-options b,.plan-teacher-image-options small{display:block}.plan-teacher-image-options small{font-weight:500;color:#7b8c9b;margin-top:2px}.plan-teacher-upload{margin:10px 0}.plan-teacher-upload label{display:grid;gap:6px}.plan-teacher-image-preview-row{display:flex;align-items:center;gap:12px}.plan-teacher-image-preview{width:78px;height:78px;border-radius:16px;border:1px dashed #cbdbe8;background:#f8fbfe;display:grid;place-items:center;overflow:hidden;flex:0 0 78px;color:#8a9aaa;font-size:.7rem;text-align:center;padding:4px}.plan-teacher-image-preview img{width:100%;height:100%;object-fit:cover}.plan-teacher-image-preview-row>small{color:#6f8193}@media(max-width:720px){.plan-teacher-image-options{grid-template-columns:1fr}.plan-teacher-image-preview-row{align-items:flex-start}}';
+      document.head.appendChild(st)
+    }
+    document.querySelectorAll('input[name="planTeacherImageSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;renderPlanTeacherImagePicker();updateSummary()});
+    $("planTeacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);renderPlanTeacherImagePicker();updateSummary()}
+  }
+  renderPlanTeacherImagePicker()
+}
+
 async function loadData(){const r=await fetch("/data.json?v=870",{cache:"no-store"});if(!r.ok)throw new Error("data "+r.status);DATA=await r.json();
 if(!Array.isArray(DATA)||DATA.length!==2155)throw new Error("Curriculum dataset integrity check failed");
 buildGrades();
@@ -188,7 +250,7 @@ function renderAffiliation(){
   if($("customAffiliationWrap"))$("customAffiliationWrap").hidden=key!=="custom";
   updateSummary()
 }
-function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
+function updateSummary(){const vals=[["ช่วงชั้น",stage],["ชั้น",$("grade")?.value],["กลุ่มสาระ",$("subject")?.value],["ตัวชี้วัด",selected?.indicator],["หน่วย",$("unitName")?.value],["เรื่อง",$("topic")?.value],["สังกัด",(affiliationMeta[$("affiliationType")?.value||"obec"]||affiliationMeta.obec).title],["ภาคเรียน",$("semester")?.value],["ปีการศึกษา",$("academicYear")?.value],["วันที่สอน",$("includeTeachingDate")?.checked?$("teachingDate")?.value:""],["ลงนาม",$("includeSignatures")?.checked?"มี":"ไม่ใช้"],["รูปครู",planTeacherImageLabel()],["สไตล์",style],["สี",palette]];$("summary").innerHTML=vals.filter(x=>x[1]).map(x=>`<div class="sum"><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join("")}
 function v(id){return $(id).value.trim()}
 function prompt(){
   if(!selected)return"";
@@ -201,6 +263,7 @@ function prompt(){
   const affiliationKey=$("affiliationType")?.value||"obec";
   const affiliation=affiliationMeta[affiliationKey]||affiliationMeta.obec;
   const customAffiliation=v("customAffiliationNote")||"ไม่มีคำอธิบายเพิ่มเติม";
+  const teacherMedia=planTeacherImagePrompt();
   const approval=signatures?`
 D. การรับรองแผนและการลงนาม
 รูปแบบการรับรอง: ${v("approvalLayout")}
@@ -215,7 +278,8 @@ D. การรับรองแผนและการลงนาม
 สร้าง “แผนการจัดการเรียนรู้” แบบหน้าเดียว ภาษาไทย อ่านง่าย กระชับ แต่มีองค์ประกอบทางวิชาการครบถ้วน เหมาะสำหรับครูไทยนำไปใช้จริง
 
 E. สื่อประจำตัวครู/โรงเรียน
-ระบบมีรูปครูและโลโก้โรงเรียนจากโปรไฟล์ (ถ้าครูอัปโหลดไว้) ให้จัดวางในหัวเอกสารหรือส่วนข้อมูลผู้สอนอย่างสุภาพ โดยคงสัดส่วนเดิม ไม่บิดภาพ ไม่เปลี่ยนใบหน้า และไม่ดัดแปลงโลโก้
+${teacherMedia}
+โลโก้โรงเรียน: หากครูมีโลโก้จริงในโปรไฟล์หรือแนบไฟล์ภายหลัง ให้ใช้ไฟล์จริงเท่านั้น จัดวางอย่างสุภาพ คงสัดส่วนเดิม ไม่บิดหรือดัดแปลงโลโก้
 
 A. ข้อมูลหลักสูตร
 หลักสูตร: ${selected.curriculum||"หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551 (รวมฉบับปรับปรุง พ.ศ. 2560)"}
@@ -1255,7 +1319,7 @@ function bind(){
   $$("[data-help-type]").forEach(b=>b.onclick=()=>{$$(" [data-help-type]".trim()).forEach(x=>x.classList.toggle("active",x===b));$("helpType").value=b.dataset.helpType});$("sendHelpBtn").onclick=sendHelp;
   if($("planSearch"))$("planSearch").oninput=renderWork;if($("planGradeFilter"))$("planGradeFilter").onchange=renderWork;if($("planSubjectFilter"))$("planSubjectFilter").onchange=renderWork;if($("refreshPlansBtn"))$("refreshPlansBtn").onclick=loadCloudPlans;if($("closePlanWorkspaceBtn"))$("closePlanWorkspaceBtn").onclick=closeWorkspacePlan;if($("planWorkspaceBackdrop"))$("planWorkspaceBackdrop").onclick=closeWorkspacePlan;if($("workspaceWorksheetBtn"))$("workspaceWorksheetBtn").onclick=()=>openMaterialStudio("worksheet");if($("workspaceKnowledgeBtn"))$("workspaceKnowledgeBtn").onclick=()=>openMaterialStudio("knowledge");if($("workspaceQuizBtn"))$("workspaceQuizBtn").onclick=openQuizStudio;if($("workspaceRubricBtn"))$("workspaceRubricBtn").onclick=openRubricStudio;if($("workspaceGameBtn"))$("workspaceGameBtn").onclick=openGameStudio;if($("workspacePackBtn"))$("workspacePackBtn").onclick=downloadTeachingPack;if($("workspaceResourceLibraryBtn"))$("workspaceResourceLibraryBtn").onclick=openResourceLibrary;if($("globalResourceSearch"))$("globalResourceSearch").oninput=renderGlobalResourceLibrary;if($("globalResourceType"))$("globalResourceType").onchange=renderGlobalResourceLibrary;if($("globalResourceSubject"))$("globalResourceSubject").onchange=renderGlobalResourceLibrary;if($("refreshResourceLibraryBtn"))$("refreshResourceLibraryBtn").onclick=()=>{populateGlobalResourceSubjects();renderGlobalResourceLibrary()};if($("closeResourceLibraryBtn"))$("closeResourceLibraryBtn").onclick=closeResourceLibrary;if($("resourceLibraryBackdrop"))$("resourceLibraryBackdrop").onclick=closeResourceLibrary;if($("saveMaterialLibraryBtn"))$("saveMaterialLibraryBtn").onclick=saveCurrentMaterialLibrary;if($("saveQuizLibraryBtn"))$("saveQuizLibraryBtn").onclick=saveCurrentQuizLibrary;if($("saveRubricLibraryBtn"))$("saveRubricLibraryBtn").onclick=saveCurrentRubricLibrary;if($("saveGameLibraryBtn"))$("saveGameLibraryBtn").onclick=saveCurrentGameLibrary;if($("closeGameStudioBtn"))$("closeGameStudioBtn").onclick=closeGameStudio;if($("gameStudioBackdrop"))$("gameStudioBackdrop").onclick=closeGameStudio;if($("gameType"))$("gameType").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameCount"))$("gameCount").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameMode"))$("gameMode").onchange=()=>{gameEditedHtml="";renderGamePreview();scheduleResourceAutosave("game")};if($("gameStudentViewBtn"))$("gameStudentViewBtn").onclick=()=>{gameViewMode="student";gameEditedHtml="";gameEditing=false;renderGamePreview()};if($("gameKeyViewBtn"))$("gameKeyViewBtn").onclick=()=>{gameViewMode="key";gameEditedHtml="";gameEditing=false;renderGamePreview()};if($("toggleGameEditBtn"))$("toggleGameEditBtn").onclick=toggleGameEdit;if($("gamePreview"))$("gamePreview").oninput=()=>{if(gameEditing){gameEditedHtml=$("gamePreview").innerHTML;scheduleResourceAutosave("game")}};if($("downloadGameDocxBtn"))$("downloadGameDocxBtn").onclick=downloadGameDocx;if($("downloadGamePdfBtn"))$("downloadGamePdfBtn").onclick=downloadGamePdf;if($("downloadGameKeyDocxBtn"))$("downloadGameKeyDocxBtn").onclick=downloadGameKeyDocx;if($("downloadGameKeyPdfBtn"))$("downloadGameKeyPdfBtn").onclick=downloadGameKeyPdf;if($("closeRubricStudioBtn"))$("closeRubricStudioBtn").onclick=closeRubricStudio;if($("rubricStudioBackdrop"))$("rubricStudioBackdrop").onclick=closeRubricStudio;if($("rubricType"))$("rubricType").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("rubricCriteriaCount"))$("rubricCriteriaCount").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("rubricMaxScore"))$("rubricMaxScore").onchange=()=>{rubricEditedHtml="";renderRubricPreview();scheduleResourceAutosave("rubric")};if($("toggleRubricEditBtn"))$("toggleRubricEditBtn").onclick=toggleRubricEdit;if($("rubricPreview"))$("rubricPreview").oninput=()=>{if(rubricEditing){rubricEditedHtml=$("rubricPreview").innerHTML;scheduleResourceAutosave("rubric")}};if($("downloadRubricDocxBtn"))$("downloadRubricDocxBtn").onclick=downloadRubricDocx;if($("downloadRubricPdfBtn"))$("downloadRubricPdfBtn").onclick=downloadRubricPdf;if($("closeQuizStudioBtn"))$("closeQuizStudioBtn").onclick=closeQuizStudio;if($("quizStudioBackdrop"))$("quizStudioBackdrop").onclick=closeQuizStudio;if($("quizCount"))$("quizCount").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizDifficulty"))$("quizDifficulty").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizType"))$("quizType").onchange=()=>{quizEditedHtml="";renderQuizPreview();scheduleResourceAutosave("quiz")};if($("quizStudentViewBtn"))$("quizStudentViewBtn").onclick=()=>{quizViewMode="student";quizEditedHtml="";renderQuizPreview()};if($("quizKeyViewBtn"))$("quizKeyViewBtn").onclick=()=>{quizViewMode="key";quizEditedHtml="";renderQuizPreview()};if($("toggleQuizEditBtn"))$("toggleQuizEditBtn").onclick=toggleQuizEdit;if($("quizPreview"))$("quizPreview").oninput=()=>{if(quizEditing){quizEditedHtml=$("quizPreview").innerHTML;scheduleResourceAutosave("quiz")}};if($("downloadQuizDocxBtn"))$("downloadQuizDocxBtn").onclick=downloadQuizDocx;if($("downloadQuizPdfBtn"))$("downloadQuizPdfBtn").onclick=downloadQuizPdf;if($("downloadQuizKeyDocxBtn"))$("downloadQuizKeyDocxBtn").onclick=downloadQuizKeyDocx;if($("downloadQuizKeyPdfBtn"))$("downloadQuizKeyPdfBtn").onclick=downloadQuizKeyPdf;if($("closeMaterialStudioBtn"))$("closeMaterialStudioBtn").onclick=closeMaterialStudio;if($("materialStudioBackdrop"))$("materialStudioBackdrop").onclick=closeMaterialStudio;if($("materialTypeWorksheet"))$("materialTypeWorksheet").onclick=()=>{materialType="worksheet";renderMaterialPreview()};if($("materialTypeKnowledge"))$("materialTypeKnowledge").onclick=()=>{materialType="knowledge";renderMaterialPreview()};nodes("[data-material-style]").forEach(b=>b.onclick=()=>{materialStyle=b.dataset.materialStyle;renderMaterialPreview();scheduleResourceAutosave("material")});if($("materialStudentPlaceholder"))$("materialStudentPlaceholder").oninput=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialTaskCount"))$("materialTaskCount").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialPageCount"))$("materialPageCount").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("materialVisualCards"))$("materialVisualCards").onchange=()=>{renderMaterialPreview();scheduleResourceAutosave("material")};if($("toggleMaterialEditBtn"))$("toggleMaterialEditBtn").onclick=toggleMaterialEdit;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").onclick=resetMaterialEdit;if($("materialPreview"))$("materialPreview").oninput=()=>{if(materialEditing){materialEditedHtml=$("materialPreview").innerHTML;if($("resetMaterialEditBtn"))$("resetMaterialEditBtn").hidden=false;scheduleResourceAutosave("material")}};if($("previewStudentMaterialBtn"))$("previewStudentMaterialBtn").onclick=()=>{materialPreviewMode="student";materialEditedHtml="";materialEditing=false;renderMaterialPreview()};if($("previewTeacherKeyBtn"))$("previewTeacherKeyBtn").onclick=()=>{materialPreviewMode="teacher";materialEditedHtml="";materialEditing=false;renderMaterialPreview()};if($("downloadTeacherKeyDocxBtn"))$("downloadTeacherKeyDocxBtn").onclick=downloadTeacherKeyDocx;if($("downloadTeacherKeyPdfBtn"))$("downloadTeacherKeyPdfBtn").onclick=downloadTeacherKeyPdf;if($("downloadMaterialDocxBtn"))$("downloadMaterialDocxBtn").onclick=downloadMaterialDocx;if($("downloadMaterialPdfBtn"))$("downloadMaterialPdfBtn").onclick=downloadMaterialPdf;if($("workspaceWordBtn"))$("workspaceWordBtn").onclick=()=>activeWorkspacePlan&&downloadWord(activeWorkspacePlan);if($("workspacePdfBtn"))$("workspacePdfBtn").onclick=()=>activeWorkspacePlan&&printPlanPdf(activeWorkspacePlan);if($("saveReflectionBtn"))$("saveReflectionBtn").onclick=saveReflection;if($("deleteCloudPlanBtn"))$("deleteCloudPlanBtn").onclick=deleteCloudPlan;if($("reusePlanBtn"))$("reusePlanBtn").onclick=()=>{if(!activeWorkspacePlan)return;switchTab("create");$("promptText").textContent=activeWorkspacePlan.prompt_text||"";$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)};if($("duplicatePlanBtn"))$("duplicatePlanBtn").onclick=duplicateActivePlan;if($("nextPlanBtn"))$("nextPlanBtn").onclick=nextPlanFromActive;
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
-  $("[data-avatar]").forEach(b=>b.onclick=()=>{profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;profile.avatar_url=b.dataset.avatar;renderProfile()});
+  nodes("[data-avatar]").forEach(b=>b.onclick=()=>{profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profilePhotoSource=await fileToDataUrl(f);resetProfilePhotoEditor();$("profileStatus").innerHTML='<div class="indicator-preview">เลือกรูปแล้ว ลาก/ซูม/เลื่อนได้ จากนั้นกด “บันทึกโปรไฟล์”</div>'}};
   if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
   if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
