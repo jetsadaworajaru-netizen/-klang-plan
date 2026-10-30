@@ -399,6 +399,12 @@ F. แนวทางการออกแบบ
 ตัวเลือกการตกแต่งที่ครูเลือก (ต้องปฏิบัติตามจริง)
 ${visualOptions}
 
+ไฟล์อ้างอิงที่อาจแนบมาพร้อม Prompt นี้
+- 01-Teacher-Reference: ถ้ามี ให้ใช้ภาพครูคนนี้เท่านั้น คงใบหน้าและบุคลิกเดิม ห้ามสร้างบุคคลใหม่
+- 02-School-Logo: ถ้ามี ให้ใช้โลโก้ต้นฉบับนี้เท่านั้น ห้ามดัดแปลง
+- 03-QR-Code: ถ้ามี ให้ใช้ QR ต้นฉบับนี้เท่านั้น ต้องสแกนได้จริง
+- หากไม่มีไฟล์ชนิดใดแนบมา ห้ามสร้างไฟล์นั้นขึ้นเอง
+
 - ใช้ Typography ภาษาไทยอ่านง่าย
 - มี Visual hierarchy ชัดเจน
 - ออกแบบให้ดูเป็น “แผนการจัดการเรียนรู้หน้าเดียว” แบบอินโฟกราฟิกการศึกษา ไม่ใช่เอกสารตารางธรรมดา
@@ -433,6 +439,42 @@ function ensurePromptReferencePreview(){
   }else{box.hidden=true;box.innerHTML=""}
   if($("copyPromptBtn"))$("copyPromptBtn").textContent=(planTeacherImageSource!=="none"&&img)?"📋 คัดลอก Prompt + รูปครู":"📋 คัดลอก";
 }
+function profileTeacherRef(){const src=profile?.teacher_photo_url||profile?.avatar_url||"";return src&&String(src).startsWith("avatar:")?"":src}
+function profileLogoRef(){return profile?.school_logo_url||""}
+async function sourceToBytes(src){
+  if(!src)return null;
+  const r=await fetch(src);if(!r.ok)throw new Error("โหลดไฟล์แนบไม่สำเร็จ");
+  const blob=await r.blob();return {bytes:new Uint8Array(await blob.arrayBuffer()),type:blob.type||"application/octet-stream"};
+}
+function extFromMime(type){if(type.includes("png"))return"png";if(type.includes("webp"))return"webp";return"jpg"}
+function saveSourceFile(src,name){
+  if(!src)return toast("ยังไม่มีไฟล์นี้ในโปรไฟล์");
+  fetch(src).then(r=>r.blob()).then(blob=>saveBlob(blob,name+"."+extFromMime(blob.type||"image/jpeg"))).catch(()=>toast("ดาวน์โหลดไฟล์ไม่สำเร็จ"));
+}
+function renderAiAttachmentKit(){
+  const teacher=profileTeacherRef(),logo=profileLogoRef();
+  const tp=$("aiTeacherPreview"),lp=$("aiLogoPreview"),qp=$("aiQrPreview");
+  if(tp)tp.innerHTML=teacher?'<img src="'+teacher+'" alt="รูปครู">':"ไม่มีรูปครู";
+  if(lp)lp.innerHTML=logo?'<img src="'+logo+'" alt="โลโก้โรงเรียน">':"ไม่มีโลโก้";
+  if(qp)qp.innerHTML=planQrData?'<img src="'+planQrData+'" alt="QR Code">':"QR";
+  if($("aiTeacherStatus"))$("aiTeacherStatus").textContent=teacher?"พร้อมแนบ":"ยังไม่มีรูปครูในโปรไฟล์";
+  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"พร้อมแนบ":"ยังไม่มีโลโก้ในโปรไฟล์";
+  if($("aiQrStatus"))$("aiQrStatus").textContent=planQrData?"พร้อมแนบ":"ไม่บังคับ";
+  if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").disabled=!teacher;
+  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").disabled=!logo;
+}
+async function downloadAiPack(){
+  const entries=[];
+  const promptText=$("promptText")?.textContent||"";
+  entries.push(["00-Prompt-Klang-Plan.txt",promptText]);
+  const teacher=profileTeacherRef(),logo=profileLogoRef();
+  try{if(teacher){const x=await sourceToBytes(teacher);entries.push(["01-Teacher-Reference."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  try{if(logo){const x=await sourceToBytes(logo);entries.push(["02-School-Logo."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  try{if(planQrData){const x=await sourceToBytes(planQrData);entries.push(["03-QR-Code."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  const readme="วิธีใช้\n1) เปิด ChatGPT หรือ Gemini\n2) แนบไฟล์ 01 รูปครู / 02 โลโก้ / 03 QR (ถ้ามี)\n3) คัดลอกข้อความจาก 00-Prompt-Klang-Plan.txt\n4) วาง Prompt แล้วสั่งสร้างภาพ A4 หน้าเดียว\n\nสำคัญ: ใช้รูปครูและโลโก้จากไฟล์แนบจริง ห้ามสร้างใหม่หรือเปลี่ยนใบหน้า";
+  entries.push(["README.txt",readme]);
+  saveBlob(zipStored(entries,"application/zip"),"Klang-Plan-AI-Attachments.zip");toast("ดาวน์โหลดชุดแนบแล้ว ✓");
+}
 async function copy(){
   const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");
   const img=currentPlanTeacherImage();
@@ -455,7 +497,7 @@ async function saveWork(t){
   if(error){console.warn("cloud save",error);return null}
   cloudPlans.unshift(data);if(activeCourseLessonContext){const rows=courseDrafts(),c=rows[activeCourseLessonContext.courseIndex];if(c){c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({type:"lesson_plan",unit_id:activeCourseLessonContext.unitClientId||null,lesson_plan_id:data.id,title:data.title,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[activeCourseLessonContext.courseIndex]=c;writeCourseDrafts(rows);renderCourses()}}renderWork();return data
 }
-async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
+async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;renderAiAttachmentKit();ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
   const items=[
     ["worksheet","📝","สร้าง Prompt ใบงาน","ใบงานพร้อมคำชี้แจง/พื้นที่ตอบ"],
@@ -1415,6 +1457,10 @@ function bind(){
   syncTeacherSourceControls();
   $("affiliationType").onchange=()=>{$("affiliationType").dataset.userChanged="1";renderAffiliation()};
   $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
+  if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(profileTeacherRef(),"Teacher-Reference");
+  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(profileLogoRef(),"School-Logo");
+  if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
+  if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
   if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("syncCoursesBtn"))$("syncCoursesBtn").onclick=()=>syncCoursesToCloud();if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   $$("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
