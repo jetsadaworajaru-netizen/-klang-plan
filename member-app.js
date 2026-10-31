@@ -1203,51 +1203,72 @@ function contextualUnitName(base,c){
   const candidate=`${base} — ${hint}`;
   return candidate.length>58?base:candidate;
 }
-function coreCurriculumAnnualHours(grade,subject){
-  grade=String(grade||"").trim();
+function normalizeCoreSubject(subject){
   subject=String(subject||"").trim();
-  const primaryLow=["ป.1","ป.2","ป.3"].includes(grade);
-  const primaryHigh=["ป.4","ป.5","ป.6"].includes(grade);
-  const lowerSec=["ม.1","ม.2","ม.3"].includes(grade);
-  if(primaryLow){
-    if(subject==="ภาษาไทย")return 200;
-    if(subject==="คณิตศาสตร์")return 200;
-    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 80;
-    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 120;
-    if(subject==="สุขศึกษาและพลศึกษา")return 80;
-    if(subject==="ศิลปะ")return 80;
-    if(subject==="การงานอาชีพ")return 40;
-    if(subject==="ภาษาต่างประเทศ")return 40;
-  }
-  if(primaryHigh){
-    if(subject==="ภาษาไทย")return 160;
-    if(subject==="คณิตศาสตร์")return 160;
-    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 80;
-    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 120;
-    if(subject==="สุขศึกษาและพลศึกษา")return 80;
-    if(subject==="ศิลปะ")return 80;
-    if(subject==="การงานอาชีพ")return 80;
-    if(subject==="ภาษาต่างประเทศ")return 80;
-  }
-  if(lowerSec){
-    if(subject==="ภาษาไทย")return 120;
-    if(subject==="คณิตศาสตร์")return 120;
-    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 120;
-    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 160;
-    if(subject==="สุขศึกษาและพลศึกษา")return 80;
-    if(subject==="ศิลปะ")return 80;
-    if(subject==="การงานอาชีพ")return 80;
-    if(subject==="ภาษาต่างประเทศ")return 120;
-  }
+  if(subject==="วิทยาศาสตร์และเทคโนโลยี")return "วิทยาศาสตร์";
+  if(subject==="การงานอาชีพ")return "การงานอาชีพและเทคโนโลยี";
+  if(subject==="ภาษาอังกฤษ")return "ภาษาต่างประเทศ";
+  return subject
+}
+function coreCurriculumTimeReference(grade,subject){
+  grade=String(grade||"").trim();
+  subject=normalizeCoreSubject(subject);
+  const rows={
+    "ภาษาไทย":{p123:200,p456:160,m123:120,m456:240},
+    "คณิตศาสตร์":{p123:200,p456:160,m123:120,m456:240},
+    "วิทยาศาสตร์":{p123:80,p456:80,m123:120,m456:240},
+    "สังคมศึกษา ศาสนา และวัฒนธรรม":{p123:120,p456:120,m123:120,m456:320},
+    "สุขศึกษาและพลศึกษา":{p123:80,p456:80,m123:80,m456:120},
+    "ศิลปะ":{p123:80,p456:80,m123:80,m456:120},
+    "การงานอาชีพและเทคโนโลยี":{p123:80,p456:80,m123:80,m456:120},
+    "ภาษาต่างประเทศ":{p123:80,p456:80,m123:120,m456:240}
+  };
+  const r=rows[subject];
+  if(!r)return {hours:0,scope:"unknown",label:"ไม่มีกรอบเวลาอ้างอิงอัตโนมัติ"};
+  if(["ป.1","ป.2","ป.3"].includes(grade))return {hours:r.p123,scope:"annual",label:`${r.p123} ชั่วโมง/ปี`};
+  if(["ป.4","ป.5","ป.6"].includes(grade))return {hours:r.p456,scope:"annual",label:`${r.p456} ชั่วโมง/ปี`};
+  if(["ม.1","ม.2","ม.3"].includes(grade))return {hours:r.m123,scope:"annual_secondary",label:`${r.m123} ชั่วโมง/ปี`};
+  if(["ม.4","ม.5","ม.6"].includes(grade))return {hours:r.m456,scope:"three_year_total",label:`${r.m456} ชั่วโมงรวม ม.4–ม.6`};
+  return {hours:0,scope:"unknown",label:"ไม่มีกรอบเวลาอ้างอิงอัตโนมัติ"}
+}
+function coreCurriculumAnnualHours(grade,subject){
+  const ref=coreCurriculumTimeReference(grade,subject);
+  if(ref.scope==="annual"||ref.scope==="annual_secondary")return ref.hours;
+  if(ref.scope==="three_year_total")return Math.round(ref.hours/3);
   return 0
 }
 function recommendedCourseHours(c){
-  const annual=coreCurriculumAnnualHours(c?.grade,c?.subject);
-  if(!annual)return Number(c?.hours)||0;
+  const ref=coreCurriculumTimeReference(c?.grade,c?.subject);
+  if(!ref.hours)return Number(c?.hours)||0;
   const sem=String(c?.semester||"").trim();
-  if(sem==="1"||sem==="2")return Math.round(annual/2);
-  return annual
+  if(ref.scope==="annual"){
+    if(sem==="1"||sem==="2")return Math.round(ref.hours/2);
+    return ref.hours
+  }
+  if(ref.scope==="annual_secondary"){
+    if(sem==="1"||sem==="2")return Math.round(ref.hours/2);
+    return ref.hours
+  }
+  if(ref.scope==="three_year_total"){
+    // Equal-share suggestion only; schools may distribute credits differently by semester.
+    if(sem==="1"||sem==="2")return Math.round(ref.hours/6);
+    return Math.round(ref.hours/3)
+  }
+  return Number(c?.hours)||0
 }
+function curriculumTimeNote(c){
+  const ref=coreCurriculumTimeReference(c?.grade,c?.subject);
+  const rec=recommendedCourseHours(c),sem=String(c?.semester||"").trim();
+  if(!ref.hours)return "ใช้เวลาเรียนตามหลักสูตรสถานศึกษาที่ครูกำหนด";
+  if(ref.scope==="three_year_total"){
+    return `กรอบหลักสูตร ${ref.label} · ระบบเสนอค่าเฉลี่ย ${rec} ชั่วโมง${sem==="1"||sem==="2"?"/ภาคเรียน":"/ปี"} เป็นค่าเริ่มต้นเท่านั้น โรงเรียนสามารถจัดหน่วยกิต/เวลาในแต่ละภาคแตกต่างกันได้`;
+  }
+  if(sem==="1"||sem==="2"){
+    return `กรอบหลักสูตร ${ref.label} · ระบบเสนอ ${rec} ชั่วโมงสำหรับภาคเรียน ${sem} โดยแบ่งครึ่งปีเป็นค่าเริ่มต้น และโรงเรียนสามารถปรับตามหลักสูตรสถานศึกษาได้`;
+  }
+  return `กรอบหลักสูตร ${ref.label} · โรงเรียนสามารถปรับตามหลักสูตรสถานศึกษาได้`
+}
+
 function autoUnits(c){
   const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
   const sourceRows=selected.length?selected:core;
@@ -1336,7 +1357,7 @@ function openCourseStructure(i){
   activeCourseIndex=i;
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
   $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
-  const annualBase=coreCurriculumAnnualHours(c.grade,c.subject),recommended=recommendedCourseHours(c);$("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${annualBase?`กรอบอ้างอิง ${annualBase} ชั่วโมง/ปี${String(c.semester)==="1"||String(c.semester)==="2"?` → เสนอ ${recommended} ชั่วโมงสำหรับภาคเรียน ${c.semester}`:""}`:"ใช้เวลาเรียนตามที่โรงเรียนกำหนด"} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>เป็นค่าเริ่มต้นอ้างอิงจากกรอบหลักสูตร ครูสามารถปรับชั่วโมงและน้ำหนักตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
+  $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
   const units=c.course_structure?.units||autoUnits(c);
   renderStructureEditor(units);
   $("courseStructureStatus").innerHTML="";
