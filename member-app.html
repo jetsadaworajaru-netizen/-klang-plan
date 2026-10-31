@@ -428,12 +428,40 @@
     <h2>📚 สร้างรายวิชา</h2>
     <p class="course-note">V9.2.7 Upload-ready — Course Workspace + Document Engine พร้อม Word (.docx) และ PDF</p>
     <div class="form-grid">
-      <label>ชื่อรายวิชา<input id="courseName" type="text" placeholder="เช่น ศิลปะ (ดนตรี–นาฏศิลป์)"></label>
-      <label>ระดับชั้น<input id="courseGrade" type="text" placeholder="เช่น ป.3"></label>
-      <label>กลุ่มสาระ / วิชา<input id="courseSubject" type="text" placeholder="เช่น ศิลปะ"></label>
+      <label>ชื่อรายวิชา<input id="courseName" type="text" placeholder="ระบบช่วยเติมจากกลุ่มสาระ หรือพิมพ์ชื่อเฉพาะได้"></label>
+      <label>ระดับชั้น
+        <select id="courseGrade">
+          <option value="">เลือกระดับชั้น</option>
+          <optgroup label="ปฐมวัย">
+            <option>อ.1</option><option>อ.2</option><option>อ.3</option>
+          </optgroup>
+          <optgroup label="ประถมศึกษา">
+            <option>ป.1</option><option>ป.2</option><option>ป.3</option><option>ป.4</option><option>ป.5</option><option>ป.6</option>
+          </optgroup>
+          <optgroup label="มัธยมศึกษา">
+            <option>ม.1</option><option>ม.2</option><option>ม.3</option><option>ม.4</option><option>ม.5</option><option>ม.6</option>
+          </optgroup>
+        </select>
+      </label>
+      <label>กลุ่มสาระ / วิชา
+        <select id="courseSubject">
+          <option value="">เลือกกลุ่มสาระ / วิชา</option>
+          <option>ภาษาไทย</option>
+          <option>คณิตศาสตร์</option>
+          <option>วิทยาศาสตร์และเทคโนโลยี</option>
+          <option>สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+          <option>สุขศึกษาและพลศึกษา</option>
+          <option>ศิลปะ</option>
+          <option>การงานอาชีพ</option>
+          <option>ภาษาต่างประเทศ</option>
+          <option>ปฐมวัย / ประสบการณ์สำคัญ</option>
+          <option>บูรณาการ</option>
+          <option>อื่น ๆ</option>
+        </select>
+      </label>
       <label>ภาคเรียน<select id="courseSemester"><option>1</option><option>2</option><option>3</option></select></label>
-      <label>ปีการศึกษา<input id="courseYear" type="text" inputmode="numeric" placeholder="เช่น 2569"></label>
-      <label>จำนวนชั่วโมง<input id="courseHours" type="number" inputmode="numeric" placeholder="เช่น 20"></label>
+      <label>ปีการศึกษา<input id="courseYear" type="text" inputmode="numeric" value="2569" placeholder="เช่น 2569"></label>
+      <label>จำนวนชั่วโมง<input id="courseHours" type="number" inputmode="numeric" min="1" placeholder="เช่น 20"></label>
       <label>โรงเรียน<input id="courseSchool" type="text" placeholder="ชื่อโรงเรียน"></label>
     </div>
     <button id="saveCourseDraftBtn" class="primary-btn" type="button">บันทึกรายวิชา</button>
@@ -847,6 +875,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=978"></script>
+<script src="/member-app.js?v=979"></script>
 </body>
 </html>
