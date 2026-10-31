@@ -1232,7 +1232,7 @@ function autoUnits(c,count){
       weight:0
     })
   }
-  const totalH=Math.max(Number(c.hours)||count,count),base=Math.floor(totalH/count),rem=totalH%count;
+  const totalH=Number(c.hours)>0?Math.max(Number(c.hours),count):count,base=Math.floor(totalH/count),rem=totalH%count;
   units.forEach((u,i)=>{u.hours=base+(i<rem?1:0);u.weight=Math.floor(100/count)+(i<100%count?1:0)});
   return units
 }
@@ -1278,7 +1278,36 @@ function openCourseStructure(i){
   $("courseStructureModal").hidden=false
 }
 function generateCourseStructure(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],units=autoUnits(c,$("courseUnitCount").value);renderStructureEditor(units);$$('#courseStructureList [data-unit-row]').forEach((row,i)=>row.dataset.indicatorIds=JSON.stringify(units[i].indicator_ids||[]));toast("สร้างโครงสร้างตั้งต้นจากฐานหลักสูตรแล้ว ✓")}
-function saveCourseStructure(){if(activeCourseIndex===null)return;const a=courseDrafts(),c=a[activeCourseIndex],units=readStructureEditor();const totalH=units.reduce((s,x)=>s+x.hours,0),totalW=units.reduce((s,x)=>s+x.weight,0);if(!units.length){return}if(totalH!==Number(c.hours||0)){$("courseStructureStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${totalH} ยังไม่ตรงกับรายวิชา ${c.hours||0} ชั่วโมง</div>`;return}if(totalW!==100){$("courseStructureStatus").innerHTML=`<div class="error-box">น้ำหนักรวมต้องเท่ากับ 100% (ปัจจุบัน ${totalW}%)</div>`;return}c.course_structure={units,source:"หลักสูตรแกนกลาง + ผลวิเคราะห์บริบทสถานศึกษา",source_curricula:c.curriculum_analysis?.curricula||[],saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("courseStructureStatus").innerHTML='<div class="indicator-preview">บันทึกโครงสร้างรายวิชาแล้ว ✓ ขั้นถัดไป: กำหนดการสอน</div>';renderCourses();toast("บันทึกโครงสร้างรายวิชาแล้ว ✓")}
+function saveCourseStructure(){
+  if(activeCourseIndex===null)return;
+  const a=courseDrafts(),c=a[activeCourseIndex],units=readStructureEditor();
+  const totalH=units.reduce((s,x)=>s+x.hours,0),totalW=units.reduce((s,x)=>s+x.weight,0);
+  if(!units.length)return;
+  if(totalW!==100){
+    $("courseStructureStatus").innerHTML=`<div class="error-box">น้ำหนักรวมต้องเท่ากับ 100% (ปัจจุบัน ${totalW}%)</div>`;
+    return
+  }
+  const courseHours=Number(c.hours||0);
+  if(courseHours>0 && totalH!==courseHours){
+    $("courseStructureStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${totalH} ยังไม่ตรงกับรายวิชา ${courseHours} ชั่วโมง กรุณาปรับชั่วโมงของแต่ละหน่วยให้รวมตรงกับรายวิชา</div>`;
+    return
+  }
+  if(courseHours<=0){
+    c.hours=totalH;
+  }
+  c.course_structure={
+    units,
+    source:"หลักสูตรแกนกลาง + ผลวิเคราะห์บริบทสถานศึกษา",
+    source_curricula:c.curriculum_analysis?.curricula||[],
+    saved_at:new Date().toISOString()
+  };
+  a[activeCourseIndex]=c;
+  writeCourseDrafts(a);
+  $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
+  $("courseStructureStatus").innerHTML=`<div class="indicator-preview">บันทึกโครงสร้างรายวิชาแล้ว ✓${courseHours<=0?` ระบบกำหนดเวลาเรียนรวมเป็น ${totalH} ชั่วโมงให้อัตโนมัติ`:""} ขั้นถัดไป: กำหนดการสอน</div>`;
+  renderCourses();
+  toast("บันทึกโครงสร้างรายวิชาแล้ว ✓")
+}
 
 function closeTeachingSchedule(){$("teachingScheduleModal").hidden=true;activeCourseIndex=null}
 function autoTeachingSchedule(c){const units=c.course_structure?.units||[];let week=1;const out=[];for(let ui=0;ui<units.length;ui++){const u=units[ui],h=Math.max(0,Number(u.hours)||0);if(!h){out.push({week:week++,unit_index:ui,unit_name:u.name,topic:u.name,hours:0,indicator_ids:u.indicator_ids||[]});continue}let remaining=h;while(remaining>0){const block=Math.min(2,remaining);out.push({week:week++,unit_index:ui,unit_name:u.name,topic:remaining===h?u.name:`${u.name} (ต่อ)`,hours:block,indicator_ids:u.indicator_ids||[]});remaining-=block}}return out}
