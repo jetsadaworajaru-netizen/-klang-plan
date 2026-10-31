@@ -1957,7 +1957,31 @@ function syncCourseQuickFields(){
     }
   }
 }
+function openCourseRoadmapStep(step){
+  const rows=courseDrafts();
+  if(!rows.length){toast("กรุณาสร้างรายวิชาก่อน");openCourseModal();return}
+  const i=0,c=rows[i];
+  const routes={
+    analysis:()=>openCurriculumAnalysis(i),
+    description:()=>openCourseDescription(i),
+    structure:()=>openCourseStructure(i),
+    schedule:()=>openTeachingSchedule(i),
+    units:()=>openLearningUnits(i),
+    lessons:()=>openCourseLessons(i),
+    assessments:()=>openCourseAssessments(i),
+    documents:()=>openCourseDocuments(i)
+  };
+  if(step==="description"&&!c.curriculum_analysis?.saved_at)return toast("กรุณาทำ “วิเคราะห์หลักสูตร” ก่อน");
+  if(step==="structure"&&!c.course_description?.saved_at)return toast("กรุณาทำ “คำอธิบายรายวิชา” ก่อน");
+  if(step==="schedule"&&!c.course_structure?.saved_at)return toast("กรุณาทำ “โครงสร้างรายวิชา” ก่อน");
+  if(step==="units"&&!c.teaching_schedule?.saved_at)return toast("กรุณาทำ “กำหนดการสอน” ก่อน");
+  if((step==="lessons"||step==="assessments")&&!c.learning_units?.saved_at)return toast("กรุณาทำ “หน่วยการเรียนรู้” ก่อน");
+  if(step==="documents"&&!c.assessments?.saved_at)return toast("กรุณาทำ “การประเมิน” ก่อน");
+  (routes[step]||(()=>{}))()
+}
 function bind(){
+  $("[data-course-roadmap-step]").forEach(b=>b.onclick=()=>openCourseRoadmapStep(b.dataset.courseRoadmapStep));
+
   if($("courseGrade"))$("courseGrade").addEventListener("change",()=>{syncCourseQuickFields()});
   if($("courseSubject"))$("courseSubject").addEventListener("change",()=>{
     const subject=$("courseSubject").value,name=$("courseName");
