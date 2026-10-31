@@ -1193,6 +1193,16 @@ function openCourseDescription(i){const c=courseDrafts()[i];if(!c?.curriculum_an
 function generateCourseDescription(){if(activeCourseIndex===null)return;$("courseDescriptionText").value=draftCourseDescription(courseDrafts()[activeCourseIndex]);toast("สร้างฉบับร่างแล้ว ✓")}
 function saveCourseDescription(){if(activeCourseIndex===null)return;const text=$("courseDescriptionText").value.trim();if(!text){$("courseDescriptionStatus").innerHTML='<div class="error-box">กรุณามีคำอธิบายรายวิชาก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.course_description={text,source_indicator_ids:c.curriculum_analysis.selected_ids||[],saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("courseDescriptionStatus").innerHTML='<div class="indicator-preview">บันทึกคำอธิบายรายวิชาแล้ว ✓ พร้อมจัดโครงสร้างรายวิชา</div>';renderCourses();toast("บันทึกคำอธิบายรายวิชาแล้ว ✓")}
 function closeCourseStructure(){$("courseStructureModal").hidden=true;activeCourseIndex=null}
+function contextualUnitName(base,c){
+  const context=String(c.curriculum_analysis?.context||"").trim();
+  const focus=String(c.curriculum_analysis?.focus||"").trim();
+  let hint=(context||focus).split(/[\n,.，;]+/)[0].trim();
+  hint=hint.replace(/^(บริบทโรงเรียน|บริบทสถานศึกษา|บริบทชุมชน|จุดเน้น|เน้น)\s*[:：-]?\s*/,"").trim();
+  if(!hint)return base;
+  if(hint.length>28)hint=hint.slice(0,28).trim()+"…";
+  const candidate=`${base} — ${hint}`;
+  return candidate.length>58?base:candidate;
+}
 function autoUnits(c,count){
   const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
   const sourceRows=selected.length?selected:core;
@@ -1211,9 +1221,10 @@ function autoUnits(c,count){
     const coreGroup=core.filter(r=>(r.domain||r.standard||"สาระการเรียนรู้")===g.key);
     const standards=unique((coreGroup.length?coreGroup:g.rows).map(x=>x.standard).filter(Boolean));
     const codes=unique((coreGroup.length?coreGroup:g.rows).map(x=>x.indicator).filter(Boolean));
+    const baseName=g.key||`หน่วยการเรียนรู้ ${i+1}`;
     units.push({
-      name:g.key||`หน่วยการเรียนรู้ ${i+1}`,
-      base_name:g.key||`หน่วยการเรียนรู้ ${i+1}`,
+      name:contextualUnitName(baseName,c),
+      base_name:baseName,
       source_standard:standards.join(", "),
       source_indicator_codes:codes,
       indicator_ids:g.rows.map(x=>x.dataset_id),
