@@ -1203,6 +1203,51 @@ function contextualUnitName(base,c){
   const candidate=`${base} — ${hint}`;
   return candidate.length>58?base:candidate;
 }
+function coreCurriculumAnnualHours(grade,subject){
+  grade=String(grade||"").trim();
+  subject=String(subject||"").trim();
+  const primaryLow=["ป.1","ป.2","ป.3"].includes(grade);
+  const primaryHigh=["ป.4","ป.5","ป.6"].includes(grade);
+  const lowerSec=["ม.1","ม.2","ม.3"].includes(grade);
+  if(primaryLow){
+    if(subject==="ภาษาไทย")return 200;
+    if(subject==="คณิตศาสตร์")return 200;
+    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 80;
+    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 120;
+    if(subject==="สุขศึกษาและพลศึกษา")return 80;
+    if(subject==="ศิลปะ")return 80;
+    if(subject==="การงานอาชีพ")return 40;
+    if(subject==="ภาษาต่างประเทศ")return 40;
+  }
+  if(primaryHigh){
+    if(subject==="ภาษาไทย")return 160;
+    if(subject==="คณิตศาสตร์")return 160;
+    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 80;
+    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 120;
+    if(subject==="สุขศึกษาและพลศึกษา")return 80;
+    if(subject==="ศิลปะ")return 80;
+    if(subject==="การงานอาชีพ")return 80;
+    if(subject==="ภาษาต่างประเทศ")return 80;
+  }
+  if(lowerSec){
+    if(subject==="ภาษาไทย")return 120;
+    if(subject==="คณิตศาสตร์")return 120;
+    if(subject==="วิทยาศาสตร์และเทคโนโลยี")return 120;
+    if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม")return 160;
+    if(subject==="สุขศึกษาและพลศึกษา")return 80;
+    if(subject==="ศิลปะ")return 80;
+    if(subject==="การงานอาชีพ")return 80;
+    if(subject==="ภาษาต่างประเทศ")return 120;
+  }
+  return 0
+}
+function recommendedCourseHours(c){
+  const annual=coreCurriculumAnnualHours(c?.grade,c?.subject);
+  if(!annual)return Number(c?.hours)||0;
+  const sem=String(c?.semester||"").trim();
+  if(sem==="1"||sem==="2")return Math.round(annual/2);
+  return annual
+}
 function autoUnits(c){
   const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
   const sourceRows=selected.length?selected:core;
@@ -1230,7 +1275,8 @@ function autoUnits(c){
     }
   });
   const counts=units.map(u=>Math.max(1,u.indicator_ids.length)),countSum=counts.reduce((a,b)=>a+b,0)||units.length||1;
-  const totalH=Number(c.hours)>0?Number(c.hours):Math.max(units.length,counts.reduce((a,b)=>a+b,0));
+  const suggestedHours=recommendedCourseHours(c);
+  const totalH=Number(c.hours)>0?Number(c.hours):(suggestedHours>0?suggestedHours:Math.max(units.length,counts.reduce((a,b)=>a+b,0)));
   let assignedH=0,assignedW=0;
   units.forEach((u,i)=>{
     const last=i===units.length-1;
@@ -1281,12 +1327,16 @@ function readStructureEditor(){return $$('#courseStructureList [data-unit-row]')
 })}
 function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนัก <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับตัวเลื่อนให้ผลรวมตรง"}</span>`}
 function openCourseStructure(i){
-  const c=courseDrafts()[i];
+  const rows=courseDrafts(),c=rows[i];
   if(!c?.course_description?.saved_at){toast("กรุณาบันทึกคำอธิบายรายวิชาก่อน");return}
+  if(Number(c.hours||0)<=0){
+    const suggested=recommendedCourseHours(c);
+    if(suggested>0){c.hours=suggested;rows[i]=c;writeCourseDrafts(rows)}
+  }
   activeCourseIndex=i;
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
   $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
-  $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · พบ ${core.length} รายการในระดับชั้น/กลุ่มสาระนี้ · ใช้ ${selected.length||core.length} รายการที่เลือกจากการวิเคราะห์หลักสูตรเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ครูแก้ได้เฉพาะชื่อหน่วย ชั่วโมง และน้ำหนัก โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
+  const annualBase=coreCurriculumAnnualHours(c.grade,c.subject),recommended=recommendedCourseHours(c);$("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${annualBase?`กรอบอ้างอิง ${annualBase} ชั่วโมง/ปี${String(c.semester)==="1"||String(c.semester)==="2"?` → เสนอ ${recommended} ชั่วโมงสำหรับภาคเรียน ${c.semester}`:""}`:"ใช้เวลาเรียนตามที่โรงเรียนกำหนด"} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>เป็นค่าเริ่มต้นอ้างอิงจากกรอบหลักสูตร ครูสามารถปรับชั่วโมงและน้ำหนักตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
   const units=c.course_structure?.units||autoUnits(c);
   renderStructureEditor(units);
   $("courseStructureStatus").innerHTML="";
@@ -2012,6 +2062,11 @@ function syncCourseQuickFields(){
     name.value=subject.value==="ปฐมวัย / ประสบการณ์สำคัญ"?"ปฐมวัย":subject.value;
   }
   if(grade&&subject){
+    const hours=$("courseHours"),semester=$("courseSemester");
+    if(hours && (!hours.value || Number(hours.value)<=0)){
+      const suggested=recommendedCourseHours({grade:grade.value,subject:subject.value,semester:semester?.value||"1"});
+      if(suggested>0)hours.value=suggested;
+    }
     const isEarly=String(grade.value||"").startsWith("อ.");
     if(isEarly&&(!subject.value||["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนา และวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ"].includes(subject.value))){
       subject.value="ปฐมวัย / ประสบการณ์สำคัญ";
@@ -2044,6 +2099,7 @@ function openCourseRoadmapStep(step){
   (routes[step]||(()=>{}))()
 }
 function bind(){
+  if($("courseSemester"))$("courseSemester").addEventListener("change",()=>{const h=$("courseHours");if(h&&(!h.value||Number(h.value)<=0))syncCourseQuickFields()});
   $$("[data-course-roadmap-step]").forEach(b=>b.onclick=()=>openCourseRoadmapStep(b.dataset.courseRoadmapStep));
 
   if($("courseGrade"))$("courseGrade").addEventListener("change",()=>{syncCourseQuickFields()});
