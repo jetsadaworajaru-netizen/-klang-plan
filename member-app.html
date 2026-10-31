@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
   <link rel="apple-touch-icon" href="/favicon.png?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/member-app.css?v=959">
+<link rel="stylesheet" href="/member-app.css?v=983">
 <style>
 #planDesignOptions{margin-top:18px}
 </style><style>
@@ -313,14 +313,14 @@
       <section class="card course-roadmap">
         <h3>เส้นทางงานในรายวิชา</h3>
         <div class="course-step-grid">
-          <div>🧠<b>วิเคราะห์หลักสูตร</b><small>มาตรฐาน • ตัวชี้วัด • สมรรถนะ</small></div>
-          <div>📘<b>คำอธิบายรายวิชา</b><small>สร้างจากข้อมูลหลักสูตรจริง</small></div>
-          <div>🗂️<b>โครงสร้างรายวิชา</b><small>หน่วย • ชั่วโมง • น้ำหนัก</small></div>
-          <div>📅<b>กำหนดการสอน</b><small>กระจายตลอดภาคเรียน</small></div>
-          <div>🧩<b>หน่วยการเรียนรู้</b><small>เชื่อมตัวชี้วัดและชิ้นงาน</small></div>
-          <div>📝<b>แผนและสื่อ</b><small>ใบงาน • บัตรภาพ • เกม</small></div>
-          <div>✅<b>การประเมิน</b><small>ก่อน–หลัง • ปลายภาค</small></div>
-          <div>📄<b>Word + PDF</b><small>เอกสารพร้อมปรับใช้</small></div>
+          <button type="button" data-course-roadmap-step="analysis">🧠<b>วิเคราะห์หลักสูตร</b><small>มาตรฐาน • ตัวชี้วัด • สมรรถนะ</small></button>
+          <button type="button" data-course-roadmap-step="description">📘<b>คำอธิบายรายวิชา</b><small>สร้างจากข้อมูลหลักสูตรจริง</small></button>
+          <button type="button" data-course-roadmap-step="structure">🗂️<b>โครงสร้างรายวิชา</b><small>หน่วย • ชั่วโมง • น้ำหนัก</small></button>
+          <button type="button" data-course-roadmap-step="schedule">📅<b>กำหนดการสอน</b><small>กระจายตลอดภาคเรียน</small></button>
+          <button type="button" data-course-roadmap-step="units">🧩<b>หน่วยการเรียนรู้</b><small>เชื่อมตัวชี้วัดและชิ้นงาน</small></button>
+          <button type="button" data-course-roadmap-step="lessons">📝<b>แผนและสื่อ</b><small>ใบงาน • บัตรภาพ • เกม</small></button>
+          <button type="button" data-course-roadmap-step="assessments">✅<b>การประเมิน</b><small>ก่อน–หลัง • ปลายภาค</small></button>
+          <button type="button" data-course-roadmap-step="documents">📄<b>Word + PDF</b><small>เอกสารพร้อมปรับใช้</small></button>
         </div>
       </section>
     </section>
@@ -883,6 +883,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=982"></script>
+<script src="/member-app.js?v=983"></script>
 </body>
 </html>
