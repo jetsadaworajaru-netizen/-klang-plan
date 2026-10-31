@@ -1869,7 +1869,33 @@ function openCourseModal(){if($("courseSchool"))$("courseSchool").value=profile?
 function closeCourseModal(){$("courseModal").hidden=true}
 function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("courseGrade").value.trim(),subject=$("courseSubject").value.trim(),year=$("courseYear").value.trim();if(!name||!grade||!subject||!year){$("courseStatus").innerHTML='<div class="error-box">กรุณากรอกชื่อรายวิชา ระดับชั้น กลุ่มสาระ/วิชา และปีการศึกษา</div>';return}const a=courseDrafts();a.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,grade,subject,semester:$("courseSemester").value,year,hours:$("courseHours").value,school:$("courseSchool").value.trim(),created_at:new Date().toISOString()});writeCourseDrafts(a);closeCourseModal();renderCourses();toast(courseCloudReady?"บันทึกรายวิชาและเตรียมซิงก์ Cloud แล้ว ✓":"บันทึกรายวิชาในเครื่องแล้ว ✓")}
 
+function syncCourseQuickFields(){
+  const grade=$("courseGrade"),subject=$("courseSubject"),name=$("courseName"),school=$("courseSchool"),year=$("courseYear");
+  if(school&&!school.value&&profile?.school_name)school.value=profile.school_name;
+  if(year&&!year.value)year.value="2569";
+  if(subject&&name&&subject.value&&!name.value){
+    name.value=subject.value==="ปฐมวัย / ประสบการณ์สำคัญ"?"ปฐมวัย":subject.value;
+  }
+  if(grade&&subject){
+    const isEarly=String(grade.value||"").startsWith("อ.");
+    if(isEarly&&(!subject.value||["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนา และวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ"].includes(subject.value))){
+      subject.value="ปฐมวัย / ประสบการณ์สำคัญ";
+      if(name&&!name.value)name.value="ปฐมวัย";
+    }else if(!isEarly&&subject.value==="ปฐมวัย / ประสบการณ์สำคัญ"){
+      subject.value="";
+    }
+  }
+}
 function bind(){
+  if($("courseGrade"))$("courseGrade").addEventListener("change",()=>{syncCourseQuickFields()});
+  if($("courseSubject"))$("courseSubject").addEventListener("change",()=>{
+    const subject=$("courseSubject").value,name=$("courseName");
+    if(name && (!name.value || ["ภาษาไทย","คณิตศาสตร์","วิทยาศาสตร์และเทคโนโลยี","สังคมศึกษา ศาสนา และวัฒนธรรม","สุขศึกษาและพลศึกษา","ศิลปะ","การงานอาชีพ","ภาษาต่างประเทศ","ปฐมวัย","บูรณาการ"].includes(name.value))){
+      name.value=subject==="ปฐมวัย / ประสบการณ์สำคัญ"?"ปฐมวัย":subject;
+    }
+    syncCourseQuickFields();
+  });
+
   $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();updateSummary()});
   $("grade").onchange=buildSubjects;$("subject").onchange=buildIndicators;$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
   ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>$(id).oninput=()=>{
