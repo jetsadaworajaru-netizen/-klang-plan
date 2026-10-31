@@ -1347,12 +1347,39 @@ function readStructureEditor(){return $$('#courseStructureList [data-unit-row]')
   }
 })}
 function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนัก <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับตัวเลื่อนให้ผลรวมตรง"}</span>`}
+function repairLegacyCourseHours(rows,i){
+  const c=rows?.[i];
+  if(!c)return {course:c,repaired:false};
+  const suggested=recommendedCourseHours(c);
+  const current=Number(c.hours||0);
+  const hasExplicitSource=!!c.hours_source;
+  const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
+  const groupCount=Math.max(1,unique((selected.length?selected:core).map(x=>x.domain||x.standard).filter(Boolean)).length||1);
+  const looksLegacyFallback=!hasExplicitSource && suggested>0 && current>0 && current<=Math.max(12,groupCount) && current<suggested*.35;
+  if(!looksLegacyFallback)return {course:c,repaired:false};
+  c.hours=suggested;
+  c.hours_source="curriculum_auto";
+  c.hours_reference=curriculumTimeNote(c);
+  // Rebuild downstream workflow because it was calculated from the old incorrect hour total.
+  c.course_structure=null;
+  c.teaching_schedule=null;
+  c.learning_units=null;
+  c.lesson_resources=null;
+  c.assessments=null;
+  c.documents=null;
+  rows[i]=c;
+  writeCourseDrafts(rows);
+  return {course:c,repaired:true,from:current,to:suggested}
+}
 function openCourseStructure(i){
-  const rows=courseDrafts(),c=rows[i];
+  const rows=courseDrafts();
+  let c=rows[i];
   if(!c?.course_description?.saved_at){toast("กรุณาบันทึกคำอธิบายรายวิชาก่อน");return}
+  const repaired=repairLegacyCourseHours(rows,i);
+  c=repaired.course;
   if(Number(c.hours||0)<=0){
     const suggested=recommendedCourseHours(c);
-    if(suggested>0){c.hours=suggested;rows[i]=c;writeCourseDrafts(rows)}
+    if(suggested>0){c.hours=suggested;c.hours_source="curriculum_auto";c.hours_reference=curriculumTimeNote(c);rows[i]=c;writeCourseDrafts(rows)}
   }
   activeCourseIndex=i;
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
@@ -1360,7 +1387,7 @@ function openCourseStructure(i){
   $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
   const units=c.course_structure?.units||autoUnits(c);
   renderStructureEditor(units);
-  $("courseStructureStatus").innerHTML="";
+  $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:"";
   $("courseStructureModal").hidden=false
 }
 function generateCourseStructure(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],units=autoUnits(c);renderStructureEditor(units);toast("คืนค่าตามฐานหลักสูตรแล้ว ✓")}
@@ -1381,6 +1408,9 @@ function saveCourseStructure(){
   if(courseHours<=0){
     c.hours=totalH;
   }
+  const recommendedNow=recommendedCourseHours(c);
+  c.hours_source=(recommendedNow>0 && Number(c.hours)!==recommendedNow)?"teacher":"curriculum_auto";
+  c.hours_reference=curriculumTimeNote(c);
   c.course_structure={
     units,
     source:"หลักสูตรแกนกลาง + ผลวิเคราะห์บริบทสถานศึกษา",
@@ -2073,7 +2103,7 @@ function downloadTeacherKeyDocx(){const m=materialModel();if(!m||m.type!=="works
 async function downloadTeacherKeyPdf(){const m=materialModel();if(!m||m.type!=="worksheet")return;saveBlob(await makePdfBlobBranded(materialTeacherText(),m.schoolLogo,m.teacherPhoto,m.style),safeFilename("เฉลย-"+m.title)+".pdf");toast("ดาวน์โหลด PDF เฉลยครูแล้ว ✓")}
 function openCourseModal(){if($("courseSchool"))$("courseSchool").value=profile?.school_name||"";$("courseModal").hidden=false}
 function closeCourseModal(){$("courseModal").hidden=true}
-function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("courseGrade").value.trim(),subject=$("courseSubject").value.trim(),year=$("courseYear").value.trim();if(!name||!grade||!subject||!year){$("courseStatus").innerHTML='<div class="error-box">กรุณากรอกชื่อรายวิชา ระดับชั้น กลุ่มสาระ/วิชา และปีการศึกษา</div>';return}const a=courseDrafts();a.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,grade,subject,semester:$("courseSemester").value,year,hours:$("courseHours").value,school:$("courseSchool").value.trim(),created_at:new Date().toISOString()});writeCourseDrafts(a);closeCourseModal();renderCourses();toast(courseCloudReady?"บันทึกรายวิชาและเตรียมซิงก์ Cloud แล้ว ✓":"บันทึกรายวิชาในเครื่องแล้ว ✓")}
+function saveCourseDraft(){const name=$("courseName").value.trim(),grade=$("courseGrade").value.trim(),subject=$("courseSubject").value.trim(),year=$("courseYear").value.trim();if(!name||!grade||!subject||!year){$("courseStatus").innerHTML='<div class="error-box">กรุณากรอกชื่อรายวิชา ระดับชั้น กลุ่มสาระ/วิชา และปีการศึกษา</div>';return}const semester=$("courseSemester").value,hours=Number($("courseHours").value)||0,suggested=recommendedCourseHours({grade,subject,semester});const a=courseDrafts();a.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,grade,subject,semester,year,hours,hours_source:(hours>0&&suggested>0&&hours!==suggested)?"teacher":"curriculum_auto",hours_reference:curriculumTimeNote({grade,subject,semester}),school:$("courseSchool").value.trim(),created_at:new Date().toISOString()});writeCourseDrafts(a);closeCourseModal();renderCourses();toast(courseCloudReady?"บันทึกรายวิชาและเตรียมซิงก์ Cloud แล้ว ✓":"บันทึกรายวิชาในเครื่องแล้ว ✓")}
 
 function syncCourseQuickFields(){
   const grade=$("courseGrade"),subject=$("courseSubject"),name=$("courseName"),school=$("courseSchool"),year=$("courseYear");
