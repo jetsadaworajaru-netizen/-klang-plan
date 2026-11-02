@@ -1988,7 +1988,7 @@ function repairGeneratedUnitTitles(rows,i){
     const newBase=String(f.base_name||"").trim();
     const oldName=String(u.name||"").trim();
     const oldAutoName=contextualUnitName(oldBase,c);
-    const shouldRefresh=currentVersion<8 || !oldBase || oldName===oldBase || oldName===oldAutoName;
+    const shouldRefresh=!oldName || !oldBase || oldName===oldBase || oldName===oldAutoName || (currentVersion<8 && oldName.length>58);
     const next={...u};
     if(newBase && oldBase!==newBase){
       next.base_name=newBase;
