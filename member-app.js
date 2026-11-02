@@ -1628,18 +1628,31 @@ function deriveLearningUnit(c,u,i){
   }
 }
 function renderLearningUnits(units){
-  $("learningUnitsList").innerHTML=units.map((u,i)=>`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}'>
-    <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
-    <label class="learning-unit-strand-field">สาระ
-      <input data-unit-strand type="text" value="${esc(u.strand_name||"")}" placeholder="เช่น การอ่าน">
-    </label>
-    <label>สาระสำคัญ<textarea data-unit-concept rows="3">${esc(u.concept||"")}</textarea></label>
-    <label>จุดประสงค์/ผลลัพธ์การเรียนรู้<textarea data-unit-objectives rows="4">${esc(u.objectives||"")}</textarea></label>
-    <label>แนวทางการวัดและประเมินผล<textarea data-unit-assessment rows="3">${esc(u.assessment||"")}</textarea></label>
-    <input type="hidden" data-unit-name value="${esc(u.name||"")}"><input type="hidden" data-unit-hours value="${Number(u.hours)||0}"><input type="hidden" data-unit-weight value="${Number(u.weight)||0}">
-  </article>`).join("")
+  const c=courseDrafts()[activeCourseIndex]||{};
+  const structureUnits=c.course_structure?.units||[];
+  let lastStrand="",strandNo=0,html="";
+  units.forEach((u,i)=>{
+    const su=structureUnits[i]||{};
+    const strandName=String(su.strand_name||su.strand_base||u.strand_name||"สาระการเรียนรู้").trim()||"สาระการเรียนรู้";
+    const standardName=String(su.standard_name||su.source_standard||u.standard_name||"").trim();
+    if(strandName!==lastStrand){
+      strandNo++;
+      lastStrand=strandName;
+      html+=`<section class="learning-unit-strand-group">
+        <div class="learning-unit-strand-heading"><span>สาระ ${strandNo}</span><b>${esc(strandName)}</b></div>
+      </section>`;
+    }
+    html+=`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(strandName)}">
+      <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small>${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
+      <label>สาระสำคัญ<textarea data-unit-concept rows="3">${esc(u.concept||"")}</textarea></label>
+      <label>จุดประสงค์/ผลลัพธ์การเรียนรู้<textarea data-unit-objectives rows="4">${esc(u.objectives||"")}</textarea></label>
+      <label>แนวทางการวัดและประเมินผล<textarea data-unit-assessment rows="3">${esc(u.assessment||"")}</textarea></label>
+      <input type="hidden" data-unit-name value="${esc(u.name||"")}"><input type="hidden" data-unit-hours value="${Number(u.hours)||0}"><input type="hidden" data-unit-weight value="${Number(u.weight)||0}">
+    </article>`;
+  });
+  $("learningUnitsList").innerHTML=html
 }
-function readLearningUnits(){return $('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:row.querySelector('[data-unit-strand]')?.value.trim()||"",standard_name:courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]?.standard_name||"",structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
+function readLearningUnits(){return $$('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}const structureUnit=courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]||{};return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:String(structureUnit.strand_name||structureUnit.strand_base||row.dataset.strandName||"").trim(),standard_name:String(structureUnit.standard_name||structureUnit.source_standard||"").trim(),structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
 function openLearningUnits(i){
   const rows=courseDrafts();
   let c=rows[i];
@@ -1649,11 +1662,11 @@ function openLearningUnits(i){
   if(!c?.teaching_schedule?.saved_at){toast("กรุณาบันทึกกำหนดการสอนก่อน");return}
   activeCourseIndex=i;
   $("learningUnitsMeta").textContent=`${c.name} · ${c.grade} · ${c.course_structure?.units?.length||0} หน่วยย่อย`;
-  $("learningUnitsSource").innerHTML=`สร้างจาก <b>สาระ → หน่วยย่อย → ตัวชี้วัด</b> ตามโครงสร้างรายวิชาล่าสุด ครูสามารถปรับสาระสำคัญ จุดประสงค์ และการประเมินของแต่ละหน่วยได้`;
+  $("learningUnitsSource").innerHTML=`ชื่อ <b>สาระ</b> ดึงจากโครงสร้างรายวิชาล่าสุดโดยอัตโนมัติ แล้วจัดหน่วยย่อยเป็นกลุ่มตามสาระ ครูสามารถปรับสาระสำคัญ จุดประสงค์ และการประเมินของแต่ละหน่วยได้`;
   const structureVersion=Number(c.course_structure?.version||0);
   const saved=c.learning_units?.units||[];
   const stale=!saved.length || saved.some((u,idx)=>Number(u.structure_version||0)<structureVersion || !u.strand_name || hasBroadUnitTitle(c,u,idx));
-  const units=stale?c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)):saved;
+  const units=(stale?c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)):saved).map((u,j)=>({...u,strand_name:c.course_structure.units?.[j]?.strand_name||c.course_structure.units?.[j]?.strand_base||u.strand_name||"",standard_name:c.course_structure.units?.[j]?.standard_name||c.course_structure.units?.[j]?.source_standard||u.standard_name||""}));
   if(stale&&saved.length){
     c.learning_units=null;c.lesson_resources=null;c.assessments=null;c.documents=null;rows[i]=c;writeCourseDrafts(rows);
   }
