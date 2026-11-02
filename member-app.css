@@ -1449,3 +1449,79 @@ button,
     max-width:none!important;
   }
 }
+
+
+/* 2026-11-02 emphasize curriculum strand parent cards */
+#courseStructureList .structure-strand-card{
+  margin:24px 0 12px!important;
+  padding:18px 20px!important;
+  min-height:96px!important;
+  border:1.5px solid #bdd7ee!important;
+  border-radius:20px!important;
+  background:linear-gradient(135deg,#edf6ff 0%,#f7fbff 100%)!important;
+  box-shadow:0 3px 12px rgba(36,88,132,.06)!important;
+  gap:16px!important;
+}
+#courseStructureList .structure-strand-badge{
+  min-width:72px!important;
+  min-height:48px!important;
+  padding:9px 14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:13px!important;
+  background:#2876d4!important;
+  color:#fff!important;
+  font-size:.86rem!important;
+  font-weight:900!important;
+  box-shadow:0 3px 8px rgba(40,118,212,.15)!important;
+}
+#courseStructureList .structure-strand-card label{
+  font-size:.76rem!important;
+  color:#4f6d86!important;
+  font-weight:900!important;
+}
+#courseStructureList .structure-strand-card input{
+  margin-top:7px!important;
+  min-height:54px!important;
+  padding:11px 14px!important;
+  border:1px solid #c9dbea!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  color:#143f68!important;
+  font-size:1.05rem!important;
+  font-weight:900!important;
+}
+#courseStructureList .structure-standard-card{
+  margin:12px 0 10px 22px!important;
+  padding:12px 15px!important;
+  border-left-width:5px!important;
+  border-radius:10px!important;
+}
+#courseStructureList .structure-subunit{
+  margin-left:28px!important;
+}
+#courseStructureList .structure-subunit:before{
+  left:-16px!important;
+}
+@media(max-width:760px){
+  #courseStructureList .structure-strand-card{
+    min-height:auto!important;
+    padding:14px!important;
+    margin-top:18px!important;
+  }
+  #courseStructureList .structure-strand-badge{
+    min-width:64px!important;
+    min-height:42px!important;
+  }
+  #courseStructureList .structure-strand-card input{
+    min-height:48px!important;
+    font-size:.96rem!important;
+  }
+  #courseStructureList .structure-standard-card{
+    margin-left:10px!important;
+  }
+  #courseStructureList .structure-subunit{
+    margin-left:14px!important;
+  }
+}
