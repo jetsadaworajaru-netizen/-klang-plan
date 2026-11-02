@@ -607,3 +607,125 @@ button,
 @media(max-width:720px){
   .course-structure-summary{grid-template-columns:1fr 1fr}
 }
+
+
+/* Optional real teaching calendar */
+.real-calendar-box{
+  margin:12px 0;
+  border:1px solid #d9e6f2;
+  border-radius:14px;
+  background:#fbfdff;
+  overflow:hidden;
+}
+.real-calendar-toggle{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:12px 14px;
+  cursor:pointer;
+}
+.real-calendar-toggle input{
+  margin-top:3px;
+  width:18px;
+  height:18px;
+}
+.real-calendar-toggle span{
+  display:grid;
+  gap:2px;
+}
+.real-calendar-toggle b{
+  color:#1f537b;
+}
+.real-calendar-toggle small{
+  color:#71869a;
+}
+.real-calendar-fields{
+  border-top:1px solid #e3edf5;
+  padding:12px 14px 14px;
+  display:grid;
+  gap:12px;
+}
+.calendar-date-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.calendar-date-grid label,
+.calendar-holidays-label{
+  display:grid;
+  gap:5px;
+  font-weight:800;
+  color:#294e6d;
+}
+.calendar-date-grid input,
+.calendar-holidays-label textarea{
+  border:1px solid #d3e1ec;
+  border-radius:10px;
+  padding:9px 10px;
+  font:inherit;
+  background:#fff;
+}
+.calendar-weekdays{
+  display:grid;
+  gap:7px;
+}
+.weekday-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:7px;
+}
+.weekday-grid label{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:4px 6px;
+  align-items:center;
+  padding:8px;
+  border:1px solid #dce8f2;
+  border-radius:10px;
+  background:#fff;
+  font-size:.74rem;
+  font-weight:800;
+}
+.weekday-grid label input[type="number"]{
+  grid-column:1 / -1;
+  width:100%;
+  border:1px solid #d8e3ec;
+  border-radius:8px;
+  padding:6px 7px;
+  font:inherit;
+}
+.calendar-holidays-label small{
+  color:#7c8e9e;
+  font-weight:500;
+}
+.calendar-action-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+#realTeachingCalendarSummary{
+  color:#547087;
+  font-size:.72rem;
+  font-weight:800;
+}
+.schedule-topic-cell{
+  min-width:0;
+  display:grid;
+  gap:5px;
+}
+.schedule-topic-cell input{
+  width:100%;
+}
+.schedule-real-dates{
+  display:block;
+  color:#34745a;
+  font-size:.64rem;
+  line-height:1.35;
+  white-space:normal;
+}
+@media(max-width:760px){
+  .calendar-date-grid{grid-template-columns:1fr}
+  .weekday-grid{grid-template-columns:1fr 1fr}
+  .calendar-action-row{align-items:stretch;flex-direction:column}
+}
