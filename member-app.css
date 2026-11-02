@@ -476,3 +476,82 @@ button,
   .progress-tabs-with-save{align-items:stretch;flex-direction:column}
   .quick-save-plan-btn{width:100%}
 }
+
+
+/* Lesson-period engine */
+.sublesson-list{
+  margin-top:12px;
+  display:grid;
+  gap:7px;
+}
+.sublesson-row{
+  display:grid;
+  grid-template-columns:70px minmax(0,1fr) 72px 92px;
+  gap:7px;
+  align-items:center;
+  padding:8px;
+  border:1px solid #dce8f2;
+  border-radius:11px;
+  background:#f9fcff;
+}
+.sublesson-no{
+  font-size:.72rem;
+  font-weight:900;
+  color:#35698f;
+}
+.sublesson-row input{
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid #d3e1ec;
+  border-radius:9px;
+  font:inherit;
+  background:#fff;
+}
+.sublesson-hours{
+  text-align:center;
+  font-size:.72rem;
+  font-weight:800;
+  color:#667f94;
+}
+.sublesson-row button{
+  border:1px solid #cfe0ef;
+  border-radius:9px;
+  background:#fff;
+  padding:8px 9px;
+  font-weight:800;
+  color:#245a82;
+  cursor:pointer;
+}
+.sublesson-row button:hover{background:#eef7ff}
+
+/* Course document template selector */
+.document-template-toolbar{
+  margin:12px 0;
+  padding:11px 13px;
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid #dce8f2;
+  border-radius:13px;
+  background:#f8fbfe;
+}
+.document-template-toolbar label{
+  display:grid;
+  gap:5px;
+  font-weight:900;
+}
+.document-template-toolbar select{
+  min-width:220px;
+}
+.document-template-toolbar small{
+  color:#71869a;
+  line-height:1.35;
+}
+@media(max-width:720px){
+  .sublesson-row{grid-template-columns:56px minmax(0,1fr);align-items:center}
+  .sublesson-hours{grid-column:1}
+  .sublesson-row button{grid-column:2}
+  .document-template-toolbar{align-items:stretch;flex-direction:column}
+  .document-template-toolbar select{width:100%;min-width:0}
+}
