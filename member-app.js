@@ -976,6 +976,62 @@ async function copy(){
     try{await navigator.clipboard.writeText(t);setCopyPromptButtonState(true);toast(img?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}
   }
 }
+function linkSavedPlanToCourse(planRow){
+  if(!planRow)return false;
+  const rows=courseDrafts();
+  let ci=-1,ui=-1;
+
+  if(activeCourseLessonContext){
+    ci=Number(activeCourseLessonContext.courseIndex);
+    ui=Number(activeCourseLessonContext.unitIndex);
+  }else{
+    ci=rows.findIndex(course=>{
+      const sameGrade=String(course.grade||"")===String(planRow.grade||$("grade")?.value||"");
+      const sameSubject=String(course.subject||"")===String(planRow.subject||$("subject")?.value||"");
+      const sameSemester=!planRow.semester||String(course.semester||"")===String(planRow.semester||"");
+      const sameYear=!planRow.academic_year||String(course.year||"")===String(planRow.academic_year||"");
+      return sameGrade&&sameSubject&&sameSemester&&sameYear
+    });
+    if(ci>=0){
+      const units=rows[ci]?.learning_units?.units||[];
+      const unitName=String(planRow.unit_name||$("unitName")?.value||"").trim();
+      ui=units.findIndex(u=>String(u.name||"").trim()===unitName);
+    }
+  }
+
+  const course=rows[ci];
+  const unit=course?.learning_units?.units?.[ui];
+  if(!course||!unit)return false;
+
+  course.lesson_resources=course.lesson_resources||{items:[]};
+  course.lesson_resources.items=course.lesson_resources.items||[];
+
+  const existingIndex=course.lesson_resources.items.findIndex(x=>
+    x.type==="lesson_plan" &&
+    (x.lesson_plan_id===planRow.id || (x.unit_id===unit.id && x.title===planRow.title))
+  );
+
+  const mapped={
+    id:existingIndex>=0?course.lesson_resources.items[existingIndex].id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+    type:"lesson_plan",
+    unit_id:unit.id||null,
+    lesson_plan_id:planRow.id,
+    title:planRow.title||planRow.topic||unit.name||"แผนการจัดการเรียนรู้",
+    status:planRow.status||"draft",
+    created_at:existingIndex>=0?(course.lesson_resources.items[existingIndex].created_at||new Date().toISOString()):new Date().toISOString(),
+    updated_at:new Date().toISOString()
+  };
+
+  if(existingIndex>=0)course.lesson_resources.items[existingIndex]=mapped;
+  else course.lesson_resources.items.push(mapped);
+
+  course.lesson_resources.saved_at=new Date().toISOString();
+  rows[ci]=course;
+  writeCourseDrafts(rows);
+  renderCourses();
+  return true
+}
+
 async function saveDraftPlan(){
   if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");
   if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");
@@ -1030,6 +1086,7 @@ async function saveDraftPlan(){
   editingPlanId=data.id;
   const idx=cloudPlans.findIndex(x=>x.id===data.id);
   if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
+  linkSavedPlanToCourse(data);
   renderWork();
   if(statusEl)statusEl.textContent="บันทึกแล้ว ✓ กลับมาแก้ต่อได้จาก “แผนของฉัน”";
   if(btn)btn.textContent="บันทึกการแก้ไข";
@@ -1049,12 +1106,13 @@ async function saveWork(t){
   if(error){console.warn("cloud save",error);toast("บันทึกแผนไม่สำเร็จ");return null}
   if(editingPlanId){
     const idx=cloudPlans.findIndex(x=>x.id===data.id);if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
+    linkSavedPlanToCourse(data);
     editingPlanId=null;
     if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกแผน";
     toast("บันทึกการแก้ไขแผนแล้ว ✓");
   }else{
     cloudPlans.unshift(data);
-    if(activeCourseLessonContext){const rows=courseDrafts(),c=rows[activeCourseLessonContext.courseIndex];if(c){c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({type:"lesson_plan",unit_id:activeCourseLessonContext.unitClientId||null,lesson_plan_id:data.id,title:data.title,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[activeCourseLessonContext.courseIndex]=c;writeCourseDrafts(rows);renderCourses()}}
+    linkSavedPlanToCourse(data);
   }
   renderWork();return data
 }
