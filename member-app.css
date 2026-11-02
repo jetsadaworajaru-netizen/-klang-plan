@@ -288,3 +288,19 @@ button,
   .schedule-row [data-schedule-topic]{grid-column:1/4}
   .schedule-indicator-codes{grid-column:1/4}
 }
+
+.learning-unit-strand{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:11px;
+  background:#eef6ff;border:1px solid #d7e7f7;
+  color:#245b8e;
+}
+.learning-unit-strand span{
+  padding:4px 7px;border-radius:8px;
+  background:#2876d4;color:#fff;
+  font-size:.66rem;font-weight:900;
+}
+.learning-unit-strand b{font-size:.8rem;color:#214f78}
+.course-lesson-strand{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.course-lesson-strand span{padding:3px 6px;border-radius:7px;background:#eef6ff;color:#286090;font-size:.62rem;font-weight:900}
+.course-lesson-strand b{font-size:.72rem!important;color:#286090!important}
