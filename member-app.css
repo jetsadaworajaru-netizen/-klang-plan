@@ -304,3 +304,40 @@ button,
 .course-lesson-strand{display:flex;align-items:center;gap:6px;margin-bottom:5px}
 .course-lesson-strand span{padding:3px 6px;border-radius:7px;background:#eef6ff;color:#286090;font-size:.62rem;font-weight:900}
 .course-lesson-strand b{font-size:.72rem!important;color:#286090!important}
+
+
+/* Learning units: emphasize curriculum strand grouping */
+.learning-unit-strand-group{
+  margin:6px 0 2px;
+}
+.learning-unit-strand-heading{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 14px;
+  border-radius:14px;
+  background:#eef6ff;
+  border:1px solid #d5e6f8;
+}
+.learning-unit-strand-heading span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 9px;
+  border-radius:9px;
+  background:#2876d4;
+  color:#fff;
+  font-size:.72rem;
+  font-weight:900;
+  white-space:nowrap;
+}
+.learning-unit-strand-heading b{
+  color:#174d7a;
+  font-size:1.02rem;
+  font-weight:900;
+  line-height:1.3;
+}
+.learning-unit-head small strong{
+  color:#2d5f87;
+  font-weight:900;
+}
