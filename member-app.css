@@ -774,3 +774,52 @@ button,
   line-height:1.3;
   color:#8192a3;
 }
+
+
+/* Compact structure unit controls */
+.structure-subunit{
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+.structure-subunit .structure-unit-head{
+  margin-bottom:6px!important;
+}
+.structure-subunit .structure-edit-grid{
+  gap:8px!important;
+}
+.structure-slider-grid{
+  grid-template-columns:minmax(0,2.4fr) 110px 118px!important;
+  align-items:stretch;
+}
+.structure-range-field{
+  padding:7px 8px!important;
+  min-height:74px;
+}
+.structure-range-field b{
+  font-size:.92rem;
+}
+.structure-range-field input[type=range]{
+  margin-top:5px;
+}
+.structure-weight-auto{
+  min-height:74px;
+  padding:7px 8px;
+  gap:2px;
+}
+.structure-weight-auto span{
+  font-size:.64rem;
+}
+.structure-weight-auto b{
+  font-size:1rem;
+}
+.structure-weight-auto small{
+  font-size:.54rem;
+  line-height:1.15;
+}
+.structure-name-field input{
+  min-height:42px;
+}
+@media(max-width:760px){
+  .structure-slider-grid{grid-template-columns:1fr!important}
+  .structure-range-field,.structure-weight-auto{min-height:auto}
+}
