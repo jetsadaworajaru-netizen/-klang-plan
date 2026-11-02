@@ -1898,6 +1898,17 @@ function repairLegacyCourseHours(rows,i){
   writeCourseDrafts(rows);
   return {course:c,repaired:true,from:current,to:suggested}
 }
+function courseStructureSummaryHtml(c){
+  const sem=String(c?.semester||"").trim();
+  const periodLabel=(sem==="1"||sem==="2")?`ภาคเรียน ${sem}`:"ทั้งปี/ตามที่โรงเรียนกำหนด";
+  const hourLabel=(sem==="1"||sem==="2")?"ชั่วโมง/ภาคเรียน":"ชั่วโมง";
+  return `<div class="course-structure-summary">
+    <div class="course-summary-cell"><small>รายวิชา</small><b>${esc(c?.name||"-")}</b></div>
+    <div class="course-summary-cell"><small>ระดับชั้น</small><b>${esc(c?.grade||"-")}</b></div>
+    <div class="course-summary-cell"><small>ช่วงเวลา</small><b>${esc(periodLabel)}</b></div>
+    <div class="course-summary-cell course-summary-hours"><small>เวลาเรียน</small><b>${esc(c?.hours||"-")}</b><span>${hourLabel}</span></div>
+  </div>`
+}
 function openCourseStructure(i){
   const rows=courseDrafts();
   let c=rows[i];
@@ -1912,7 +1923,7 @@ function openCourseStructure(i){
   }
   activeCourseIndex=i;
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
-  $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
+  $("courseStructureMeta").innerHTML=courseStructureSummaryHtml(c);
   $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
   const units=c.course_structure?.units?.length?c.course_structure.units:autoUnits(c);
   renderStructureEditor(units);
