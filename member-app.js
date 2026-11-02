@@ -1631,19 +1631,124 @@ function isBroadCurriculumTitle(title,row){
   const broad=[r.domain,r.standard,r.subject,r.learning_area,r.strand,r.area].filter(Boolean).map(x=>String(x).trim());
   return broad.includes(t)||/^สาระ(การเรียนรู้)?$/i.test(t)||/^มาตรฐาน/i.test(t)
 }
-function suggestedUnitTitle(rows,index=0){
-  const list=(rows||[]).map(r=>{
+function curriculumUnitSourceText(rows){
+  return (rows||[]).map(r=>{
     const candidates=[r.indicator_text,r.learning_outcome,r.outcome_text,r.competency_text,r.description,r.topic]
       .map(cleanCurriculumUnitTitle).filter(Boolean);
     return candidates.find(x=>!isBroadCurriculumTitle(x,r))||""
-  }).filter(Boolean);
-  const unique=[...new Set(list)];
-  let text=unique.join(" และ ");
-  if(!text){
-    const first=(rows||[])[0]||{},code=String(first.indicator||"").trim();
-    text=code?`เรียนรู้ตามตัวชี้วัด ${code}`:`หน่วยการเรียนรู้ ${index+1}`
+  }).filter(Boolean)
+}
+function hasAnyUnitKeyword(text,words){
+  return (words||[]).some(w=>text.includes(w))
+}
+function autoUnitNameByMeaning(rows,c,index=0){
+  const texts=curriculumUnitSourceText(rows);
+  const text=texts.join(" ").replace(/\s+/g," ").trim();
+  const subject=normalizeCoreSubject(c?.subject||rows?.[0]?.subject||"");
+  const domain=String(rows?.[0]?.domain||rows?.[0]?.strand||rows?.[0]?.area||"").trim();
+  const rule=(name,words)=>hasAnyUnitKeyword(text,words)?name:"";
+  let name="";
+
+  if(curriculumFrameworkMode(c)==="early_childhood"){
+    name=
+      rule("ร่างกายแข็งแรงและการเคลื่อนไหว",["เคลื่อนไหว","กล้ามเนื้อ","สุขนิสัย","ร่างกาย"])||
+      rule("อารมณ์ดีและมีความสุข",["อารมณ์","ความรู้สึก","มั่นใจ","แสดงออก"])||
+      rule("อยู่ร่วมกับผู้อื่นอย่างมีความสุข",["ผู้อื่น","ร่วมมือ","แบ่งปัน","กติกา","สังคม"])||
+      rule("คิด สำรวจ และเรียนรู้สิ่งรอบตัว",["สังเกต","สำรวจ","ทดลอง","คิด","แก้ปัญหา","จำนวน","รูปทรง"])||
+      "";
+  }else if(subject==="ภาษาไทย"){
+    name=
+      rule("การอ่านออกเสียงและเข้าใจความหมาย",["อ่านออกเสียง","คำคล้องจอง","บอกความหมาย","ข้อความ"])||
+      rule("การอ่านจับใจความและเล่าเรื่อง",["จับใจความ","เล่าเรื่อง","คาดคะเน","เหตุการณ์","ตอบคำถามจากเรื่อง"])||
+      rule("รักการอ่านและเลือกอ่านอย่างเหมาะสม",["อ่านหนังสือตามความสนใจ","นิสัยรักการอ่าน","เลือกอ่าน"])||
+      rule("การเขียนสื่อสารอย่างถูกต้อง",["เขียน","คัดลายมือ","สะกดคำ","แต่งประโยค"])||
+      rule("การฟัง ดู และพูดสื่อสาร",["ฟัง","ดู","พูด","สนทนา","สื่อสาร","มารยาทในการฟัง"])||
+      rule("หลักภาษาและการใช้ภาษาไทย",["พยัญชนะ","สระ","วรรณยุกต์","ชนิดของคำ","ประโยค","หลักภาษา"])||
+      rule("วรรณคดีและวรรณกรรม",["วรรณคดี","วรรณกรรม","บทร้อยกรอง","นิทาน","บทอาขยาน"])||
+      "";
+  }else if(subject==="คณิตศาสตร์"){
+    name=
+      rule("จำนวนนับและการคำนวณ",["จำนวนนับ","บวก","ลบ","คูณ","หาร","ค่าประจำหลัก"])||
+      rule("เศษส่วน ทศนิยม และร้อยละ",["เศษส่วน","ทศนิยม","ร้อยละ"])||
+      rule("การวัดและการแก้โจทย์",["ความยาว","น้ำหนัก","ปริมาตร","เวลา","เงิน","การวัด"])||
+      rule("รูปเรขาคณิตและมิติสัมพันธ์",["รูปเรขาคณิต","รูปสามเหลี่ยม","รูปสี่เหลี่ยม","วงกลม","มุม","เส้นขนาน"])||
+      rule("แบบรูปและความสัมพันธ์",["แบบรูป","ความสัมพันธ์"])||
+      rule("ข้อมูลและการนำเสนอข้อมูล",["ข้อมูล","แผนภูมิ","ตาราง","กราฟ"])||
+      "";
+  }else if(subject==="วิทยาศาสตร์"){
+    name=
+      rule("สิ่งมีชีวิตและสิ่งแวดล้อม",["สิ่งมีชีวิต","พืช","สัตว์","ระบบนิเวศ","สิ่งแวดล้อม","โซ่อาหาร"])||
+      rule("สารและสมบัติของสาร",["สาร","วัสดุ","สมบัติของวัสดุ","การเปลี่ยนแปลงของสาร"])||
+      rule("แรง พลังงาน และการเคลื่อนที่",["แรง","พลังงาน","การเคลื่อนที่","ไฟฟ้า","แม่เหล็ก","แสง","เสียง"])||
+      rule("โลก อวกาศ และธรรมชาติรอบตัว",["โลก","ดวงอาทิตย์","ดวงจันทร์","ดาว","อวกาศ","หิน","ดิน","น้ำ","อากาศ"])||
+      rule("กระบวนการสืบเสาะทางวิทยาศาสตร์",["ทดลอง","สืบเสาะ","ตั้งสมมติฐาน","หลักฐาน","สังเกต"])||
+      "";
+  }else if(subject==="สังคมศึกษา ศาสนา และวัฒนธรรม"){
+    name=
+      rule("ศาสนา คุณธรรม และการดำเนินชีวิต",["ศาสนา","พุทธ","คุณธรรม","ศีล","ธรรม"])||
+      rule("หน้าที่พลเมืองและการอยู่ร่วมกัน",["หน้าที่","พลเมือง","กติกา","สิทธิ","ประชาธิปไตย","อยู่ร่วมกัน"])||
+      rule("เศรษฐศาสตร์ในชีวิตประจำวัน",["เศรษฐศาสตร์","สินค้า","บริการ","เงิน","รายรับ","รายจ่าย","ออม"])||
+      rule("ภูมิศาสตร์และสิ่งแวดล้อม",["ภูมิศาสตร์","แผนที่","ทิศ","ภูมิประเทศ","ทรัพยากร","สิ่งแวดล้อม"])||
+      "";
+  }else if(subject==="ประวัติศาสตร์"){
+    name=
+      rule("เวลา ลำดับเหตุการณ์ และหลักฐาน",["เวลา","ลำดับเหตุการณ์","หลักฐาน","อดีต"])||
+      rule("เรื่องราวท้องถิ่นและความเป็นมา",["ท้องถิ่น","ชุมชน","ความเป็นมา","ประวัติ"])||
+      rule("บุคคลและเหตุการณ์สำคัญ",["บุคคลสำคัญ","เหตุการณ์สำคัญ","วีรกรรม"])||
+      "";
+  }else if(subject==="สุขศึกษาและพลศึกษา"){
+    name=
+      rule("การเจริญเติบโตและดูแลสุขภาพ",["เจริญเติบโต","สุขภาพ","สุขบัญญัติ","ร่างกาย","โภชนาการ"])||
+      rule("ชีวิตปลอดภัยและป้องกันความเสี่ยง",["ความปลอดภัย","อุบัติเหตุ","ยา","สารเสพติด","ความเสี่ยง"])||
+      rule("การเคลื่อนไหว กีฬา และสมรรถภาพ",["เคลื่อนไหว","กีฬา","ออกกำลังกาย","สมรรถภาพ","เกม"])||
+      "";
+  }else if(subject==="ศิลปะ"){
+    name=
+      rule("เส้น สี รูปร่าง และการสร้างสรรค์",["เส้น","สี","รูปร่าง","รูปทรง","ทัศนศิลป์","วาด","ระบายสี"])||
+      rule("เสียง จังหวะ และการขับร้อง",["เสียง","จังหวะ","ดนตรี","ขับร้อง","เพลง","เครื่องดนตรี","โน้ต"])||
+      rule("การเคลื่อนไหวและนาฏยศัพท์",["เคลื่อนไหว","นาฏยศัพท์","นาฏศิลป์","รำ","ท่ารำ","การแสดง"])||
+      rule("ศิลปะ วัฒนธรรม และภูมิปัญญา",["วัฒนธรรม","ภูมิปัญญา","ท้องถิ่น","ศิลปะไทย"])||
+      "";
+  }else if(subject==="การงานอาชีพและเทคโนโลยี"){
+    name=
+      rule("ทักษะการทำงานในชีวิตประจำวัน",["งานบ้าน","ชีวิตประจำวัน","จัดเก็บ","ดูแล","ทำงาน"])||
+      rule("งานประดิษฐ์และการสร้างชิ้นงาน",["ประดิษฐ์","ชิ้นงาน","วัสดุ","เครื่องมือ"])||
+      rule("อาชีพและการวางแผนการทำงาน",["อาชีพ","วางแผน","การทำงาน","คุณธรรมในการทำงาน"])||
+      "";
+  }else if(subject==="ภาษาต่างประเทศ"){
+    name=
+      rule("การฟังและพูดสื่อสารในชีวิตประจำวัน",["listen","speak","listening","speaking","ฟัง","พูด","สนทนา","สื่อสาร"])||
+      rule("คำศัพท์และประโยคใกล้ตัว",["vocabulary","word","sentence","คำศัพท์","ประโยค"])||
+      rule("การอ่านและเข้าใจข้อความ",["read","reading","อ่าน","ข้อความ","เรื่องสั้น"])||
+      rule("การเขียนเพื่อการสื่อสาร",["write","writing","เขียน","ข้อความสั้น"])||
+      rule("ภาษาและวัฒนธรรม",["culture","วัฒนธรรม","เทศกาล","ประเพณี"])||
+      "";
   }
-  return text
+
+  if(name)return name;
+
+  if(domain && domain.length<=42 && !/^สาระ(การเรียนรู้)?$/.test(domain)){
+    const cleanedDomain=domain.replace(/^สาระที่\s*\d+\s*/,"").trim();
+    if(cleanedDomain && cleanedDomain!==subject)return cleanedDomain;
+  }
+
+  const first=texts[0]||"";
+  if(first){
+    const compact=first.replace(/\s+/g," ").trim();
+    if(compact.length<=52)return compact;
+    const clauses=compact.split(/\s*(?:และ|รวมทั้ง|พร้อมทั้ง|โดย)\s*/).filter(Boolean);
+    if(clauses.length>=2){
+      const candidate=clauses.slice(0,2).join("และ");
+      if(candidate.length<=58)return candidate;
+    }
+    return compact.slice(0,52).trim().replace(/[,:;\-]+$/,"");
+  }
+
+  const code=String(rows?.[0]?.indicator||rows?.[0]?.outcome_code||"").trim();
+  return code?`เรียนรู้ตามตัวชี้วัด ${code}`:`หน่วยการเรียนรู้ ${index+1}`
+}
+function suggestedUnitTitle(rows,index=0,c=null){
+  return autoUnitNameByMeaning(rows,c,index)
 }
 function curriculumIndicatorPriority(row){
   const cls=String(row?.classification||"").trim();
@@ -1724,7 +1829,7 @@ function autoUnits(c){
       const rows=std.rows||[];
       const chunkCount=chunksForStandard(rows,sourceRows.length,targetUnits,allStandards.length);
       for(const chunk of splitCurriculumRows(rows,chunkCount)){
-        const baseName=suggestedUnitTitle(chunk,unitIndex);
+        const baseName=suggestedUnitTitle(chunk,unitIndex,c);
         units.push({
           name:contextualUnitName(baseName,c),
           base_name:baseName,
@@ -1871,6 +1976,7 @@ function repairGeneratedUnitTitles(rows,i){
   const c=rows?.[i];
   const oldUnits=c?.course_structure?.units||[];
   if(!c||!oldUnits.length)return {course:c,repaired:false};
+  const currentVersion=Number(c.course_structure?.version||0);
   const fresh=autoUnits(c);
   if(fresh.length!==oldUnits.length)return {course:c,repaired:false};
   let changed=false;
@@ -1880,17 +1986,21 @@ function repairGeneratedUnitTitles(rows,i){
     if(!sameIds)return u;
     const oldBase=String(u.base_name||"").trim();
     const newBase=String(f.base_name||"").trim();
-    if(!newBase||oldBase===newBase)return u;
+    const oldName=String(u.name||"").trim();
     const oldAutoName=contextualUnitName(oldBase,c);
-    const next={...u,base_name:newBase};
-    if(String(u.name||"").trim()===oldAutoName || String(u.name||"").trim()===oldBase){
-      next.name=contextualUnitName(newBase,c);
+    const shouldRefresh=currentVersion<8 || !oldBase || oldName===oldBase || oldName===oldAutoName;
+    const next={...u};
+    if(newBase && oldBase!==newBase){
+      next.base_name=newBase;
+      if(shouldRefresh)next.name=contextualUnitName(newBase,c);
+      changed=true;
+    }else if(currentVersion<8){
+      changed=true;
     }
-    changed=true;
     return next
   });
   if(!changed)return {course:c,repaired:false};
-  c.course_structure={...c.course_structure,version:7,units:merged,source:"Curriculum Engine v7: ชื่อหน่วยจากข้อความตัวชี้วัด/ผลลัพธ์แบบเต็ม ไม่ตัดกลางประโยค"};
+  c.course_structure={...c.course_structure,version:8,units:merged,source:"Curriculum Engine v8: ตั้งชื่อหน่วยอัตโนมัติจากความหมายของตัวชี้วัด/ผลลัพธ์ตามกลุ่มสาระ"};
   rows[i]=c;
   writeCourseDrafts(rows);
   return {course:c,repaired:true}
@@ -2012,9 +2122,9 @@ function saveCourseStructure(){
   c.hours_source=(recommendedNow>0 && Number(c.hours)!==recommendedNow)?"teacher":"curriculum_auto";
   c.hours_reference=curriculumTimeNote(c);
   c.course_structure={
-    version:7,
+    version:8,
     units,
-    source:"Curriculum Engine v7: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → หน่วยจากข้อความตัวชี้วัดแบบเต็ม",
+    source:"Curriculum Engine v8: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → ชื่อหน่วยอัตโนมัติตามความหมาย",
     source_curricula:c.curriculum_analysis?.curricula||[],
     saved_at:new Date().toISOString()
   };
