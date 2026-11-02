@@ -1643,7 +1643,7 @@ function renderLearningUnits(units){
       </section>`;
     }
     html+=`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(strandName)}">
-      <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small>${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
+      <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small><strong>สาระ: ${esc(strandName)}</strong> · ${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
       <label>สาระสำคัญ<textarea data-unit-concept rows="3">${esc(u.concept||"")}</textarea></label>
       <label>จุดประสงค์/ผลลัพธ์การเรียนรู้<textarea data-unit-objectives rows="4">${esc(u.objectives||"")}</textarea></label>
       <label>แนวทางการวัดและประเมินผล<textarea data-unit-assessment rows="3">${esc(u.assessment||"")}</textarea></label>
