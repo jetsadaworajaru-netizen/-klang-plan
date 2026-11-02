@@ -1384,3 +1384,36 @@ button,
     min-width:92px!important;
   }
 }
+
+
+/* 2026-11-02 wider course structure modal */
+#courseStructureModal{
+  align-items:center!important;
+  padding:24px!important;
+  box-sizing:border-box!important;
+}
+#courseStructureModal .modal-card.structure-card{
+  width:min(1180px,96vw)!important;
+  max-width:1180px!important;
+  max-height:92vh!important;
+  border-radius:24px!important;
+  padding:22px 24px!important;
+  overflow:auto!important;
+}
+#courseStructureModal #courseStructureList{
+  width:100%!important;
+  max-width:none!important;
+}
+@media(max-width:760px){
+  #courseStructureModal{
+    align-items:flex-end!important;
+    padding:0!important;
+  }
+  #courseStructureModal .modal-card.structure-card{
+    width:100%!important;
+    max-width:none!important;
+    max-height:94vh!important;
+    border-radius:22px 22px 0 0!important;
+    padding:16px!important;
+  }
+}
