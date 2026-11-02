@@ -867,7 +867,7 @@ function ensurePromptReferencePreview(){
     box.hidden=false;
     box.innerHTML='<img src="'+img+'" alt="รูปครูอ้างอิง" style="width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid #dbe7f0"><div><b>รูปครูอ้างอิงสำหรับ Prompt นี้</b><br><small>เมื่อนำ Prompt ไปใช้ ต้องแนบรูปนี้ไปพร้อมกัน เพื่อให้ AI ใช้ใบหน้าครูจริง</small></div>';
   }else{box.hidden=true;box.innerHTML=""}
-  if($("copyPromptBtn"))$("copyPromptBtn").textContent=(planTeacherImageSource!=="none"&&img)?"📋 คัดลอก Prompt + รูปครู":"📋 คัดลอก";
+  if($("copyPromptBtn"))$("copyPromptBtn").textContent="📋 คัดลอก Prompt พร้อมใช้";
 }
 function profileTeacherRef(){const src=profile?.teacher_photo_url||profile?.avatar_url||"";return src&&String(src).startsWith("avatar:")?"":src}
 function profileLogoRef(){return profile?.school_logo_url||""}
@@ -905,6 +905,12 @@ async function downloadAiPack(){
   entries.push(["README.txt",readme]);
   saveBlob(zipStored(entries,"application/zip"),"Klang-Plan-AI-Attachments.zip");toast("ดาวน์โหลดชุดแนบแล้ว ✓");
 }
+function setCopyPromptButtonState(copied=false){
+  const b=$("copyPromptBtn");if(!b)return;
+  b.classList.toggle("is-copied",copied);
+  b.textContent=copied?"✓ คัดลอกแล้ว":"📋 คัดลอก Prompt พร้อมใช้";
+  if(copied)setTimeout(()=>setCopyPromptButtonState(false),1800);
+}
 async function copy(){
   const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");
   const img=currentPlanTeacherImage();
@@ -913,12 +919,13 @@ async function copy(){
       const png=await imageSourceToPngBlob(img);
       const item=new ClipboardItem({"text/plain":new Blob([t],{type:"text/plain"}),"image/png":png});
       await navigator.clipboard.write([item]);
-      toast("คัดลอก Prompt + รูปครูแล้ว ✓");return;
+      setCopyPromptButtonState(true);toast("คัดลอก Prompt + รูปครูแล้ว ✓");return;
     }
     await navigator.clipboard.writeText(t);
+    setCopyPromptButtonState(true);
     toast(img&&planTeacherImageSource!=="none"?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓");
   }catch(e){
-    try{await navigator.clipboard.writeText(t);toast(img?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}
+    try{await navigator.clipboard.writeText(t);setCopyPromptButtonState(true);toast(img?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}
   }
 }
 async function saveWork(t){
