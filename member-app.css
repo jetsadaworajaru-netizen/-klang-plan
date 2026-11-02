@@ -341,3 +341,22 @@ button,
   color:#2d5f87;
   font-weight:900;
 }
+
+
+/* Saved plan actions */
+.plan-workspace-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.plan-workspace-actions button{min-height:38px}
+.danger-btn{
+  border:1px solid #efc3c3;
+  background:#fff7f7;
+  color:#a43f3f;
+  border-radius:12px;
+  padding:9px 11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.danger-btn:hover{background:#fff0f0}
+@media(max-width:720px){
+  .plan-workspace-actions{justify-content:flex-start}
+  .plan-workspace-actions button{flex:1 1 auto}
+}
