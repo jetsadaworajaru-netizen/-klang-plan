@@ -1790,7 +1790,13 @@ function renderStructureEditor(units){
     }
     unitNo++;
     html+=`<article class="structure-unit-card structure-subunit" data-unit-row="${i}" data-strand-group="${areaNo}" data-standard-name="${esc(standard)}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-base-name="${esc(u.base_name||u.name||"")}" data-source-standard="${esc(u.source_standard||"")}" data-source-codes='${esc(JSON.stringify(u.source_indicator_codes||[]))}'>
-      <div class="structure-unit-head"><span>${unitNo}</span><div><b>หน่วยการเรียนรู้: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b><small>${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small></div></div>
+      <div class="structure-unit-head">
+        <span class="structure-unit-number"><small>หน่วยที่</small><strong>${unitNo}</strong></span>
+        <div class="structure-unit-title-wrap">
+          <b>หน่วยการเรียนรู้: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b>
+          <small><span class="structure-book-icon">▣</span> ${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small>
+        </div>
+      </div>
       <div class="structure-edit-grid structure-slider-grid">
         <label class="structure-name-field">ชื่อหน่วย (แก้ได้)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}"></label>
         <div class="structure-control-strip">
