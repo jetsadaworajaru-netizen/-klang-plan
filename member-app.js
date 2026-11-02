@@ -1461,6 +1461,38 @@ function hasBroadUnitTitle(c,u,idx=0){
   const structureStandard=String(structureUnit.standard_name||structureUnit.source_standard||"").trim();
   return !title || title===strand || title===standard || title===structureStrand || title===structureStandard;
 }
+function ensureCurriculumStructureCurrent(rows,i){
+  let c=rows?.[i];
+  if(!c)return {course:c,repaired:false};
+  const version=Number(c.course_structure?.version||0);
+  const units=c.course_structure?.units||[];
+  const broad=units.some((u,idx)=>{
+    const title=String(u?.name||"").trim();
+    const strand=String(u?.strand_name||u?.strand_base||"").trim();
+    const standard=String(u?.standard_name||u?.source_standard||"").trim();
+    return !title || title===strand || title===standard || isBroadCurriculumTitle(title,{
+      domain:strand,standard,subject:c.subject
+    });
+  });
+  if(version>=4 && units.length && !broad)return {course:c,repaired:false};
+
+  const fresh=autoUnits(c);
+  c.course_structure={
+    version:4,
+    units:fresh,
+    source:"Curriculum Engine: สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด/ผลลัพธ์ของแต่ละวิชา",
+    source_curricula:c.curriculum_analysis?.curricula||[],
+    saved_at:new Date().toISOString()
+  };
+  c.teaching_schedule=null;
+  c.learning_units=null;
+  c.lesson_resources=null;
+  c.assessments=null;
+  c.documents=null;
+  rows[i]=c;
+  writeCourseDrafts(rows);
+  return {course:c,repaired:true}
+}
 function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนัก <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับตัวเลื่อนให้ผลรวมตรง"}</span>`}
 function repairLegacyCourseHours(rows,i){
   const c=rows?.[i];
@@ -1492,6 +1524,8 @@ function openCourseStructure(i){
   if(!c?.course_description?.saved_at){toast("กรุณาบันทึกคำอธิบายรายวิชาก่อน");return}
   const repaired=repairLegacyCourseHours(rows,i);
   c=repaired.course;
+  const hierarchyCheck=ensureCurriculumStructureCurrent(rows,i);
+  c=hierarchyCheck.course;
   if(Number(c.hours||0)<=0){
     const suggested=recommendedCourseHours(c);
     if(suggested>0){c.hours=suggested;c.hours_source="curriculum_auto";c.hours_reference=curriculumTimeNote(c);rows[i]=c;writeCourseDrafts(rows)}
@@ -1500,10 +1534,9 @@ function openCourseStructure(i){
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
   $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
   $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
-  const needsSubunits=!c.course_structure?.units || Number(c.course_structure?.version||0)<4;
-  const units=needsSubunits?autoUnits(c):c.course_structure.units;
+  const units=c.course_structure?.units?.length?c.course_structure.units:autoUnits(c);
   renderStructureEditor(units);
-  $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:"";
+  $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:(hierarchyCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างเป็น “สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด” แล้ว</div>':"");
   $("courseStructureModal").hidden=false
 }
 function generateCourseStructure(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],units=autoUnits(c);renderStructureEditor(units);toast("คืนค่าตามฐานหลักสูตรแล้ว ✓")}
@@ -1553,7 +1586,11 @@ function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.m
 function readTeachingSchedule(){return $$('#teachingScheduleList [data-schedule-row]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids}})}
 function updateScheduleTotal(){const rows=readTeachingSchedule(),hours=rows.reduce((s,x)=>s+x.hours,0);$("teachingScheduleTotal").innerHTML=`รวม <b>${rows.length} ช่วงการสอน</b> · <b>${hours} ชั่วโมง</b>`}
 function openTeachingSchedule(i){
-  const rows=courseDrafts(),c=rows[i];
+  const rows=courseDrafts();
+  let c=rows[i];
+  if(!c?.course_description?.saved_at){toast("กรุณาบันทึกคำอธิบายรายวิชาก่อน");return}
+  const structureCheck=ensureCurriculumStructureCurrent(rows,i);
+  c=structureCheck.course;
   if(!c?.course_structure?.saved_at){toast("กรุณาบันทึกโครงสร้างรายวิชาก่อน");return}
   activeCourseIndex=i;
   const structureVersion=Number(c.course_structure?.version||0);
@@ -1565,7 +1602,7 @@ function openTeachingSchedule(i){
   $("teachingScheduleMeta").textContent=`${c.name} · ${c.grade} · ภาคเรียน ${c.semester}/${c.year}`;
   $("teachingScheduleSource").innerHTML=`รับข้อมูลจาก <b>${c.course_structure.units?.length||0} หน่วยย่อย</b> · เวลาเรียนรวม <b>${c.hours||0} ชั่วโมง</b> — ชื่อหน่วยยึดจาก Curriculum Engine ของวิชา/ชั้นนี้ และครูแก้เรื่อง/หัวข้อ/สัปดาห์ได้`;
   renderTeachingSchedule(scheduleStale?autoTeachingSchedule(c):savedRows);
-  $("teachingScheduleStatus").innerHTML=scheduleStale&&savedRows.length?'<div class="indicator-preview">✓ ปรับกำหนดการสอนให้ตรงกับชื่อหน่วยจากหลักสูตรล่าสุดแล้ว</div>':"";
+  $("teachingScheduleStatus").innerHTML=structureCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างรายวิชาเป็นหน่วยย่อยตามตัวชี้วัดของวิชา/ชั้นนี้แล้ว</div>':(scheduleStale&&savedRows.length?'<div class="indicator-preview">✓ ปรับกำหนดการสอนให้ตรงกับชื่อหน่วยจากหลักสูตรล่าสุดแล้ว</div>':"");
   $("teachingScheduleModal").hidden=false
 }
 function generateTeachingSchedule(){if(activeCourseIndex===null)return;renderTeachingSchedule(autoTeachingSchedule(courseDrafts()[activeCourseIndex]));toast("สร้างกำหนดการสอนแล้ว ✓")}
@@ -1601,7 +1638,11 @@ function renderLearningUnits(units){
 }
 function readLearningUnits(){return $$('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:row.dataset.strandName||"",standard_name:courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]?.standard_name||"",structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
 function openLearningUnits(i){
-  const rows=courseDrafts(),c=rows[i];
+  const rows=courseDrafts();
+  let c=rows[i];
+  const structureCheck=ensureCurriculumStructureCurrent(rows,i);
+  c=structureCheck.course;
+  if(structureCheck.repaired){toast("อัปเกรดโครงสร้างตามหลักสูตรล่าสุดแล้ว กรุณาตรวจและบันทึกกำหนดการสอนใหม่");openTeachingSchedule(i);return}
   if(!c?.teaching_schedule?.saved_at){toast("กรุณาบันทึกกำหนดการสอนก่อน");return}
   activeCourseIndex=i;
   $("learningUnitsMeta").textContent=`${c.name} · ${c.grade} · ${c.course_structure?.units?.length||0} หน่วยย่อย`;
@@ -1632,7 +1673,7 @@ function unitWorkStatus(c,u){
   return {plan,worksheet,knowledge,visual,assessment,done,total:5,percent:Math.round(done/5*100)}
 }
 function closeCourseLessons(){$("courseLessonsModal").hidden=true;activeCourseIndex=null}
-function openCourseLessons(i){const rows=courseDrafts(),c=rows[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}const currentVersion=Number(c.course_structure?.version||0);if((c.learning_units.units||[]).some((u,idx)=>Number(u.structure_version||0)<currentVersion||!u.strand_name||hasBroadUnitTitle(c,u,idx))){c.learning_units={version:currentVersion,units:c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)),saved_at:new Date().toISOString()};c.lesson_resources=null;c.assessments=null;c.documents=null;rows[i]=c;writeCourseDrafts(rows)}activeCourseIndex=i;$("courseLessonsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย`;$("courseLessonsList").innerHTML=c.learning_units.units.map((u,ui)=>{const st=unitWorkStatus(c,u);return `<article class="course-lesson-unit"><div><b>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</b><small>${u.strand_name?`${esc(curriculumAreaLabel(c.subject))}: ${esc(u.strand_name)} · `:""}${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:""}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด</small><div class="unit-progress-wrap"><div class="unit-progress-bar"><i style="width:${st.percent}%"></i></div><div class="unit-progress-meta"><span>ความพร้อมหน่วย ${st.percent}%</span><span>${st.done}/${st.total} งานหลัก</span></div><div class="unit-resource-chips"><span class="${st.plan?"done":""}">📝 แผน</span><span class="${st.worksheet?"done":""}">📄 ใบงาน</span><span class="${st.knowledge?"done":""}">📚 ใบความรู้</span><span class="${st.visual?"done":""}">🖼️ บัตรภาพ</span><span class="${st.assessment?"done":""}">✅ ประเมิน</span></div></div></div><div class="course-lesson-actions"><button type="button" data-unit-plan="${ui}">📝 สร้างแผน</button><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div></article>`}).join("");$$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan)));$$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(":");createUnitResourcePrompt(i,Number(ui),type)});$("courseLessonsStatus").innerHTML="";$("courseLessonsModal").hidden=false}
+function openCourseLessons(i){const rows=courseDrafts();let c=rows[i];const structureCheck=ensureCurriculumStructureCurrent(rows,i);c=structureCheck.course;if(structureCheck.repaired){toast("อัปเกรดโครงสร้างตามหลักสูตรล่าสุดแล้ว กรุณาตรวจลำดับงานต่อจากกำหนดการสอน");openTeachingSchedule(i);return}if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}const currentVersion=Number(c.course_structure?.version||0);if((c.learning_units.units||[]).some((u,idx)=>Number(u.structure_version||0)<currentVersion||!u.strand_name||hasBroadUnitTitle(c,u,idx))){c.learning_units={version:currentVersion,units:c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)),saved_at:new Date().toISOString()};c.lesson_resources=null;c.assessments=null;c.documents=null;rows[i]=c;writeCourseDrafts(rows)}activeCourseIndex=i;$("courseLessonsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย`;$("courseLessonsList").innerHTML=c.learning_units.units.map((u,ui)=>{const st=unitWorkStatus(c,u);return `<article class="course-lesson-unit"><div><b>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</b><small>${u.strand_name?`${esc(curriculumAreaLabel(c.subject))}: ${esc(u.strand_name)} · `:""}${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:""}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด</small><div class="unit-progress-wrap"><div class="unit-progress-bar"><i style="width:${st.percent}%"></i></div><div class="unit-progress-meta"><span>ความพร้อมหน่วย ${st.percent}%</span><span>${st.done}/${st.total} งานหลัก</span></div><div class="unit-resource-chips"><span class="${st.plan?"done":""}">📝 แผน</span><span class="${st.worksheet?"done":""}">📄 ใบงาน</span><span class="${st.knowledge?"done":""}">📚 ใบความรู้</span><span class="${st.visual?"done":""}">🖼️ บัตรภาพ</span><span class="${st.assessment?"done":""}">✅ ประเมิน</span></div></div></div><div class="course-lesson-actions"><button type="button" data-unit-plan="${ui}">📝 สร้างแผน</button><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div></article>`}).join("");$$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan)));$$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(":");createUnitResourcePrompt(i,Number(ui),type)});$("courseLessonsStatus").innerHTML="";$("courseLessonsModal").hidden=false}
 async function startUnitPlan(ci,ui){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui);toast("นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
 function resourceIntro(type,u,c){const m={worksheet:`สร้างใบงานสำหรับหน่วย “${u.name}” ของ ${c.grade} มีคำชี้แจง กิจกรรม พื้นที่ตอบ และเฉลย`,visual_card:`สร้างชุดบัตรภาพประกอบการสอนสำหรับหน่วย “${u.name}” ของ ${c.grade} ภาพชัดเจน เหมาะกับวัย พร้อมคำกำกับเฉพาะที่จำเป็น`,knowledge:`สร้างใบความรู้สำหรับหน่วย “${u.name}” ของ ${c.grade} สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย`};return m[type]||`สร้างสื่อการเรียนรู้สำหรับหน่วย “${u.name}”`}
 function createUnitResourcePrompt(ci,ui,type){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;const refs=savedCurriculumRows(c).filter(x=>(u.indicator_ids||[]).includes(x.dataset_id));const text=`${resourceIntro(type,u,c)}\n\nข้อมูลอ้างอิงที่ต้องใช้:\nรายวิชา: ${c.name}\nชั้น: ${c.grade}\nภาคเรียน: ${c.semester}/${c.year}\nหน่วย: ${u.name}\nสาระสำคัญ: ${u.concept||""}\nจุดประสงค์: ${u.objectives||""}\nตัวชี้วัด:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด: ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่ และให้เนื้อหาสอดคล้องกับหน่วยเดียวกัน`;c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,type,title:`${type} · ${u.name}`,prompt:text,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt สื่อจากหน่วยแล้ว ✓")}
