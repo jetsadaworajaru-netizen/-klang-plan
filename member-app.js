@@ -352,7 +352,7 @@ function timedMethodPhases(method,topic,duration){
   if(n===3)weights=[.15,.65,.20];
   else if(n===4)weights=[.12,.30,.38,.20];
   else if(n===5)weights=[.10,.22,.28,.24,.16];
-  else weights=Array.from({length:n},(_,i)=>i===0?.10:i===n-1?.15:.75/Math.max(1,n-2));
+  else weights=Array.from({length:n},(_,i)=>i===0 ? .10 : (i===n-1 ? .15 : .75/Math.max(1,n-2)));
   const mins=weights.map(w=>Math.max(1,Math.round(total*w)));
   const diff=total-mins.reduce((a,b)=>a+b,0);
   if(mins.length)mins[Math.min(1,mins.length-1)]+=diff;
