@@ -1767,6 +1767,11 @@ function autoUnits(c){
   units.forEach((u,i)=>{u.hours=hours[i]||0;u.weight=weights[i]||0;delete u.priority});
   return units
 }
+function autoSizeUnitNameField(el){
+  if(!el)return;
+  el.style.height="auto";
+  el.style.height=Math.max(44,el.scrollHeight)+"px";
+}
 function renderStructureEditor(units){
   const course=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex];
   const maxHours=Math.max(10,Number(course?.hours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||20);
@@ -1816,7 +1821,7 @@ function renderStructureEditor(units){
   });
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
-  $$('#courseStructureList [data-unit-name]').forEach(x=>x.oninput=updateStructureTotal);
+  $('#courseStructureList [data-unit-name]').forEach(x=>{autoSizeUnitNameField(x);x.oninput=()=>{autoSizeUnitNameField(x);updateStructureTotal()}});
   $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
   updateStructureTotal()
 }
