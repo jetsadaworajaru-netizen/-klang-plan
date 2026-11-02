@@ -1780,12 +1780,12 @@ function renderStructureEditor(units){
     }
     if(standard!==lastStandard){
       stdNo++;
-      html+=`<div class="structure-standard-card"><b>มาตรฐาน: ${esc(standard)}</b><small>หน่วยย่อยด้านล่างเชื่อมกับมาตรฐานนี้</small></div>`;
+      html+=`<div class="structure-standard-card"><b>มาตรฐาน: ${esc(standard)}</b><small>หน่วยการเรียนรู้ด้านล่างเชื่อมกับมาตรฐาน/ผลลัพธ์นี้</small></div>`;
       lastStandard=standard;
     }
     unitNo++;
     html+=`<article class="structure-unit-card structure-subunit" data-unit-row="${i}" data-strand-group="${areaNo}" data-standard-name="${esc(standard)}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-base-name="${esc(u.base_name||u.name||"")}" data-source-standard="${esc(u.source_standard||"")}" data-source-codes='${esc(JSON.stringify(u.source_indicator_codes||[]))}'>
-      <div class="structure-unit-head"><span>${unitNo}</span><div><b>หน่วยย่อย: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b><small>${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small></div></div>
+      <div class="structure-unit-head"><span>${unitNo}</span><div><b>หน่วยการเรียนรู้: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b><small>${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small></div></div>
       <div class="structure-edit-grid structure-slider-grid">
         <label class="structure-name-field">ชื่อหน่วย (แก้ได้)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}"></label>
         <label class="structure-range-field">ชั่วโมง <b data-hours-value>${Number(u.hours)||0}</b>
@@ -1855,7 +1855,7 @@ function ensureCurriculumStructureCurrent(rows,i){
   c.course_structure={
     version:6,
     units:fresh,
-    source:"Curriculum Engine: สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด/ผลลัพธ์ของแต่ละวิชา",
+    source:"Curriculum Engine v6: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → จัดกลุ่มตัวชี้วัดที่สัมพันธ์กัน → หน่วยการเรียนรู้",
     source_curricula:c.curriculum_analysis?.curricula||[],
     saved_at:new Date().toISOString()
   };
@@ -1938,7 +1938,7 @@ function saveCourseStructure(){
   c.course_structure={
     version:6,
     units,
-    source:"Curriculum Engine: สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด/ผลลัพธ์ของแต่ละวิชา",
+    source:"Curriculum Engine v6: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → จัดกลุ่มตัวชี้วัดที่สัมพันธ์กัน → หน่วยการเรียนรู้",
     source_curricula:c.curriculum_analysis?.curricula||[],
     saved_at:new Date().toISOString()
   };
