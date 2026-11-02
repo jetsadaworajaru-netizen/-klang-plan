@@ -1520,8 +1520,8 @@ function coreCurriculumTimeReference(grade,subject){
     "สังคมศึกษา ศาสนา และวัฒนธรรม":{p123:120,p456:120,m123:120,m456:320},
     "สุขศึกษาและพลศึกษา":{p123:80,p456:80,m123:80,m456:120},
     "ศิลปะ":{p123:80,p456:80,m123:80,m456:120},
-    "การงานอาชีพและเทคโนโลยี":{p123:80,p456:80,m123:80,m456:120},
-    "ภาษาต่างประเทศ":{p123:80,p456:80,m123:120,m456:240}
+    "การงานอาชีพและเทคโนโลยี":{p123:40,p456:80,m123:80,m456:120},
+    "ภาษาต่างประเทศ":{p123:40,p456:80,m123:120,m456:240}
   };
   const r=rows[subject];
   if(!r)return {hours:0,scope:"unknown",label:"ไม่มีกรอบเวลาอ้างอิงอัตโนมัติ"};
@@ -1598,22 +1598,47 @@ function isBroadCurriculumTitle(title,row){
   return broad.includes(t)||/^สาระ(การเรียนรู้)?$/i.test(t)||/^มาตรฐาน/i.test(t)
 }
 function suggestedUnitTitle(rows,index=0){
-  const first=(rows||[])[0]||{};
-  const candidates=[
-    first.indicator_text,
-    first.learning_outcome,
-    first.outcome_text,
-    first.competency_text,
-    first.description,
-    first.topic
-  ].map(cleanCurriculumUnitTitle).filter(Boolean);
-  let text=candidates.find(x=>!isBroadCurriculumTitle(x,first))||"";
+  const list=(rows||[]).map(r=>{
+    const candidates=[r.indicator_text,r.learning_outcome,r.outcome_text,r.competency_text,r.description,r.topic]
+      .map(cleanCurriculumUnitTitle).filter(Boolean);
+    return candidates.find(x=>!isBroadCurriculumTitle(x,r))||""
+  }).filter(Boolean);
+  let text=list[0]||"";
+  if(list.length>1){
+    const second=list[1];
+    if(second && second!==text){
+      const left=text.length>34?text.slice(0,34).trim():text;
+      const right=second.length>30?second.slice(0,30).trim():second;
+      text=left+" และ "+right
+    }
+  }
   if(!text){
-    const code=String(first.indicator||"").trim();
-    text=code?`เรียนรู้ตามตัวชี้วัด ${code}`:`หน่วยการเรียนรู้ ${index+1}`;
+    const first=(rows||[])[0]||{},code=String(first.indicator||"").trim();
+    text=code?`เรียนรู้ตามตัวชี้วัด ${code}`:`หน่วยการเรียนรู้ ${index+1}`
   }
   if(text.length>72)text=text.slice(0,69).trim()+"…";
   return text
+}
+function curriculumIndicatorPriority(row){
+  const cls=String(row?.classification||"").trim();
+  return cls==="ปลายทาง"?2:1
+}
+function allocateExactTotal(total,weights,minValue=0){
+  total=Math.max(0,Math.round(Number(total)||0));
+  weights=(weights||[]).map(x=>Math.max(0,Number(x)||0));
+  const n=weights.length;if(!n)return[];
+  const minTotal=minValue*n;
+  if(total<minTotal)minValue=0;
+  const base=Array(n).fill(minValue),remaining=Math.max(0,total-base.reduce((a,b)=>a+b,0));
+  const sum=weights.reduce((a,b)=>a+b,0)||n;
+  const raw=weights.map(w=>remaining*(w||1)/sum);
+  const floors=raw.map(Math.floor);
+  let used=floors.reduce((a,b)=>a+b,0);
+  floors.forEach((v,i)=>base[i]+=v);
+  const remainders=raw.map((v,i)=>({i,r:v-floors[i]})).sort((a,b)=>b.r-a.r||a.i-b.i);
+  let left=remaining-used,p=0;
+  while(left>0){base[remainders[p%remainders.length].i]++;p++;left--}
+  return base
 }
 function autoUnits(c){
   const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
@@ -1633,8 +1658,15 @@ function autoUnits(c){
   let unitIndex=0;
   for(const area of areas){
     for(const std of area.standards){
-      for(const row of std.rows){
-        const baseName=suggestedUnitTitle([row],unitIndex);
+      const rows=std.rows||[];
+      // หน่วยการเรียนรู้ไม่ควรเท่ากับตัวชี้วัดแบบ 1:1 เสมอไป:
+      // รวมตัวชี้วัดที่อยู่ในมาตรฐานเดียวกันครั้งละ 2 รายการ (รายการสุดท้ายอาจ 1–3)
+      // เพื่อให้หน่วยมีความหมายและสามารถจัดเวลาได้จริงใน 20/40 สัปดาห์
+      const chunkSize=rows.length<=2?rows.length:2;
+      for(let start=0;start<rows.length;start+=Math.max(1,chunkSize)){
+        let chunk=rows.slice(start,start+Math.max(1,chunkSize));
+        if(rows.length-start===3 && start>0)chunk=rows.slice(start,start+3);
+        const baseName=suggestedUnitTitle(chunk,unitIndex);
         units.push({
           name:contextualUnitName(baseName,c),
           base_name:baseName,
@@ -1642,12 +1674,13 @@ function autoUnits(c){
           strand_base:area.key,
           standard_name:std.key,
           source_standard:std.key,
-          source_indicator_codes:row.indicator?[row.indicator]:[],
-          indicator_ids:[row.dataset_id],
+          source_indicator_codes:chunk.map(r=>r.indicator).filter(Boolean),
+          indicator_ids:chunk.map(r=>r.dataset_id).filter(Boolean),
+          priority:chunk.reduce((s,r)=>s+curriculumIndicatorPriority(r),0),
           hours:0,
           weight:0
         });
-        unitIndex++;
+        unitIndex++
       }
     }
   }
@@ -1657,26 +1690,16 @@ function autoUnits(c){
       name:"หน่วยการเรียนรู้ 1",base_name:"หน่วยการเรียนรู้ 1",
       strand_name:"สาระการเรียนรู้",strand_base:"สาระการเรียนรู้",
       standard_name:"มาตรฐาน/ผลลัพธ์",source_standard:"",
-      source_indicator_codes:[],indicator_ids:[],hours:0,weight:100
+      source_indicator_codes:[],indicator_ids:[],priority:1,hours:0,weight:100
     })
   }
 
-  const counts=units.map(u=>Math.max(1,u.indicator_ids.length));
-  const countSum=counts.reduce((a,b)=>a+b,0)||1;
+  const priorities=units.map(u=>Math.max(1,Number(u.priority)||u.indicator_ids.length||1));
   const suggestedHours=recommendedCourseHours(c);
-  const totalH=Number(c.hours)>0?Number(c.hours):(suggestedHours>0?suggestedHours:Math.max(units.length,countSum));
-  let assignedH=0,assignedW=0;
-  units.forEach((u,i)=>{
-    const last=i===units.length-1;
-    if(last){
-      u.hours=Math.max(0,totalH-assignedH);
-      u.weight=Math.max(0,100-assignedW);
-    }else{
-      u.hours=Math.max(1,Math.round(totalH*counts[i]/countSum));
-      u.weight=Math.max(1,Math.round(100*counts[i]/countSum));
-      assignedH+=u.hours;assignedW+=u.weight;
-    }
-  });
+  const totalH=Math.max(1,Number(c.hours)>0?Number(c.hours):(suggestedHours>0?suggestedHours:units.length));
+  const hours=allocateExactTotal(totalH,priorities,1);
+  const weights=allocateExactTotal(100,priorities,1);
+  units.forEach((u,i)=>{u.hours=hours[i]||0;u.weight=weights[i]||0;delete u.priority});
   return units
 }
 
@@ -1767,11 +1790,11 @@ function ensureCurriculumStructureCurrent(rows,i){
       domain:strand,standard,subject:c.subject
     });
   });
-  if(version>=4 && units.length && !broad)return {course:c,repaired:false};
+  if(version>=5 && units.length && !broad)return {course:c,repaired:false};
 
   const fresh=autoUnits(c);
   c.course_structure={
-    version:4,
+    version:5,
     units:fresh,
     source:"Curriculum Engine: สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด/ผลลัพธ์ของแต่ละวิชา",
     source_curricula:c.curriculum_analysis?.curricula||[],
@@ -1854,7 +1877,7 @@ function saveCourseStructure(){
   c.hours_source=(recommendedNow>0 && Number(c.hours)!==recommendedNow)?"teacher":"curriculum_auto";
   c.hours_reference=curriculumTimeNote(c);
   c.course_structure={
-    version:4,
+    version:5,
     units,
     source:"Curriculum Engine: สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด/ผลลัพธ์ของแต่ละวิชา",
     source_curricula:c.curriculum_analysis?.curricula||[],
@@ -1874,10 +1897,51 @@ function saveCourseStructure(){
 }
 
 function closeTeachingSchedule(){$("teachingScheduleModal").hidden=true;activeCourseIndex=null}
-function autoTeachingSchedule(c){const units=c.course_structure?.units||[];let week=1;const out=[];for(let ui=0;ui<units.length;ui++){const u=units[ui],h=Math.max(0,Number(u.hours)||0),strand=u.strand_name||u.strand_base||"",codes=u.source_indicator_codes||[];if(!h){out.push({week:week++,unit_index:ui,strand_name:strand,unit_name:u.name,topic:u.name,hours:0,indicator_ids:u.indicator_ids||[],indicator_codes:codes});continue}let remaining=h;while(remaining>0){const block=Math.min(2,remaining);out.push({week:week++,unit_index:ui,strand_name:strand,unit_name:u.name,topic:remaining===h?u.name:`${u.name} (ต่อ)`,hours:block,indicator_ids:u.indicator_ids||[],indicator_codes:codes});remaining-=block}}return out}
-function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ"><input data-schedule-hours type="number" min="0" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';$$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()}
+function courseTeachingWeeks(c){
+  const sem=String(c?.semester||"").trim();
+  return (sem==="1"||sem==="2")?20:40
+}
+function roundQuarterHour(n){return Math.round((Number(n)||0)*4)/4}
+function autoTeachingSchedule(c){
+  const units=c.course_structure?.units||[],out=[];
+  const totalH=units.reduce((s,u)=>s+Math.max(0,Number(u.hours)||0),0);
+  const teachingWeeks=courseTeachingWeeks(c);
+  if(!units.length||!totalH)return out;
+  const weeklyCapacity=totalH/teachingWeeks;
+  let week=1,weekUsed=0;
+  const EPS=.0001;
+  for(let ui=0;ui<units.length;ui++){
+    const u=units[ui],strand=u.strand_name||u.strand_base||"",codes=u.source_indicator_codes||[];
+    let remaining=Math.max(0,Number(u.hours)||0),part=0;
+    while(remaining>EPS && week<=teachingWeeks){
+      let available=weeklyCapacity-weekUsed;
+      if(available<=EPS){week++;weekUsed=0;available=weeklyCapacity}
+      if(week>teachingWeeks)break;
+      const block=Math.min(remaining,available);
+      part++;
+      out.push({
+        week,
+        unit_index:ui,
+        strand_name:strand,
+        unit_name:u.name,
+        topic:part===1?u.name:`${u.name} (ต่อ)`,
+        hours:roundQuarterHour(block),
+        indicator_ids:u.indicator_ids||[],
+        indicator_codes:codes
+      });
+      remaining-=block;weekUsed+=block;
+      if(weeklyCapacity-weekUsed<=EPS){week++;weekUsed=0}
+    }
+  }
+  // ปรับเศษทศนิยมจากการปัด 0.25 ชั่วโมงให้ผลรวมตรงกับชั่วโมงรายวิชา
+  const target=Number(c.hours||totalH),sum=out.reduce((s,r)=>s+Number(r.hours||0),0),diff=roundQuarterHour(target-sum);
+  if(out.length&&Math.abs(diff)>=.001)out[out.length-1].hours=roundQuarterHour(Number(out[out.length-1].hours||0)+diff);
+  return out
+}
+
+function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ"><input data-schedule-hours type="number" min="0" step="0.25" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';$$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()}
 function readTeachingSchedule(){return $$('#teachingScheduleList [data-schedule-row]').map((row,i)=>{let ids=[],codes=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}try{codes=JSON.parse(row.dataset.indicatorCodes||"[]")}catch{}return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,strand_name:row.dataset.strandName||"",unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids,indicator_codes:codes}})}
-function updateScheduleTotal(){const rows=readTeachingSchedule(),hours=rows.reduce((s,x)=>s+x.hours,0);$("teachingScheduleTotal").innerHTML=`รวม <b>${rows.length} ช่วงการสอน</b> · <b>${hours} ชั่วโมง</b>`}
+function updateScheduleTotal(){const rows=readTeachingSchedule(),hours=roundQuarterHour(rows.reduce((s,x)=>s+x.hours,0)),weeks=unique(rows.map(x=>x.week)).length,targetWeeks=activeCourseIndex===null?0:courseTeachingWeeks(courseDrafts()[activeCourseIndex]);$("teachingScheduleTotal").innerHTML=`รวม <b>${weeks} สัปดาห์</b>${targetWeeks?` / กรอบ ${targetWeeks} สัปดาห์`:""} · <b>${rows.length} ช่วงการสอน</b> · <b>${hours} ชั่วโมง</b>`}
 function openTeachingSchedule(i){
   const rows=courseDrafts();
   let c=rows[i];
@@ -1893,13 +1957,13 @@ function openTeachingSchedule(i){
     return u && (String(r.unit_name||"").trim()!==String(u.name||"").trim());
   });
   $("teachingScheduleMeta").textContent=`${c.name} · ${c.grade} · ภาคเรียน ${c.semester}/${c.year}`;
-  $("teachingScheduleSource").innerHTML=`รับข้อมูลจาก <b>${c.course_structure.units?.length||0} หน่วยย่อย</b> · เวลาเรียนรวม <b>${c.hours||0} ชั่วโมง</b> — ชื่อหน่วยยึดจาก Curriculum Engine ของวิชา/ชั้นนี้ และครูแก้เรื่อง/หัวข้อ/สัปดาห์ได้`;
+  $("teachingScheduleSource").innerHTML=`รับข้อมูลจาก <b>${c.course_structure.units?.length||0} หน่วยการเรียนรู้</b> · เวลาเรียนรวม <b>${c.hours||0} ชั่วโมง</b> · กรอบ <b>${courseTeachingWeeks(c)} สัปดาห์</b> (${String(c.semester||"").trim()==="1"||String(c.semester||"").trim()==="2"?"1 ภาคเรียน":"1 ปีการศึกษา"}) — ระบบกระจายชั่วโมงต่อสัปดาห์อัตโนมัติ ครูปรับหัวข้อได้`;
   renderTeachingSchedule(scheduleStale?autoTeachingSchedule(c):savedRows);
   $("teachingScheduleStatus").innerHTML=structureCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างรายวิชาเป็นหน่วยย่อยตามตัวชี้วัดของวิชา/ชั้นนี้แล้ว</div>':(scheduleStale&&savedRows.length?'<div class="indicator-preview">✓ ปรับกำหนดการสอนให้ตรงกับชื่อหน่วยจากหลักสูตรล่าสุดแล้ว</div>':"");
   $("teachingScheduleModal").hidden=false
 }
 function generateTeachingSchedule(){if(activeCourseIndex===null)return;renderTeachingSchedule(autoTeachingSchedule(courseDrafts()[activeCourseIndex]));toast("สร้างกำหนดการสอนแล้ว ✓")}
-function saveTeachingSchedule(){if(activeCourseIndex===null)return;const a=courseDrafts(),c=a[activeCourseIndex],rows=readTeachingSchedule(),hours=rows.reduce((s,x)=>s+x.hours,0);if(hours!==Number(c.hours||0)){$("teachingScheduleStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${hours} ยังไม่ตรงกับรายวิชา ${c.hours||0} ชั่วโมง</div>`;return}c.teaching_schedule={structure_version:Number(c.course_structure?.version||4),rows,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("teachingScheduleStatus").innerHTML='<div class="indicator-preview">บันทึกกำหนดการสอนแล้ว ✓ พร้อมออกแบบหน่วยการเรียนรู้</div>';renderCourses();toast("บันทึกกำหนดการสอนแล้ว ✓")}
+function saveTeachingSchedule(){if(activeCourseIndex===null)return;const a=courseDrafts(),c=a[activeCourseIndex],rows=readTeachingSchedule(),hours=roundQuarterHour(rows.reduce((s,x)=>s+x.hours,0)),maxWeek=Math.max(0,...rows.map(x=>Number(x.week)||0)),weekLimit=courseTeachingWeeks(c);if(Math.abs(hours-Number(c.hours||0))>.01){$("teachingScheduleStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${hours} ยังไม่ตรงกับรายวิชา ${c.hours||0} ชั่วโมง</div>`;return}if(maxWeek>weekLimit){$("teachingScheduleStatus").innerHTML=`<div class="error-box">กำหนดการเกินกรอบ ${weekLimit} สัปดาห์ (${String(c.semester||"").trim()==="1"||String(c.semester||"").trim()==="2"?"1 ภาคเรียน":"1 ปีการศึกษา"}) กรุณาสร้างกำหนดการอัตโนมัติใหม่</div>`;return}c.teaching_schedule={structure_version:Number(c.course_structure?.version||5),weeks:weekLimit,rows,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("teachingScheduleStatus").innerHTML='<div class="indicator-preview">บันทึกกำหนดการสอนแล้ว ✓ พร้อมออกแบบหน่วยการเรียนรู้</div>';renderCourses();toast("บันทึกกำหนดการสอนแล้ว ✓")}
 
 function closeLearningUnits(){$("learningUnitsModal").hidden=true;activeCourseIndex=null}
 function deriveLearningUnit(c,u,i){
@@ -1968,7 +2032,7 @@ function openLearningUnits(i){
   $("learningUnitsModal").hidden=false
 }
 function generateLearningUnits(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex];renderLearningUnits(c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)));toast("สร้างหน่วยการเรียนรู้แล้ว ✓")}
-function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.strand_name||!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจสาระ สาระสำคัญ และจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.learning_units={version:Number(c.course_structure?.version||4),units,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ พร้อมต่อยอดเป็นแผนการสอน ใบงาน และการประเมิน</div>';renderCourses();toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
+function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.strand_name||!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจสาระ สาระสำคัญ และจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.learning_units={version:Number(c.course_structure?.version||5),units,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ พร้อมต่อยอดเป็นแผนการสอน ใบงาน และการประเมิน</div>';renderCourses();toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
 
 
 async function resolveCourseCloudId(c){if(c?._cloud_id)return c._cloud_id;if(!courseCloudReady||!sb||!user)return null;const {data,error}=await sb.from("courses").select("id").eq("user_id",user.id).eq("client_id",c.id).maybeSingle();if(error||!data)return null;c._cloud_id=data.id;const rows=courseDrafts(),idx=rows.findIndex(x=>x.id===c.id);if(idx>=0){rows[idx]=c;writeCourseDrafts(rows,{sync:false})}return data.id}
