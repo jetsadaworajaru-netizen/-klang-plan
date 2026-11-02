@@ -865,3 +865,51 @@ button,
       "hours weight";
   }
 }
+
+
+/* Rebalance unit name and compact controls */
+.structure-slider-grid{
+  grid-template-columns:minmax(0,1fr) 110px 118px!important;
+  grid-template-areas:"name hours weight"!important;
+  align-items:stretch!important;
+}
+.structure-name-field{
+  grid-area:name;
+  min-width:0;
+  align-self:stretch;
+}
+.structure-name-field input{
+  height:100%;
+  min-height:74px!important;
+  display:flex;
+  align-items:center;
+}
+.structure-slider-grid .structure-range-field:nth-child(2){
+  grid-area:hours;
+}
+.structure-slider-grid .structure-weight-auto{
+  grid-area:weight;
+}
+.structure-range-field,
+.structure-weight-auto{
+  min-height:74px!important;
+  height:74px;
+  box-sizing:border-box;
+}
+@media(max-width:760px){
+  .structure-slider-grid{
+    grid-template-columns:1fr 1fr!important;
+    grid-template-areas:
+      "name name"
+      "hours weight"!important;
+  }
+  .structure-name-field input{
+    min-height:52px!important;
+    height:auto;
+  }
+  .structure-range-field,
+  .structure-weight-auto{
+    height:auto;
+    min-height:68px!important;
+  }
+}
