@@ -1407,7 +1407,7 @@ function courseQuality(c){
     {key:"identity",label:"ข้อมูลรายวิชา",ok:!!(c.name&&c.grade&&c.subject&&c.semester&&c.year&&courseHours>0),hint:"ชื่อรายวิชา ชั้น วิชา ภาคเรียน ปี และเวลาเรียนต้องครบ"},
     {key:"curriculum",label:"วิเคราะห์หลักสูตร",ok:!!c.curriculum_analysis?.saved_at&&selectedIds.size>0,hint:"เลือกมาตรฐาน/ตัวชี้วัดที่ใช้จริง"},
     {key:"description",label:"คำอธิบายรายวิชา",ok:!!c.course_description?.saved_at&&String(c.course_description?.text||"").trim().length>40,hint:"คำอธิบายต้องสัมพันธ์กับหลักสูตร"},
-    {key:"structure",label:"โครงสร้างรายวิชา",ok:!!c.course_structure?.saved_at&&structure.length>0&&Math.abs(structureHours-courseHours)<.01&&structureWeight===100,hint:`ชั่วโมงหน่วย ${structureHours}/${courseHours} · น้ำหนัก ${structureWeight}%`},
+    {key:"structure",label:"โครงสร้างรายวิชา",ok:!!c.course_structure?.saved_at&&structure.length>0&&Math.abs(structureHours-courseHours)<.01&&Math.abs(structureWeight-100)<.01,hint:`ชั่วโมงหน่วย ${structureHours}/${courseHours} · น้ำหนัก ${structureWeight}%`},
     {key:"coverage",label:"ตัวชี้วัดครอบคลุมในหน่วย",ok:missingIndicators.length===0,hint:missingIndicators.length?`ยังไม่ถูกจัดลงหน่วย ${missingIndicators.length} ตัวชี้วัด`:"ตัวชี้วัดที่เลือกถูกจัดลงหน่วยครบ"},
     {key:"schedule",label:"กำหนดการสอน",ok:!!c.teaching_schedule?.saved_at&&schedule.length>0&&Math.abs(scheduleHours-courseHours)<.01&&maxWeek<=weekLimit,hint:`รวม ${scheduleHours}/${courseHours} ชั่วโมง · สูงสุดสัปดาห์ ${maxWeek}/${weekLimit}`},
     {key:"units",label:"หน่วยการเรียนรู้",ok:!!c.learning_units?.saved_at&&learning.length===structure.length&&learning.every(u=>u.concept&&u.objectives&&u.assessment),hint:"สาระสำคัญ จุดประสงค์ และการประเมินต้องครบทุกหน่วย"},
@@ -1812,24 +1812,21 @@ function renderStructureEditor(units){
   updateStructureTotal()
 }
 function recalculateStructureWeights(){
-  const rows=$('#courseStructureList [data-unit-row]');
+  const rows=$$('#courseStructureList [data-unit-row]');
   const c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex];
-  const target=Math.max(0,Number(c?.hours)||rows.reduce((s,row)=>s+(Number(row.querySelector('[data-unit-hours]')?.value)||0),0));
+  const target=Math.max(0,Number(c?.hours)||0);
   const hours=rows.map(row=>Math.max(0,Number(row.querySelector('[data-unit-hours]')?.value)||0));
-  const totalHours=hours.reduce((a,b)=>a+b,0);
   if(!rows.length)return;
-  let weights;
-  if(target>0 && Math.abs(totalHours-target)<.01){
-    weights=allocateExactTotal(100,hours,0)
-  }else if(totalHours>0){
-    weights=allocateExactTotal(100,hours,0)
-  }else{
-    weights=Array(rows.length).fill(0)
+  let weights=hours.map(h=>target>0?Math.round((h/target*100)*100)/100:0);
+  const totalHours=hours.reduce((a,b)=>a+b,0);
+  if(target>0&&Math.abs(totalHours-target)<.01&&weights.length){
+    const beforeLast=weights.slice(0,-1).reduce((a,b)=>a+b,0);
+    weights[weights.length-1]=Math.round((100-beforeLast)*100)/100;
   }
   rows.forEach((row,i)=>{
-    const inp=row.querySelector('[data-unit-weight]'),out=row.querySelector('[data-weight-value]');
-    if(inp)inp.value=weights[i]||0;
-    if(out)out.textContent=(weights[i]||0)+"%"
+    const inp=row.querySelector('[data-unit-weight]'),out=row.querySelector('[data-weight-value]'),val=weights[i]||0;
+    if(inp)inp.value=val;
+    if(out)out.textContent=(Number.isInteger(val)?val:val.toFixed(2).replace(/0+$/,"").replace(/\.$/,""))+"%"
   })
 }
 function readStructureEditor(){
@@ -1896,7 +1893,7 @@ function ensureCurriculumStructureCurrent(rows,i){
   writeCourseDrafts(rows);
   return {course:c,repaired:true}
 }
-function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนักอัตโนมัติ <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับเฉพาะชั่วโมงให้ผลรวมตรง"}</span>`}
+function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=Math.abs(w-100)<.01,okH=!target||Math.abs(h-target)<.01;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนักอัตโนมัติ <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับเฉพาะชั่วโมงให้ผลรวมตรง"}</span>`}
 function repairLegacyCourseHours(rows,i){
   const c=rows?.[i];
   if(!c)return {course:c,repaired:false};
