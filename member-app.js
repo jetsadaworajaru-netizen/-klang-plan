@@ -3560,6 +3560,28 @@ function bind(){
   $("openWordBtn").onclick=async()=>{await copy();window.open("https://www.office.com/launch/word","_blank","noopener")};
   $("savePdfBtn").onclick=()=>{const t=$("promptText").textContent;if(!t)return toast("ยังไม่มี Prompt");saveBlob(makePdfBlob("Klang Plan — Prompt\n\n"+t),"Klang-Plan-Prompt.pdf")}
 }
-async function start(){try{const ok=await auth();if(!ok)return;bind();await withTimeout(loadData(),10000,"โหลดฐานหลักสูตร");await Promise.allSettled([withTimeout(loadCloudPlans(),8000,"โหลดคลังแผน"),withTimeout(loadCoursesFromCloud(),8000,"โหลดรายวิชา"),withTimeout(loadResourceLibraryFromCloud(),8000,"โหลดคลังงาน")]);renderCourses();$("loadingGate").classList.add("hidden");$("appShell").classList.remove("is-loading")}catch(e){console.error(e);$("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message||"เกิดข้อผิดพลาดในการเชื่อมต่อ")}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button><br><small>หากอินเทอร์เน็ตช้า ระบบจะหยุดรอแทนการค้างหน้าจอ</small></div>`}}
+async function start(){
+  try{
+    const ok=await auth();if(!ok)return;
+    bind();
+
+    $("loadingGate").classList.add("hidden");
+    $("appShell").classList.remove("is-loading");
+
+    await withTimeout(loadData(),5000,"โหลดฐานหลักสูตร");
+    renderCourses();
+
+    Promise.allSettled([
+      withTimeout(loadCloudPlans(),5000,"โหลดคลังแผน"),
+      withTimeout(loadCoursesFromCloud(),5000,"โหลดรายวิชา"),
+      withTimeout(loadResourceLibraryFromCloud(),5000,"โหลดคลังงาน")
+    ]).then(()=>{try{renderCourses()}catch(err){console.warn("background render",err)}});
+  }catch(e){
+    console.error(e);
+    $("loadingGate").classList.remove("hidden");
+    $("appShell").classList.add("is-loading");
+    $("loadingGate").innerHTML=`<div class="error-box"><b>เปิดระบบไม่สำเร็จ</b><br>${esc(e.message||"เกิดข้อผิดพลาดในการเชื่อมต่อ")}<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button><br><small>หากอินเทอร์เน็ตช้า ระบบจะหยุดรอแทนการค้างหน้าจอ</small></div>`
+  }
+}
 document.readyState==="loading"?document.addEventListener("DOMContentLoaded",start,{once:true}):start();
 })();
