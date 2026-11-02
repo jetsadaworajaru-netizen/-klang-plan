@@ -379,3 +379,39 @@ button,
 .admin-reply p{margin:5px 0;white-space:pre-wrap}
 .admin-reply small{color:#7f91a4}
 .help-empty{text-align:center;color:#8797a8;padding:18px}
+
+
+/* Compact corner close button for course document modals */
+.modal-card .modal-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:5;
+  width:28px;
+  height:28px;
+  min-width:28px;
+  min-height:28px;
+  padding:0;
+  margin:0;
+  border:1px solid #d9e3eb;
+  border-radius:50%;
+  background:#fff;
+  color:#52677a;
+  font-size:17px;
+  font-weight:700;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(32,58,82,.08);
+}
+.modal-card .modal-close:hover{
+  background:#f4f7fa;
+  color:#244b70;
+}
+.learning-units-modal-card{
+  padding-top:20px;
+}
+.learning-units-modal-card .workspace-modal-head{
+  padding-right:34px;
+}
