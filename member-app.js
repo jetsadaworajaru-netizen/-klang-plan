@@ -1793,14 +1793,17 @@ function renderStructureEditor(units){
       <div class="structure-unit-head"><span>${unitNo}</span><div><b>หน่วยการเรียนรู้: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b><small>${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small></div></div>
       <div class="structure-edit-grid structure-slider-grid">
         <label class="structure-name-field">ชื่อหน่วย (แก้ได้)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}"></label>
-        <label class="structure-range-field">ชั่วโมง <b data-hours-value>${Number(u.hours)||0}</b>
-          <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
-        </label>
-        <div class="structure-range-field structure-weight-auto">
-          <span>น้ำหนักอัตโนมัติ</span>
-          <b data-weight-value>${Number(u.weight)||0}%</b>
-          <small>คำนวณจากชั่วโมงของหน่วย ÷ ชั่วโมงรวมรายวิชา</small>
-          <input data-unit-weight type="hidden" value="${Number(u.weight)||0}">
+        <div class="structure-control-strip">
+          <label class="structure-hours-control">
+            <span>ชั่วโมง</span>
+            <b data-hours-value>${Number(u.hours)||0}</b>
+            <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
+          </label>
+          <div class="structure-weight-pill">
+            <span>น้ำหนัก</span>
+            <b data-weight-value>${Number(u.weight)||0}%</b>
+            <input data-unit-weight type="hidden" value="${Number(u.weight)||0}">
+          </div>
         </div>
       </div>
     </article>`;
@@ -1808,7 +1811,7 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>x.oninput=updateStructureTotal);
-  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
+  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
   updateStructureTotal()
 }
 function recalculateStructureWeights(){
