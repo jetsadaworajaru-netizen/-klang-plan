@@ -1232,11 +1232,12 @@ function prefillCourseToCreate(c,u=null,courseIndex=null,unitIndex=null){
   if(u){
     $("unitName").value=u.name||"";
     $("topic").value=u.name||"";
+    activeCourseLessonContext={courseIndex,unitIndex,courseClientId:c.id,unitClientId:u.id||null};
     const hours=Math.max(0,Number(u.hours)||0);
     setDurationValue(hours>0?`${hours} ชั่วโมง`:autoDurationByGrade(c.grade,c.subject));
     const firstId=(u.indicator_ids||[])[0],r=courseCurriculumRows(c).find(x=>x.dataset_id===firstId);
     if(r){const idx=DATA.indexOf(r),opt=[...$("indicator").options].find(o=>o.value===String(idx));if(opt){$("indicator").value=String(idx);selected=r;chooseIndicator()}}
-    activeCourseLessonContext={courseIndex,unitIndex,courseClientId:c.id,unitClientId:u.id||null}
+    setDurationValue(hours>0?`${hours} ชั่วโมง`:autoDurationByGrade(c.grade,c.subject));
   }else{
     activeCourseLessonContext=null;
     setDurationValue(autoDurationByGrade(c.grade,c.subject))
