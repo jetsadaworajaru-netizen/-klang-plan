@@ -1808,7 +1808,7 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>x.oninput=updateStructureTotal);
-  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
+  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
   updateStructureTotal()
 }
 function recalculateStructureWeights(){
@@ -2058,7 +2058,7 @@ function formatTeachingDate(value){
 function readRealTeachingCalendarConfig(){
   const enabled=!!$("useRealTeachingCalendar")?.checked,start_date=$("termStartDate")?.value||"",end_date=$("termEndDate")?.value||"";
   const weekdays={};
-  $("[data-calendar-day]").forEach(ch=>{
+  $$("[data-calendar-day]").forEach(ch=>{
     if(ch.checked){
       const day=Number(ch.dataset.calendarDay),hours=Number($(`[data-calendar-hours="${day}"]`)?.value)||1;
       if(day>=0&&day<=6&&hours>0)weekdays[day]=roundQuarterHour(hours)
@@ -2072,7 +2072,7 @@ function writeRealTeachingCalendarConfig(config={}){
   if($("realTeachingCalendarFields"))$("realTeachingCalendarFields").hidden=!config.enabled;
   if($("termStartDate"))$("termStartDate").value=config.start_date||"";
   if($("termEndDate"))$("termEndDate").value=config.end_date||"";
-  $("[data-calendar-day]").forEach(ch=>{
+  $$("[data-calendar-day]").forEach(ch=>{
     const day=Number(ch.dataset.calendarDay),hours=Number(config.weekdays?.[day]||0);
     ch.checked=hours>0;
     const h=$(`[data-calendar-hours="${day}"]`);if(h&&hours>0)h.value=hours
