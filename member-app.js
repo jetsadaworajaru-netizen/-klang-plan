@@ -1276,35 +1276,57 @@ function curriculumTimeNote(c){
   return `กรอบหลักสูตร ${ref.label} · โรงเรียนสามารถปรับตามหลักสูตรสถานศึกษาได้`
 }
 
+function suggestedUnitTitle(rows,index=0){
+  const texts=(rows||[]).map(r=>String(r.indicator_text||"").replace(/\s+/g," ").trim()).filter(Boolean);
+  let title=texts[0]||`หน่วยการเรียนรู้ ${index+1}`;
+  title=title.replace(/[.;]+$/,"").trim();
+  if(title.length>58)title=title.slice(0,55).trim()+"…";
+  return title
+}
 function autoUnits(c){
   const selected=savedCurriculumRows(c),core=courseCurriculumRows(c);
   const sourceRows=selected.length?selected:core;
-  const groups=[];
+  const strands=[];
   for(const r of sourceRows){
     const key=r.domain||r.standard||"สาระการเรียนรู้";
-    let g=groups.find(x=>x.key===key);
-    if(!g){g={key,rows:[]};groups.push(g)}
+    let g=strands.find(x=>x.key===key);
+    if(!g){g={key,rows:[]};strands.push(g)}
     g.rows.push(r)
   }
-  const usable=(groups.length?groups:[{key:"สาระการเรียนรู้",rows:sourceRows}]).slice(0,12);
-  const units=usable.map((g,i)=>{
-    const coreGroup=core.filter(r=>(r.domain||r.standard||"สาระการเรียนรู้")===g.key);
-    const standards=unique((coreGroup.length?coreGroup:g.rows).map(x=>x.standard).filter(Boolean));
-    const codes=unique((coreGroup.length?coreGroup:g.rows).map(x=>x.indicator).filter(Boolean));
-    const baseName=g.key||`หน่วยการเรียนรู้ ${i+1}`;
-    return {
-      name:contextualUnitName(baseName,c),
-      base_name:baseName,
-      source_standard:standards.join(", "),
-      source_indicator_codes:codes,
-      indicator_ids:g.rows.map(x=>x.dataset_id),
-      hours:0,
-      weight:0
+  const units=[];
+  let unitIndex=0;
+  for(const strand of strands){
+    const rows=strand.rows||[];
+    const chunkSize=rows.length>=7?2:rows.length>=4?2:rows.length>=2?2:1;
+    for(let p=0;p<rows.length;p+=chunkSize){
+      const chunk=rows.slice(p,p+chunkSize);
+      const standards=unique(chunk.map(x=>x.standard).filter(Boolean));
+      const codes=unique(chunk.map(x=>x.indicator).filter(Boolean));
+      const baseName=suggestedUnitTitle(chunk,unitIndex);
+      units.push({
+        name:contextualUnitName(baseName,c),
+        base_name:baseName,
+        strand_name:strand.key,
+        strand_base:strand.key,
+        source_standard:standards.join(", "),
+        source_indicator_codes:codes,
+        indicator_ids:chunk.map(x=>x.dataset_id),
+        hours:0,
+        weight:0
+      });
+      unitIndex++;
     }
-  });
-  const counts=units.map(u=>Math.max(1,u.indicator_ids.length)),countSum=counts.reduce((a,b)=>a+b,0)||units.length||1;
+  }
+  if(!units.length){
+    units.push({
+      name:"หน่วยการเรียนรู้ 1",base_name:"หน่วยการเรียนรู้ 1",
+      strand_name:"สาระการเรียนรู้",strand_base:"สาระการเรียนรู้",
+      source_standard:"",source_indicator_codes:[],indicator_ids:[],hours:0,weight:100
+    })
+  }
+  const counts=units.map(u=>Math.max(1,u.indicator_ids.length)),countSum=counts.reduce((a,b)=>a+b,0)||1;
   const suggestedHours=recommendedCourseHours(c);
-  const totalH=Number(c.hours)>0?Number(c.hours):(suggestedHours>0?suggestedHours:Math.max(units.length,counts.reduce((a,b)=>a+b,0)));
+  const totalH=Number(c.hours)>0?Number(c.hours):(suggestedHours>0?suggestedHours:Math.max(units.length,countSum));
   let assignedH=0,assignedW=0;
   units.forEach((u,i)=>{
     const last=i===units.length-1;
@@ -1322,37 +1344,59 @@ function autoUnits(c){
 function renderStructureEditor(units){
   const c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex];
   const maxHours=Math.max(10,Number(c?.hours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||20);
-  $("courseStructureList").innerHTML=units.map((u,i)=>`<article class="structure-unit-card" data-unit-row="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-base-name="${esc(u.base_name||u.name||"")}" data-source-standard="${esc(u.source_standard||"")}" data-source-codes='${esc(JSON.stringify(u.source_indicator_codes||[]))}'>
-    <div class="structure-unit-head"><span>${i+1}</span><div><b>ฐานหลักสูตร: ${esc(u.base_name||u.name||`หน่วยที่ ${i+1}`)}</b><small>${esc(u.source_standard||"มาตรฐานตามหลักสูตร")} · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
-    <div class="structure-edit-grid structure-slider-grid">
-      <label class="structure-name-field">ชื่อหน่วย (แก้ได้)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${i+1}`)}"></label>
-      <label class="structure-range-field">ชั่วโมง <b data-hours-value>${Number(u.hours)||0}</b>
-        <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
-      </label>
-      <label class="structure-range-field">น้ำหนัก <b data-weight-value>${Number(u.weight)||0}%</b>
-        <input data-unit-weight type="range" min="0" max="100" step="1" value="${Number(u.weight)||0}">
-      </label>
-    </div>
-  </article>`).join("");
+  let lastStrand="",html="",unitNo=0,strandNo=0;
+  units.forEach((u,i)=>{
+    const strand=u.strand_name||u.strand_base||"สาระการเรียนรู้";
+    if(strand!==lastStrand){
+      strandNo++;
+      html+=`<section class="structure-strand-card" data-strand-group="${strandNo}">
+        <div class="structure-strand-badge">สาระ ${strandNo}</div>
+        <label>ชื่อสาระ (แก้ได้)<input data-strand-name data-strand-group-input="${strandNo}" value="${esc(strand)}"></label>
+      </section>`;
+      lastStrand=strand;
+    }
+    unitNo++;
+    html+=`<article class="structure-unit-card structure-subunit" data-unit-row="${i}" data-strand-group="${strandNo}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-base-name="${esc(u.base_name||u.name||"")}" data-source-standard="${esc(u.source_standard||"")}" data-source-codes='${esc(JSON.stringify(u.source_indicator_codes||[]))}'>
+      <div class="structure-unit-head"><span>${unitNo}</span><div><b>หน่วยย่อย: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b><small>${esc(u.source_standard||"มาตรฐานตามหลักสูตร")} · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
+      <div class="structure-edit-grid structure-slider-grid">
+        <label class="structure-name-field">ชื่อหน่วย (แก้ได้)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}"></label>
+        <label class="structure-range-field">ชั่วโมง <b data-hours-value>${Number(u.hours)||0}</b>
+          <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
+        </label>
+        <label class="structure-range-field">น้ำหนัก <b data-weight-value>${Number(u.weight)||0}%</b>
+          <input data-unit-weight type="range" min="0" max="100" step="1" value="${Number(u.weight)||0}">
+        </label>
+      </div>
+    </article>`;
+  });
+  $("courseStructureList").innerHTML=html;
+  $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;updateStructureTotal()});
   $$('#courseStructureList [data-unit-weight]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-weight-value]").textContent=x.value+"%";updateStructureTotal()});
   updateStructureTotal()
 }
-function readStructureEditor(){return $$('#courseStructureList [data-unit-row]').map((row,i)=>{
-  let ids=[],codes=[];
-  try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}
-  try{codes=JSON.parse(row.dataset.sourceCodes||"[]")}catch{}
-  return {
-    name:row.querySelector('[data-unit-name]').value.trim()||`หน่วยที่ ${i+1}`,
-    base_name:row.dataset.baseName||`หน่วยที่ ${i+1}`,
-    source_standard:row.dataset.sourceStandard||"",
-    source_indicator_codes:codes,
-    hours:Number(row.querySelector('[data-unit-hours]').value)||0,
-    weight:Number(row.querySelector('[data-unit-weight]').value)||0,
-    indicator_ids:ids
-  }
-})}
+function readStructureEditor(){
+  const strandMap=new Map();
+  $$('#courseStructureList [data-strand-name]').forEach(inp=>strandMap.set(String(inp.dataset.strandGroupInput),inp.value.trim()||"สาระการเรียนรู้"));
+  return $$('#courseStructureList [data-unit-row]').map((row,i)=>{
+    let ids=[],codes=[];
+    try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}
+    try{codes=JSON.parse(row.dataset.sourceCodes||"[]")}catch{}
+    return {
+      name:row.querySelector('[data-unit-name]').value.trim()||`หน่วยที่ ${i+1}`,
+      base_name:row.dataset.baseName||`หน่วยที่ ${i+1}`,
+      strand_name:strandMap.get(String(row.dataset.strandGroup))||"สาระการเรียนรู้",
+      strand_base:strandMap.get(String(row.dataset.strandGroup))||"สาระการเรียนรู้",
+      source_standard:row.dataset.sourceStandard||"",
+      source_indicator_codes:codes,
+      hours:Number(row.querySelector('[data-unit-hours]').value)||0,
+      weight:Number(row.querySelector('[data-unit-weight]').value)||0,
+      indicator_ids:ids
+    }
+  })
+}
+
 function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนัก <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับตัวเลื่อนให้ผลรวมตรง"}</span>`}
 function repairLegacyCourseHours(rows,i){
   const c=rows?.[i];
@@ -1392,7 +1436,8 @@ function openCourseStructure(i){
   const core=courseCurriculumRows(c),selected=savedCurriculumRows(c);
   $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
   $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
-  const units=c.course_structure?.units||autoUnits(c);
+  const needsSubunits=!c.course_structure?.units || Number(c.course_structure?.version||0)<2;
+  const units=needsSubunits?autoUnits(c):c.course_structure.units;
   renderStructureEditor(units);
   $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:"";
   $("courseStructureModal").hidden=false
@@ -1419,11 +1464,17 @@ function saveCourseStructure(){
   c.hours_source=(recommendedNow>0 && Number(c.hours)!==recommendedNow)?"teacher":"curriculum_auto";
   c.hours_reference=curriculumTimeNote(c);
   c.course_structure={
+    version:2,
     units,
-    source:"หลักสูตรแกนกลาง + ผลวิเคราะห์บริบทสถานศึกษา",
+    source:"หลักสูตรแกนกลาง: สาระ → หน่วยย่อย → ตัวชี้วัด",
     source_curricula:c.curriculum_analysis?.curricula||[],
     saved_at:new Date().toISOString()
   };
+  c.teaching_schedule=null;
+  c.learning_units=null;
+  c.lesson_resources=null;
+  c.assessments=null;
+  c.documents=null;
   a[activeCourseIndex]=c;
   writeCourseDrafts(a);
   $("courseStructureMeta").textContent=`${c.name} · ${c.grade} · ${c.hours||"-"} ชั่วโมง`;
