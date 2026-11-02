@@ -1028,7 +1028,7 @@ ${base}`;
   $("promptWrap").scrollIntoView({behavior:"smooth"});
   toast("สร้าง Prompt ต่อยอดแล้ว ✓")
 }
-function switchTab(name){$(".page").forEach(x=>x.classList.toggle("active",x.id===`tab-${name}`));$(".top-tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));$("[data-bottom-tab]").forEach(x=>x.classList.toggle("active",x.dataset.bottomTab===name));if(name==="work")loadCloudPlans();if(name==="library"){Promise.all([loadCloudPlans(),loadResourceLibraryFromCloud()]).then(async()=>{await syncLocalResourceBacklog();renderGlobalResourceLibrary()}).catch(()=>renderGlobalResourceLibrary())}window.scrollTo({top:0,behavior:"smooth"})}
+function switchTab(name){$$(".page").forEach(x=>x.classList.toggle("active",x.id===`tab-${name}`));$$(".top-tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));$$("[data-bottom-tab]").forEach(x=>x.classList.toggle("active",x.dataset.bottomTab===name));if(name==="work")loadCloudPlans();if(name==="library"){Promise.all([loadCloudPlans(),loadResourceLibraryFromCloud()]).then(async()=>{await syncLocalResourceBacklog();renderGlobalResourceLibrary()}).catch(()=>renderGlobalResourceLibrary())}window.scrollTo({top:0,behavior:"smooth"})}
 async function loadCloudPlans(){
   if(!sb||!user)return;const {data,error}=await sb.from("lesson_plans").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200);if(error){console.warn(error);return}cloudPlans=data||[];populatePlanFilters();renderWork()
 }
@@ -1052,16 +1052,16 @@ function renderWork(){
       </div>
     </div>
   </article>`).join("")||'<div class="list-item">ยังไม่มีแผนที่บันทึกไว้</div>';
-  $$('[data-open-cloud-plan]').forEach(b=>b.onclick=()=>openWorkspacePlan(b.dataset.openCloudPlan));
-  $$('[data-edit-cloud-plan]').forEach(b=>b.onclick=()=>editCloudPlan(b.dataset.editCloudPlan));
-  $$('[data-delete-cloud-plan]').forEach(b=>b.onclick=()=>deleteCloudPlanById(b.dataset.deleteCloudPlan))
+  $$$('[data-open-cloud-plan]').forEach(b=>b.onclick=()=>openWorkspacePlan(b.dataset.openCloudPlan));
+  $$$('[data-edit-cloud-plan]').forEach(b=>b.onclick=()=>editCloudPlan(b.dataset.editCloudPlan));
+  $$$('[data-delete-cloud-plan]').forEach(b=>b.onclick=()=>deleteCloudPlanById(b.dataset.deleteCloudPlan))
 }
 function editCloudPlan(id){
   const p=cloudPlans.find(x=>x.id===id);if(!p)return;
   editingPlanId=p.id;activeCourseLessonContext=null;
   switchTab("create");
   stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
-  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
   buildGrades();
   if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
   if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
@@ -1116,7 +1116,7 @@ function nextPlanFromActive(){
   const p=activeWorkspacePlan;if(!p)return;
   switchTab("create");
   stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
-  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
+  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
   if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
   if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
   const match=DATA.findIndex(x=>x.indicator===p.indicator&&x.subject===p.subject&&recordMatchesGrade(x,p.grade));
@@ -1181,7 +1181,7 @@ function renderLibrary(rows){
 function useLibraryIndicator(){
   if(!librarySelected)return;
   stage=librarySelected.stage;
-  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
   const preferredGrade=$("libraryGrade")?.value||recordGrades(librarySelected)[0]||librarySelected.grade;
   buildGrades();
   $("grade").value=preferredGrade;buildSubjects();
@@ -1975,8 +1975,8 @@ function renderGlobalResourceLibrary(){
   if($("globalAssessmentCount"))$("globalAssessmentCount").textContent=all.filter(x=>x.type==="quiz"||x.type==="rubric").length;
   if($("globalGameCount"))$("globalGameCount").textContent=all.filter(x=>x.type==="game").length;
   box.innerHTML=rows.length?rows.map(x=>{const p=resourcePlan(x);return '<article class="global-resource-card"><div class="global-resource-head"><div class="global-resource-icon">'+resourceIcon(x.type)+'</div><div class="global-resource-title"><h3>'+esc(x.title||resourceTypeName(x.type))+'</h3><p>'+esc(resourceTypeName(x.type))+' · '+esc(p?.title||"แผนเดิม")+'</p></div></div><div class="global-resource-meta"><span>'+esc(p?.grade||"-")+'</span><span>'+esc(p?.subject||"-")+'</span><span>'+esc(p?.unit_name||"ไม่ระบุหน่วย")+'</span><span>'+(x.cloud_id?"☁️ Cloud":"📱 ในเครื่อง")+'</span></div><small>แก้ไขล่าสุด '+new Date(x.updated_at||x.created_at).toLocaleString("th-TH")+'</small><div class="global-resource-actions"><button type="button" data-global-open="'+x.id+'">เปิดแก้ไข</button><button type="button" class="danger" data-global-delete="'+x.id+'">ลบ</button></div></article>'}).join(""):'<div class="resource-empty"><b>ยังไม่มีงานในคลัง</b><br><small>เปิดแผนที่ต้องการ แล้วเลือกสร้างใบงาน ใบความรู้ แบบทดสอบ Rubric หรือเกม จากนั้นกด “บันทึกเข้าคลัง”</small><br><button type="button" class="secondary-btn" data-go-plan-workspace>ไปที่แผนของฉัน</button></div>';
-  $$("[data-global-open]").forEach(b=>b.onclick=()=>openGlobalSavedResource(b.dataset.globalOpen));
-  $("[data-global-delete]").forEach(b=>b.onclick=()=>deleteSavedResource(b.dataset.globalDelete,true));$("[data-go-plan-workspace]").forEach(b=>b.onclick=()=>switchTab("work"))
+  $$$("[data-global-open]").forEach(b=>b.onclick=()=>openGlobalSavedResource(b.dataset.globalOpen));
+  $$("[data-global-delete]").forEach(b=>b.onclick=()=>deleteSavedResource(b.dataset.globalDelete,true));$$("[data-go-plan-workspace]").forEach(b=>b.onclick=()=>switchTab("work"))
 }
 async function openGlobalSavedResource(id){
   const item=resourceLibrary().find(x=>x.id===id);if(!item)return;
@@ -2572,7 +2572,7 @@ function bind(){
     syncCourseQuickFields();
   });
 
-  $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
+  $$$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
   $("grade").onchange=()=>{buildSubjects();syncAutoDuration()};$("subject").onchange=()=>{buildIndicators();syncAutoDuration()};$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
   ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>{const el=$(id);if(!el)return;const refresh=()=>{
   if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
@@ -2595,7 +2595,7 @@ function bind(){
   if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(profileLogoRef(),"School-Logo");
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
-  $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
+  $$$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
   if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   $$("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
   $("libraryStage").onchange=updateLibraryFilters;$("libraryGrade").onchange=updateLibrarySubjects;$("librarySubject").onchange=applyLibraryFilters;$("librarySearch").oninput=applyLibraryFilters;$("useLibraryIndicatorBtn").onclick=useLibraryIndicator;
