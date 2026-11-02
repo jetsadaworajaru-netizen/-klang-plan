@@ -211,3 +211,25 @@ button,
 .structure-auto-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f5f9fd;border:1px solid #dbe8f3;border-radius:14px;padding:11px 12px}.structure-auto-toolbar>div{display:grid;gap:2px}.structure-auto-toolbar small{color:#70859a}.structure-slider-grid{grid-template-columns:1.8fr 1fr 1fr}.structure-range-field{background:#f8fbfe;border:1px solid #e1ebf3;border-radius:12px;padding:9px 10px}.structure-range-field b{float:right;color:#246bce}.structure-range-field input[type=range]{width:100%;padding:0;border:0;background:transparent;accent-color:#2876d4}.structure-total-ok{color:#18834c;margin-left:8px}.structure-total-warn{color:#b66a14;margin-left:8px}@media(max-width:760px){.structure-auto-toolbar{align-items:stretch;flex-direction:column}.structure-slider-grid{grid-template-columns:1fr}.structure-name-field{grid-column:auto!important}}
 
 @media(min-width:900px){.schedule-card .schedule-row{padding:10px 12px}.schedule-card .schedule-row input{min-width:0}.schedule-card .doc-source-note{font-size:.78rem}.schedule-card .workspace-modal-head{position:sticky;top:0;background:#fff;z-index:3;padding-bottom:8px}.schedule-card .schedule-head{position:sticky;top:74px;background:#fff;z-index:2}}
+
+.copy-prompt-primary{
+  min-height:52px;
+  min-width:260px;
+  padding:11px 20px;
+  border:0;
+  border-radius:15px;
+  background:linear-gradient(135deg,#128ef5,#5d44df);
+  color:#fff;
+  font-weight:900;
+  font-size:.92rem;
+  box-shadow:0 8px 22px rgba(69,83,220,.18);
+  cursor:pointer;
+  transition:.16s ease;
+}
+.copy-prompt-primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(69,83,220,.24)}
+.copy-prompt-primary:active{transform:translateY(0)}
+.copy-prompt-primary.is-copied{background:linear-gradient(135deg,#18a66a,#0b8f58)}
+@media(max-width:640px){
+  .prompt-head{align-items:stretch;flex-direction:column}
+  .copy-prompt-primary{width:100%;min-width:0}
+}
