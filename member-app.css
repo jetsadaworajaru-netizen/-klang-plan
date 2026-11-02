@@ -972,3 +972,97 @@ button,
     height:56px!important;
   }
 }
+
+
+/* Clean inline unit controls */
+.structure-slider-grid{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:8px!important;
+}
+.structure-name-field{
+  display:grid;
+  gap:5px;
+  min-width:0;
+  color:#6f8295;
+  font-size:.68rem;
+  font-weight:800;
+}
+.structure-name-field input{
+  width:100%;
+  min-height:46px!important;
+  height:auto!important;
+  padding:9px 12px!important;
+  border:1px solid #cfdeeb!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#143f68!important;
+  font-size:.98rem!important;
+  font-weight:900!important;
+  box-sizing:border-box;
+}
+.structure-control-strip{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  min-height:36px;
+}
+.structure-hours-control{
+  display:grid;
+  grid-template-columns:auto auto;
+  grid-template-areas:
+    "label value"
+    "slider slider";
+  column-gap:6px;
+  row-gap:2px;
+  width:132px;
+  padding:6px 9px;
+  border:1px solid #dce7f1;
+  border-radius:10px;
+  background:#f8fbfe;
+  box-sizing:border-box;
+}
+.structure-hours-control span{
+  grid-area:label;
+  color:#73879a;
+  font-size:.62rem;
+  font-weight:800;
+}
+.structure-hours-control b{
+  grid-area:value;
+  justify-self:end;
+  color:#2257d3;
+  font-size:.82rem;
+}
+.structure-hours-control input[type=range]{
+  grid-area:slider;
+  width:100%;
+  margin:0;
+  padding:0;
+  accent-color:#2e78d2;
+}
+.structure-weight-pill{
+  display:flex;
+  align-items:baseline;
+  gap:5px;
+  min-width:88px;
+  padding:7px 10px;
+  border:1px solid #dbe5f7;
+  border-radius:999px;
+  background:#f4f7ff;
+  box-sizing:border-box;
+}
+.structure-weight-pill span{
+  color:#75879a;
+  font-size:.6rem;
+  font-weight:800;
+}
+.structure-weight-pill b{
+  color:#244fd6;
+  font-size:.9rem;
+  line-height:1;
+}
+@media(max-width:760px){
+  .structure-control-strip{justify-content:flex-start;flex-wrap:wrap}
+}
