@@ -1962,9 +1962,9 @@ function handleStructureEditorAction(event){
 
   if(action==="add"){
     const group=String(btn.dataset.strandGroupAction||"");
-    const strandInput=$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===group);
+    const strandInput=$$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===group);
     const strandName=String(strandInput?.value||"สาระการเรียนรู้").trim()||"สาระการเรียนรู้";
-    const rows=$('#courseStructureList [data-unit-row]');
+    const rows=$$('#courseStructureList [data-unit-row]');
     const groupRows=rows.filter(r=>String(r.dataset.strandGroup)===group);
     const lastRow=groupRows[groupRows.length-1];
     const lastIndex=lastRow?rows.indexOf(lastRow):-1;
@@ -1990,7 +1990,7 @@ function handleStructureEditorAction(event){
 
   const row=btn.closest("[data-unit-row]");
   if(!row)return;
-  const rows=$('#courseStructureList [data-unit-row]');
+  const rows=$$('#courseStructureList [data-unit-row]');
   const idx=rows.indexOf(row);
   if(idx<0)return;
   const group=String(row.dataset.strandGroup||"");
