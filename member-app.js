@@ -207,20 +207,20 @@ function indicatorSuggestions(row){
   if(topic.length>120)topic=topic.slice(0,117).trim()+"...";
   return {unit,topic}
 }
-function applyIndicatorSuggestions(row){
+function applyIndicatorSuggestions(row,force=false){
   if(!row)return;
   const unitEl=$("unitName"),topicEl=$("topic"),sug=indicatorSuggestions(row);
   const unitNow=unitEl?.value?.trim()||"",topicNow=topicEl?.value?.trim()||"";
-  const canUnit=!unitNow||unitNow===autoUnitValue;
-  const canTopic=!topicNow||topicNow===autoTopicValue;
+  const canUnit=force||!unitNow||unitNow===autoUnitValue;
+  const canTopic=force||!topicNow||topicNow===autoTopicValue;
   if(unitEl&&canUnit&&sug.unit){unitEl.value=sug.unit;autoUnitValue=sug.unit}
   if(topicEl&&canTopic&&sug.topic){topicEl.value=sug.topic;autoTopicValue=sug.topic}
 }
-function chooseIndicator(){
+function chooseIndicator(forceSuggestions=false){
   const i=Number($("indicator").value);
   selected=Number.isFinite(i)?DATA[i]:null;
   $("indicatorPreview").innerHTML=selected?`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`:"เลือกตัวชี้วัดเพื่อดูรายละเอียด";
-  if(selected)applyIndicatorSuggestions(selected);
+  if(selected)applyIndicatorSuggestions(selected,forceSuggestions);
   syncAutoDuration();
   updateSummary()
 }
@@ -1186,7 +1186,7 @@ function useLibraryIndicator(){
   buildGrades();
   $("grade").value=preferredGrade;buildSubjects();
   $("subject").value=librarySelected.subject;buildIndicators();
-  $("indicator").value=String(DATA.indexOf(librarySelected));chooseIndicator();
+  $("indicator").value=String(DATA.indexOf(librarySelected));chooseIndicator(true);
   switchTab("create");
   $("step1").scrollIntoView({behavior:"smooth"});
   toast("นำตัวชี้วัดมาใช้ในแผนแล้ว ✓")
@@ -2598,7 +2598,7 @@ function bind(){
   });
 
   $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
-  $("grade").onchange=()=>{buildSubjects();syncAutoDuration()};$("subject").onchange=()=>{buildIndicators();syncAutoDuration()};$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
+  $("grade").onchange=()=>{buildSubjects();syncAutoDuration()};$("subject").onchange=()=>{buildIndicators();syncAutoDuration()};$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=()=>chooseIndicator(true);
   ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>{const el=$(id);if(!el)return;const refresh=()=>{
   if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
   if(id==="topic"&&$("topic").value.trim()!==autoTopicValue)autoTopicValue="";
