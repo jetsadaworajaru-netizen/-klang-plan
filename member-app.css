@@ -1622,3 +1622,80 @@ button,
     max-width:none!important;
   }
 }
+
+
+/* 2026-11-02 keep unit controls inside card */
+#courseStructureList .structure-edit-grid.structure-slider-grid{
+  grid-template-columns:minmax(0,1fr) 150px 84px!important;
+  gap:12px!important;
+  width:100%!important;
+  min-width:0!important;
+  align-items:end!important;
+}
+#courseStructureList .structure-name-field{
+  min-width:0!important;
+  width:100%!important;
+}
+#courseStructureList .structure-name-field textarea{
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+  min-height:46px!important;
+  max-height:64px!important;
+  resize:vertical!important;
+  padding:8px 11px!important;
+  font-size:.84rem!important;
+  line-height:1.25!important;
+  overflow:auto!important;
+}
+#courseStructureList .structure-hours-control{
+  width:150px!important;
+  max-width:150px!important;
+  min-width:0!important;
+  justify-self:stretch!important;
+}
+#courseStructureList .structure-hours-control input[type=range]{
+  width:100%!important;
+  max-width:none!important;
+}
+#courseStructureList .structure-weight-pill{
+  width:84px!important;
+  min-width:84px!important;
+  height:42px!important;
+}
+#courseStructureList .structure-subunit{
+  overflow:hidden!important;
+}
+@media(max-width:900px){
+  #courseStructureList .structure-edit-grid.structure-slider-grid{
+    grid-template-columns:minmax(0,1fr) 130px 80px!important;
+    gap:10px!important;
+  }
+  #courseStructureList .structure-hours-control{
+    width:130px!important;
+    max-width:130px!important;
+  }
+  #courseStructureList .structure-weight-pill{
+    width:80px!important;
+    min-width:80px!important;
+  }
+}
+@media(max-width:760px){
+  #courseStructureList .structure-edit-grid.structure-slider-grid{
+    grid-template-columns:minmax(0,1fr) 84px!important;
+    gap:9px 10px!important;
+  }
+  #courseStructureList .structure-name-field{
+    grid-column:1/-1!important;
+  }
+  #courseStructureList .structure-hours-control{
+    grid-column:1!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  #courseStructureList .structure-weight-pill{
+    grid-column:2!important;
+    width:84px!important;
+    min-width:84px!important;
+  }
+}
