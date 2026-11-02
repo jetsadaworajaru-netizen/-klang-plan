@@ -980,8 +980,8 @@ async function saveDraftPlan(){
   if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");
   if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");
   if(!selected)return toast("กรุณาเลือกตัวชี้วัด");
-  const btn=$("saveDraftPlanBtn"),topBtn=$("saveDraftPlanTopBtn"),statusEl=$("saveDraftPlanStatus");
-  if(btn)btn.disabled=true;if(topBtn)topBtn.disabled=true;
+  const btn=$("saveDraftPlanBtn"),statusEl=$("saveDraftPlanStatus");
+  if(btn)btn.disabled=true;
   if(statusEl)statusEl.textContent="กำลังบันทึก...";
   const t=prompt();
   const payload={
@@ -1021,7 +1021,7 @@ async function saveDraftPlan(){
   }else{
     ({data,error}=await sb.from("lesson_plans").insert(payload).select("*").single());
   }
-  if(btn)btn.disabled=false;if(topBtn)topBtn.disabled=false;
+  if(btn)btn.disabled=false;
   if(error){
     console.warn("draft save",error);
     if(statusEl)statusEl.textContent="บันทึกไม่สำเร็จ กรุณาลองใหม่";
@@ -1032,7 +1032,7 @@ async function saveDraftPlan(){
   if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
   renderWork();
   if(statusEl)statusEl.textContent="บันทึกแล้ว ✓ กลับมาแก้ต่อได้จาก “แผนของฉัน”";
-  if(btn)btn.textContent="💾 บันทึกการแก้ไข";if(topBtn)topBtn.textContent="💾 บันทึกการแก้ไข";
+  if(btn)btn.textContent="บันทึกการแก้ไข";
   await loadCloudPlans();
   toast("บันทึกแผนแล้ว ✓ ดูได้ทันทีที่ “แผนของฉัน”")
 }
@@ -1050,7 +1050,7 @@ async function saveWork(t){
   if(editingPlanId){
     const idx=cloudPlans.findIndex(x=>x.id===data.id);if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
     editingPlanId=null;
-    if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกแผน";if($("saveDraftPlanTopBtn"))$("saveDraftPlanTopBtn").textContent="💾 บันทึกแผน";
+    if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกแผน";
     toast("บันทึกการแก้ไขแผนแล้ว ✓");
   }else{
     cloudPlans.unshift(data);
@@ -1144,7 +1144,7 @@ function editCloudPlan(id){
   if(p.style&&styleMeta[p.style])style=p.style;
   if(p.palette&&palettes.includes(p.palette))palette=p.palette;
   renderStyles();renderAffiliation();updateSummary();
-  if($("generateBtn"))$("generateBtn").textContent="💾 บันทึกการแก้ไขแผน";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกการแก้ไข";if($("saveDraftPlanTopBtn"))$("saveDraftPlanTopBtn").textContent="💾 บันทึกการแก้ไข";
+  if($("generateBtn"))$("generateBtn").textContent="💾 บันทึกการแก้ไขแผน";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกการแก้ไข";
   $("step2")?.scrollIntoView({behavior:"smooth",block:"start"});
   toast("เปิดแผนสำหรับแก้ไขแล้ว ✓")
 }
@@ -2674,7 +2674,7 @@ function bind(){
   if($("planQrUpload"))$("planQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);planQrSource="upload";document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
   syncTeacherSourceControls();
   $("affiliationType").onchange=()=>{$("affiliationType").dataset.userChanged="1";renderAffiliation()};
-  if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").onclick=saveDraftPlan;if($("saveDraftPlanTopBtn"))$("saveDraftPlanTopBtn").onclick=saveDraftPlan;$("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
+  if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").onclick=saveDraftPlan;$("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   if($("refreshDirectPreviewBtn"))$("refreshDirectPreviewBtn").onclick=renderDirectPlanPreview;
   if($("downloadDirectPlanPdfBtn"))$("downloadDirectPlanPdfBtn").onclick=downloadDirectPlanPdf;
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(profileTeacherRef(),"Teacher-Reference");
