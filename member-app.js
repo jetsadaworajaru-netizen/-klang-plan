@@ -174,6 +174,32 @@ function filteredIndicators(){
   return DATA.filter(x=>x.stage===stage&&recordMatchesGrade(x,g)&&x.subject===s&&(!q||[x.indicator,x.indicator_text,x.standard,x.domain].some(v=>String(v||"").toLowerCase().includes(q))))
 }
 function buildIndicators(){if(!$("grade").value||!$("subject").value)return;const rows=filteredIndicators();$("indicator").innerHTML="";opt($("indicator"),"","เลือกตัวชี้วัด / ความสามารถ");rows.forEach(x=>{const o=document.createElement("option");o.value=String(DATA.indexOf(x));o.textContent=`${x.indicator||x.standard||""}${x.indicator_text?" — "+x.indicator_text:""}`;$("indicator").appendChild(o)});$("indicator").disabled=false}
+function ensureDurationOption(value,label=value){
+  const el=$("duration");if(!el||!value)return;
+  let opt=[...el.options].find(o=>o.value===value);
+  if(!opt){opt=document.createElement("option");opt.value=value;opt.textContent=label;el.appendChild(opt)}
+}
+function setDurationValue(value){
+  const el=$("duration");if(!el)return;
+  const v=String(value||"").trim()||"1 ชั่วโมง";
+  ensureDurationOption(v);
+  el.value=v
+}
+function autoDurationByGrade(grade,subject=""){
+  grade=String(grade||"").trim();
+  subject=String(subject||"").trim();
+  if(grade.startsWith("อนุบาล")||grade.startsWith("ปฐมวัย"))return "30 นาที";
+  if(["ป.1","ป.2","ป.3"].includes(grade))return "50 นาที";
+  if(["ป.4","ป.5","ป.6"].includes(grade))return "1 ชั่วโมง";
+  if(grade.startsWith("ม."))return "1 ชั่วโมง";
+  return "1 ชั่วโมง"
+}
+function syncAutoDuration(){
+  if(activeCourseLessonContext)return;
+  const grade=$("grade")?.value||selected?.grade||"";
+  const subject=$("subject")?.value||selected?.subject||"";
+  setDurationValue(autoDurationByGrade(grade,subject))
+}
 function indicatorSuggestions(row){
   if(!row)return {unit:"",topic:""};
   const unit=String(row.domain||row.subject||"").trim();
@@ -195,6 +221,7 @@ function chooseIndicator(){
   selected=Number.isFinite(i)?DATA[i]:null;
   $("indicatorPreview").innerHTML=selected?`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`:"เลือกตัวชี้วัดเพื่อดูรายละเอียด";
   if(selected)applyIndicatorSuggestions(selected);
+  syncAutoDuration();
   updateSummary()
 }
 function styleCard(v){
@@ -1193,7 +1220,29 @@ $$('[data-course-lessons]').forEach(b=>b.onclick=()=>openCourseLessons(Number(b.
 $$('[data-course-assessments]').forEach(b=>b.onclick=()=>openCourseAssessments(Number(b.dataset.courseAssessments)));
 $$('[data-course-documents]').forEach(b=>b.onclick=()=>openCourseDocuments(Number(b.dataset.courseDocuments)));
 $$('[data-course-use]').forEach(b=>b.onclick=()=>{const c=courseDrafts()[Number(b.dataset.courseUse)];if(!c)return;prefillCourseToCreate(c,null);toast("นำข้อมูลรายวิชามาใช้แล้ว ✓")})}
-function prefillCourseToCreate(c,u=null,courseIndex=null,unitIndex=null){switchTab("create");stage=String(c.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(c.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย";$$('.stage-btn').forEach(x=>x.classList.toggle('active',x.dataset.stage===stage));buildGrades();$("grade").value=c.grade||"";buildSubjects();if(c.subject){$("subject").value=c.subject;buildIndicators()}$("semester").value=c.semester||"";$("academicYear").value=c.year||"";$("schoolName").value=c.school||profile?.school_name||"";if(u){$("unitName").value=u.name||"";$("topic").value=u.name||"";$("duration").value=`${Number(u.hours)||1} ชั่วโมง`;const firstId=(u.indicator_ids||[])[0],r=courseCurriculumRows(c).find(x=>x.dataset_id===firstId);if(r){const idx=DATA.indexOf(r),opt=[...$("indicator").options].find(o=>o.value===String(idx));if(opt){$("indicator").value=String(idx);chooseIndicator()}}activeCourseLessonContext={courseIndex,unitIndex,courseClientId:c.id,unitClientId:u.id||null}}else activeCourseLessonContext=null;updateSummary()}
+function prefillCourseToCreate(c,u=null,courseIndex=null,unitIndex=null){
+  switchTab("create");
+  stage=String(c.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(c.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย";
+  $$('.stage-btn').forEach(x=>x.classList.toggle('active',x.dataset.stage===stage));
+  buildGrades();$("grade").value=c.grade||"";buildSubjects();
+  if(c.subject){$("subject").value=c.subject;buildIndicators()}
+  $("semester").value=c.semester||"";
+  $("academicYear").value=c.year||"";
+  $("schoolName").value=c.school||profile?.school_name||"";
+  if(u){
+    $("unitName").value=u.name||"";
+    $("topic").value=u.name||"";
+    const hours=Math.max(0,Number(u.hours)||0);
+    setDurationValue(hours>0?`${hours} ชั่วโมง`:autoDurationByGrade(c.grade,c.subject));
+    const firstId=(u.indicator_ids||[])[0],r=courseCurriculumRows(c).find(x=>x.dataset_id===firstId);
+    if(r){const idx=DATA.indexOf(r),opt=[...$("indicator").options].find(o=>o.value===String(idx));if(opt){$("indicator").value=String(idx);selected=r;chooseIndicator()}}
+    activeCourseLessonContext={courseIndex,unitIndex,courseClientId:c.id,unitClientId:u.id||null}
+  }else{
+    activeCourseLessonContext=null;
+    setDurationValue(autoDurationByGrade(c.grade,c.subject))
+  }
+  updateSummary()
+}
 function closeCurriculumAnalysis(){$("curriculumAnalysisModal").hidden=true;activeCourseIndex=null}
 function openCurriculumAnalysis(i){const c=courseDrafts()[i];if(!c)return;activeCourseIndex=i;const rows=courseCurriculumRows(c);$("curriculumAnalysisMeta").textContent=`${c.name} · ${c.grade} · ${c.subject||"ทุกกลุ่มสาระ"}`;const standards=unique(rows.map(x=>x.standard)),domains=unique(rows.map(x=>x.domain)),curricula=unique(rows.map(x=>x.curriculum));$("curriculumAnalysisSummary").innerHTML=`<div><b>${rows.length}</b><small>ตัวชี้วัด/ผลลัพธ์</small></div><div><b>${standards.length}</b><small>มาตรฐาน</small></div><div><b>${domains.length}</b><small>สาระ/ด้าน</small></div><div><b>${curricula.length}</b><small>หลักสูตร</small></div>`;if($("curriculumContext"))$("curriculumContext").value=c.curriculum_analysis?.context||"";if($("curriculumFocus"))$("curriculumFocus").value=c.curriculum_analysis?.focus||"";$("curriculumAnalysisSearch").value="";renderCurriculumIndicators();$("curriculumAnalysisModal").hidden=false}
 function renderCurriculumIndicators(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],q=$("curriculumAnalysisSearch").value.trim().toLowerCase(),saved=new Set(c.curriculum_analysis?.selected_ids||[]);const rows=courseCurriculumRows(c).filter(x=>!q||[x.indicator,x.indicator_text,x.standard,x.domain].some(v=>String(v||"").toLowerCase().includes(q)));$("curriculumIndicatorList").innerHTML=rows.map(x=>`<label class="analysis-indicator-item"><input type="checkbox" value="${esc(x.dataset_id)}" ${saved.size?saved.has(x.dataset_id)?"checked":"":"checked"}><span><b>${esc(x.indicator||x.standard||"ผลลัพธ์การเรียนรู้")}</b><small>${esc(x.standard||"")} ${x.domain?`· ${esc(x.domain)}`:""} ${x.classification?`· ${esc(x.classification)}`:""}</small><p>${esc(x.indicator_text||"")}</p></span></label>`).join("")||'<div class="list-item">ไม่พบข้อมูลหลักสูตรที่ตรงกับรายวิชานี้ กรุณาตรวจระดับชั้นและกลุ่มสาระ</div>';$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.onchange=updateCurriculumSelectedSummary);updateCurriculumSelectedSummary()}
@@ -2418,8 +2467,8 @@ function bind(){
     syncCourseQuickFields();
   });
 
-  $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();updateSummary()});
-  $("grade").onchange=buildSubjects;$("subject").onchange=buildIndicators;$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
+  $(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
+  $("grade").onchange=()=>{buildSubjects();syncAutoDuration()};$("subject").onchange=()=>{buildIndicators();syncAutoDuration()};$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
   ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>{const el=$(id);if(!el)return;const refresh=()=>{
   if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
   if(id==="topic"&&$("topic").value.trim()!==autoTopicValue)autoTopicValue="";
