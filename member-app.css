@@ -913,3 +913,62 @@ button,
     min-height:68px!important;
   }
 }
+
+
+/* Final compact balance for unit controls */
+.structure-slider-grid{
+  grid-template-columns:minmax(0,1fr) 86px 94px!important;
+  gap:8px!important;
+}
+.structure-name-field input{
+  min-height:60px!important;
+  height:60px!important;
+  padding:9px 12px!important;
+  font-size:.95rem!important;
+}
+.structure-range-field,
+.structure-weight-auto{
+  min-height:60px!important;
+  height:60px!important;
+  padding:6px 7px!important;
+  border-radius:10px!important;
+}
+.structure-range-field{
+  display:grid;
+  align-content:center;
+}
+.structure-range-field b{
+  font-size:.86rem!important;
+}
+.structure-range-field input[type=range]{
+  margin-top:3px!important;
+}
+.structure-weight-auto{
+  grid-template-rows:auto auto;
+  align-content:center;
+}
+.structure-weight-auto span{
+  font-size:.58rem!important;
+  line-height:1.05;
+}
+.structure-weight-auto b{
+  font-size:.92rem!important;
+  line-height:1;
+}
+.structure-weight-auto small{
+  display:none!important;
+}
+@media(max-width:760px){
+  .structure-slider-grid{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .structure-name-field input{
+    min-height:50px!important;
+    height:auto!important;
+  }
+  .structure-range-field,
+  .structure-weight-auto{
+    min-height:56px!important;
+    height:56px!important;
+  }
+}
