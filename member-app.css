@@ -555,3 +555,55 @@ button,
   .document-template-toolbar{align-items:stretch;flex-direction:column}
   .document-template-toolbar select{width:100%;min-width:0}
 }
+
+
+/* Course structure summary badge */
+.course-structure-summary{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:1.4fr .8fr 1fr 1.2fr;
+  gap:8px;
+}
+.course-summary-cell{
+  min-width:0;
+  padding:9px 11px;
+  border:1px solid #dbe8f4;
+  border-radius:12px;
+  background:#f8fbff;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.course-summary-cell small{
+  color:#6f8497;
+  font-size:.66rem;
+  font-weight:800;
+}
+.course-summary-cell b{
+  color:#174d7a;
+  font-size:.86rem;
+  line-height:1.2;
+}
+.course-summary-hours{
+  background:linear-gradient(135deg,#eef7ff,#f1efff);
+  border-color:#cfdcf8;
+  flex-direction:row;
+  align-items:baseline;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.course-summary-hours small{
+  width:100%;
+}
+.course-summary-hours b{
+  font-size:1.28rem;
+  color:#244fd6;
+}
+.course-summary-hours span{
+  font-size:.7rem;
+  font-weight:900;
+  color:#5d6f82;
+}
+@media(max-width:720px){
+  .course-structure-summary{grid-template-columns:1fr 1fr}
+}
