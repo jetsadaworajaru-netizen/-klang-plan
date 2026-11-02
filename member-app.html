@@ -73,15 +73,12 @@
 
   <main>
     <section id="tab-create" class="page active">
-      <div class="progress-tabs progress-tabs-with-save">
-        <div class="progress-tabs-main">
-          <button class="progress-pill active" data-scroll="step1">1 หลักสูตร</button>
-          <button class="progress-pill" data-scroll="step2">2 รายละเอียด</button>
-          <button class="progress-pill" data-scroll="step3">3 ผู้สอน</button>
-          <button class="progress-pill" data-scroll="step4">4 สไตล์</button>
-          <button class="progress-pill" data-scroll="step5">5 สร้าง</button>
-        </div>
-        <button id="saveDraftPlanTopBtn" class="primary-btn quick-save-plan-btn" type="button">💾 บันทึกแผน</button>
+      <div class="progress-tabs">
+        <button class="progress-pill active" data-scroll="step1">1 หลักสูตร</button>
+        <button class="progress-pill" data-scroll="step2">2 รายละเอียด</button>
+        <button class="progress-pill" data-scroll="step3">3 ผู้สอน</button>
+        <button class="progress-pill" data-scroll="step4">4 สไตล์</button>
+        <button class="progress-pill" data-scroll="step5">5 สร้าง</button>
       </div>
 
       <section id="step1" class="card">
@@ -142,11 +139,6 @@
           <label>ปีการศึกษา<input id="academicYear" type="text" inputmode="numeric" placeholder="เช่น 2569"></label>
         </div>
 
-        <div class="plan-draft-actions">
-          <button id="saveDraftPlanBtn" class="secondary-btn plan-save-draft-btn" type="button">💾 บันทึกแผน</button>
-          <small id="saveDraftPlanStatus">บันทึกไว้ก่อน แล้วกลับมาแก้ต่อได้จาก “แผนของฉัน”</small>
-        </div>
-
         <div class="optional-block">
           <div class="toggle-row">
             <div><b>📅 เพิ่มวันที่สอน</b><small>เลือกเปิดเฉพาะเมื่อโรงเรียนต้องการระบุวันที่ในแผน</small></div>
@@ -155,6 +147,14 @@
           <div id="teachingDateFields" class="optional-fields" hidden>
             <label>วันที่สอน<input id="teachingDate" type="date"></label>
           </div>
+        </div>
+
+        <div class="plan-draft-actions plan-draft-actions-bottom">
+          <div>
+            <b>💾 บันทึกแผนไว้ก่อน</b>
+            <small id="saveDraftPlanStatus">บันทึกไว้ก่อน แล้วกลับมาแก้ต่อได้จาก “แผนของฉัน”</small>
+          </div>
+          <button id="saveDraftPlanBtn" class="primary-btn plan-save-draft-btn" type="button">บันทึกแผน</button>
         </div>
       </section>
 
