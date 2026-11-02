@@ -568,6 +568,45 @@
     <button id="closeTeachingScheduleBtn" class="modal-close" type="button">×</button>
     <div class="workspace-modal-head"><div><h2>📅 กำหนดการสอน</h2><p id="teachingScheduleMeta"></p></div><span class="workspace-status">ต่อจากโครงสร้างรายวิชา</span></div>
     <div id="teachingScheduleSource" class="doc-source-note"></div>
+
+    <section class="real-calendar-box">
+      <label class="real-calendar-toggle">
+        <input id="useRealTeachingCalendar" type="checkbox">
+        <span><b>📆 ใช้ปฏิทินสอนจริง</b><small>ไม่บังคับ — เปิดเมื่อครูต้องการกำหนดวันตามตารางสอนจริง</small></span>
+      </label>
+      <div id="realTeachingCalendarFields" class="real-calendar-fields" hidden>
+        <div class="calendar-date-grid">
+          <label>วันเปิดภาคเรียน
+            <input id="termStartDate" type="date">
+          </label>
+          <label>วันปิดภาคเรียน <small>(ไม่บังคับ)</small>
+            <input id="termEndDate" type="date">
+          </label>
+        </div>
+
+        <div class="calendar-weekdays">
+          <b>วันเรียนประจำสัปดาห์ / ชั่วโมงต่อวัน</b>
+          <div class="weekday-grid">
+            <label><input type="checkbox" data-calendar-day="1"> จันทร์ <input type="number" data-calendar-hours="1" min="0.25" step="0.25" value="1" title="ชั่วโมงต่อวัน"></label>
+            <label><input type="checkbox" data-calendar-day="2"> อังคาร <input type="number" data-calendar-hours="2" min="0.25" step="0.25" value="1" title="ชั่วโมงต่อวัน"></label>
+            <label><input type="checkbox" data-calendar-day="3"> พุธ <input type="number" data-calendar-hours="3" min="0.25" step="0.25" value="1" title="ชั่วโมงต่อวัน"></label>
+            <label><input type="checkbox" data-calendar-day="4"> พฤหัสบดี <input type="number" data-calendar-hours="4" min="0.25" step="0.25" value="1" title="ชั่วโมงต่อวัน"></label>
+            <label><input type="checkbox" data-calendar-day="5"> ศุกร์ <input type="number" data-calendar-hours="5" min="0.25" step="0.25" value="1" title="ชั่วโมงต่อวัน"></label>
+          </div>
+        </div>
+
+        <label class="calendar-holidays-label">วันหยุด / วันงดสอน
+          <textarea id="teachingHolidayDates" rows="2" placeholder="ใส่วันที่ เช่น 2026-11-12, 2026-12-05 หรือพิมพ์แยกบรรทัด"></textarea>
+          <small>ใส่เฉพาะวันที่วิชานี้ไม่ได้สอน ระบบจะข้ามวันเหล่านี้อัตโนมัติ</small>
+        </label>
+
+        <div class="calendar-action-row">
+          <button id="applyRealTeachingCalendarBtn" class="secondary-btn" type="button">📅 คำนวณวันที่สอนจริง</button>
+          <span id="realTeachingCalendarSummary">ยังไม่ได้คำนวณ</span>
+        </div>
+      </div>
+    </section>
+
     <div class="schedule-head"><span>สัปดาห์</span><span>สาระ/ด้าน</span><span>หน่วย</span><span>เรื่อง/หัวข้อ</span><span>ชม.</span><span>รหัสตัวชี้วัด</span></div>
     <div id="teachingScheduleList" class="schedule-list"></div>
     <div id="teachingScheduleTotal" class="structure-total"></div>
