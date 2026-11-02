@@ -976,6 +976,66 @@ async function copy(){
     try{await navigator.clipboard.writeText(t);setCopyPromptButtonState(true);toast(img?"คัดลอก Prompt แล้ว — กรุณาแนบรูปครูที่แสดงไว้ด้วย":"คัดลอกแล้ว ✓")}catch{toast("กดค้างที่ Prompt เพื่อคัดลอก")}
   }
 }
+async function saveDraftPlan(){
+  if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");
+  if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");
+  if(!selected)return toast("กรุณาเลือกตัวชี้วัด");
+  const btn=$("saveDraftPlanBtn"),statusEl=$("saveDraftPlanStatus");
+  if(btn)btn.disabled=true;
+  if(statusEl)statusEl.textContent="กำลังบันทึก...";
+  const t=prompt();
+  const payload={
+    user_id:user.id,
+    title:v("topic")||v("unitName")||selected?.indicator||"แผนการจัดการเรียนรู้",
+    stage,
+    grade:$("grade").value||null,
+    subject:$("subject").value||null,
+    domain:selected?.domain||null,
+    standard:selected?.standard||null,
+    indicator:selected?.indicator||null,
+    indicator_text:selected?.indicator_text||null,
+    unit_name:v("unitName")||null,
+    topic:v("topic")||null,
+    duration:v("duration")||null,
+    method:v("method")||null,
+    semester:$("semester")?.value||null,
+    academic_year:v("academicYear")||null,
+    teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,
+    affiliation_type:$("affiliationType")?.value||"obec",
+    organization:v("organization")||null,
+    teacher_name:v("teacherName")||null,
+    school_name:v("schoolName")||null,
+    style,
+    palette,
+    prompt_text:t,
+    status:"draft"
+  };
+  if(activeCourseLessonContext){
+    const course=courseDrafts()[activeCourseLessonContext.courseIndex],unit=course?.learning_units?.units?.[activeCourseLessonContext.unitIndex];
+    if(course?._cloud_id)payload.course_id=course._cloud_id;
+    if(unit?._cloud_id)payload.unit_id=unit._cloud_id;
+  }
+  let data,error;
+  if(editingPlanId){
+    ({data,error}=await sb.from("lesson_plans").update(payload).eq("id",editingPlanId).eq("user_id",user.id).select("*").single());
+  }else{
+    ({data,error}=await sb.from("lesson_plans").insert(payload).select("*").single());
+  }
+  if(btn)btn.disabled=false;
+  if(error){
+    console.warn("draft save",error);
+    if(statusEl)statusEl.textContent="บันทึกไม่สำเร็จ กรุณาลองใหม่";
+    return toast("บันทึกแผนไม่สำเร็จ")
+  }
+  editingPlanId=data.id;
+  const idx=cloudPlans.findIndex(x=>x.id===data.id);
+  if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
+  renderWork();
+  if(statusEl)statusEl.textContent="บันทึกแล้ว ✓ กลับมาแก้ต่อได้จาก “แผนของฉัน”";
+  if(btn)btn.textContent="💾 บันทึกการแก้ไข";
+  toast("บันทึกแผนแล้ว ✓")
+}
+
 async function saveWork(t){
   const payload={user_id:user.id,title:v("topic")||selected?.indicator||"แผนการจัดการเรียนรู้",stage,grade:$("grade").value||null,subject:$("subject").value||null,domain:selected?.domain||null,standard:selected?.standard||null,indicator:selected?.indicator||null,indicator_text:selected?.indicator_text||null,unit_name:v("unitName")||null,topic:v("topic")||null,duration:v("duration")||null,method:v("method")||null,semester:$("semester")?.value||null,academic_year:v("academicYear")||null,teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,affiliation_type:$("affiliationType")?.value||"obec",organization:v("organization")||null,teacher_name:v("teacherName")||null,school_name:v("schoolName")||null,style,palette,prompt_text:t,status:"ready"};
   if(activeCourseLessonContext){const c=courseDrafts()[activeCourseLessonContext.courseIndex],u=c?.learning_units?.units?.[activeCourseLessonContext.unitIndex];if(c?._cloud_id)payload.course_id=c._cloud_id;if(u?._cloud_id)payload.unit_id=u._cloud_id}
@@ -989,7 +1049,7 @@ async function saveWork(t){
   if(editingPlanId){
     const idx=cloudPlans.findIndex(x=>x.id===data.id);if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
     editingPlanId=null;
-    if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";
+    if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกแผน";
     toast("บันทึกการแก้ไขแผนแล้ว ✓");
   }else{
     cloudPlans.unshift(data);
@@ -1083,7 +1143,7 @@ function editCloudPlan(id){
   if(p.style&&styleMeta[p.style])style=p.style;
   if(p.palette&&palettes.includes(p.palette))palette=p.palette;
   renderStyles();renderAffiliation();updateSummary();
-  if($("generateBtn"))$("generateBtn").textContent="💾 บันทึกการแก้ไขแผน";
+  if($("generateBtn"))$("generateBtn").textContent="💾 บันทึกการแก้ไขแผน";if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").textContent="💾 บันทึกการแก้ไข";
   $("step2")?.scrollIntoView({behavior:"smooth",block:"start"});
   toast("เปิดแผนสำหรับแก้ไขแล้ว ✓")
 }
@@ -2613,7 +2673,7 @@ function bind(){
   if($("planQrUpload"))$("planQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);planQrSource="upload";document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
   syncTeacherSourceControls();
   $("affiliationType").onchange=()=>{$("affiliationType").dataset.userChanged="1";renderAffiliation()};
-  $("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
+  if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").onclick=saveDraftPlan;$("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   if($("refreshDirectPreviewBtn"))$("refreshDirectPreviewBtn").onclick=renderDirectPlanPreview;
   if($("downloadDirectPlanPdfBtn"))$("downloadDirectPlanPdfBtn").onclick=downloadDirectPlanPdf;
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(profileTeacherRef(),"Teacher-Reference");
