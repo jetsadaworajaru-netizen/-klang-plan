@@ -272,3 +272,16 @@ body>main,main,#adminApp,.admin-app{
 .trial-promo-form{display:grid!important;grid-template-columns:2fr 1fr 1fr 1fr auto!important;gap:9px!important;align-items:end!important}
 .trial-promo-form label{display:grid;gap:5px}.trial-promo-form label>span{font-size:.68rem;font-weight:800;color:#617b91}.input-suffix{display:flex;align-items:center;border:1px solid #d5e2ec;border-radius:13px;overflow:hidden;background:#fff}.input-suffix input{border:0!important;min-width:0}.input-suffix em{font-style:normal;padding:0 10px;color:#71879a;font-size:.72rem}.trial-create-btn{min-height:50px}.promo-help{margin-top:9px;background:#eef9f2;border:1px solid #cfe9d8;border-radius:13px;padding:10px 12px;color:#426b51;font-size:.69rem}.trial-result{display:grid!important;gap:7px}.trial-result small{color:#668093}
 @media(max-width:800px){.trial-promo-form{grid-template-columns:1fr 1fr!important}.trial-promo-form label:first-child,.trial-create-btn{grid-column:1/-1}.trial-create-btn{width:100%}}
+
+
+/* Admin support replies */
+.support-admin-row{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:14px;padding:16px;border-bottom:1px solid #e6edf3}
+.support-admin-main{min-width:0}
+.support-admin-main small{display:block;color:#8291a0;margin-top:3px}
+.support-admin-main h4{margin:10px 0 4px}
+.support-admin-main p{white-space:pre-wrap;margin:0 0 10px}
+.support-reply-label{display:grid;gap:6px;font-weight:800;color:#355674}
+.support-reply-label textarea{width:100%;resize:vertical;border:1px solid #cfdde8;border-radius:12px;padding:10px;font:inherit;background:#fff}
+.support-admin-actions{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.support-admin-actions .status{text-align:center}
+@media(max-width:760px){.support-admin-row{grid-template-columns:1fr}.support-admin-actions{flex-direction:row;flex-wrap:wrap}}
