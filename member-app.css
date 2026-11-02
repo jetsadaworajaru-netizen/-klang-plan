@@ -559,53 +559,72 @@ button,
 
 /* Course structure summary badge */
 .course-structure-summary{
-  margin-top:8px;
+  margin-top:10px;
   display:grid;
-  grid-template-columns:1.4fr .8fr 1fr 1.2fr;
-  gap:8px;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:stretch;
 }
-.course-summary-cell{
+.course-summary-main{
   min-width:0;
-  padding:9px 11px;
+  padding:12px 14px;
   border:1px solid #dbe8f4;
-  border-radius:12px;
+  border-radius:14px;
   background:#f8fbff;
   display:flex;
-  flex-direction:column;
-  gap:2px;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+  color:#315b7d;
+  font-size:.82rem;
+  font-weight:900;
 }
-.course-summary-cell small{
+.course-summary-subject{
+  color:#174d7a;
+  font-size:1rem;
+}
+.course-summary-dot{
+  color:#9aabbb;
+  font-weight:700;
+}
+.course-summary-hours{
+  min-width:170px;
+  padding:10px 14px;
+  border:1px solid #cfdcf8;
+  border-radius:14px;
+  background:linear-gradient(135deg,#eef7ff,#f1efff);
+  display:grid;
+  grid-template-columns:auto auto;
+  grid-template-areas:"label label" "num unit";
+  align-content:center;
+  justify-content:center;
+  column-gap:6px;
+}
+.course-summary-hours small{
+  grid-area:label;
   color:#6f8497;
   font-size:.66rem;
   font-weight:800;
-}
-.course-summary-cell b{
-  color:#174d7a;
-  font-size:.86rem;
-  line-height:1.2;
-}
-.course-summary-hours{
-  background:linear-gradient(135deg,#eef7ff,#f1efff);
-  border-color:#cfdcf8;
-  flex-direction:row;
-  align-items:baseline;
-  gap:6px;
-  flex-wrap:wrap;
-}
-.course-summary-hours small{
-  width:100%;
+  text-align:center;
 }
 .course-summary-hours b{
-  font-size:1.28rem;
+  grid-area:num;
+  font-size:1.55rem;
+  line-height:1;
   color:#244fd6;
 }
 .course-summary-hours span{
+  grid-area:unit;
+  align-self:end;
+  padding-bottom:1px;
   font-size:.7rem;
   font-weight:900;
   color:#5d6f82;
+  white-space:nowrap;
 }
 @media(max-width:720px){
-  .course-structure-summary{grid-template-columns:1fr 1fr}
+  .course-structure-summary{grid-template-columns:1fr}
+  .course-summary-hours{min-width:0}
 }
 
 
