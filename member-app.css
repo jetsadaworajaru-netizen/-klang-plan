@@ -441,3 +441,38 @@ button,
   .plan-draft-actions{align-items:stretch;flex-direction:column}
   .plan-save-draft-btn{width:100%}
 }
+
+
+/* Prominent plan save button + draft badge */
+.progress-tabs-with-save{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.progress-tabs-main{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.quick-save-plan-btn{
+  min-width:148px;
+  white-space:nowrap;
+  box-shadow:0 5px 14px rgba(52,88,210,.16);
+}
+.draft-badge{
+  display:inline-flex;
+  align-items:center;
+  margin-left:6px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#fff4cf;
+  color:#8a6812;
+  font-size:.62rem;
+  font-weight:900;
+  vertical-align:middle;
+}
+@media(max-width:760px){
+  .progress-tabs-with-save{align-items:stretch;flex-direction:column}
+  .quick-save-plan-btn{width:100%}
+}
