@@ -23,7 +23,13 @@ function memberRuntimeGuard(error,{background=false}={}){
     setTimeout(()=>toastEl.classList.remove("show"),4500)
   }
 }
-window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
+window.addEventListener("error",e=>{
+  const err=e.error||new Error(e.message||"runtime error");
+  const file=String(e.filename||"").split("/").pop();
+  const where=file?(file+":"+String(e.lineno||"?")+(e.colno?":"+e.colno:"")):"";
+  if(where)err.message=(err.message||"runtime error")+" @ "+where;
+  memberRuntimeGuard(err);
+});
 window.addEventListener("unhandledrejection",e=>{
   memberRuntimeGuard(e.reason||new Error("promise rejected"),{background:true});
 });
