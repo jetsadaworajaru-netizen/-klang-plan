@@ -110,7 +110,19 @@
         <div class="form-grid">
           <label>หน่วยการเรียนรู้<input id="unitName" type="text" placeholder="เช่น จำนวน"></label>
           <label>เรื่อง<input id="topic" type="text" placeholder="เช่น การบวกจำนวนไม่เกิน 1,000"></label>
-          <label>เวลา<input id="duration" type="text" value="1 ชั่วโมง"></label>
+          <label>เวลา
+            <select id="duration">
+              <option value="30 นาที">30 นาที</option>
+              <option value="40 นาที">40 นาที</option>
+              <option value="50 นาที">50 นาที</option>
+              <option value="1 ชั่วโมง" selected>1 ชั่วโมง</option>
+              <option value="2 ชั่วโมง">2 ชั่วโมง</option>
+              <option value="3 ชั่วโมง">3 ชั่วโมง</option>
+              <option value="4 ชั่วโมง">4 ชั่วโมง</option>
+              <option value="5 ชั่วโมง">5 ชั่วโมง</option>
+              <option value="6 ชั่วโมง">6 ชั่วโมง</option>
+            </select>
+          </label>
           <label>รูปแบบการจัดการเรียนรู้
             <select id="method">
               <option value="Active Learning">Active Learning (เชิงรุก)</option><option value="5E">5E Instructional Model</option><option value="GPAS 5 Steps">GPAS 5 Steps</option>
