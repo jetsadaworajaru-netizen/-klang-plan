@@ -337,11 +337,32 @@ function methodModel(method,topic="บทเรียน"){
   };
   return models[m]||models["Active Learning"];
 }
+function durationToMinutes(duration){
+  const s=String(duration||"").trim();
+  const min=s.match(/(\d+(?:\.\d+)?)\s*นาที/);
+  if(min)return Math.max(1,Math.round(Number(min[1])));
+  const hr=s.match(/(\d+(?:\.\d+)?)\s*ชั่วโมง/);
+  if(hr)return Math.max(1,Math.round(Number(hr[1])*60));
+  const n=Number(s.replace(/[^0-9.]/g,""));
+  return Number.isFinite(n)&&n>0?Math.round(n*60):60
+}
+function timedMethodPhases(method,topic,duration){
+  const model=methodModel(method,topic),base=model.phases||[],total=durationToMinutes(duration),n=base.length;
+  let weights;
+  if(n===3)weights=[.15,.65,.20];
+  else if(n===4)weights=[.12,.30,.38,.20];
+  else if(n===5)weights=[.10,.22,.28,.24,.16];
+  else weights=Array.from({length:n},(_,i)=>i===0?.10:i===n-1?.15:.75/Math.max(1,n-2));
+  const mins=weights.map(w=>Math.max(1,Math.round(total*w)));
+  const diff=total-mins.reduce((a,b)=>a+b,0);
+  if(mins.length)mins[Math.min(1,mins.length-1)]+=diff;
+  return base.map((p,i)=>[p[0],p[1],p[2],Math.max(1,mins[i]||1)])
+}
 function methodPromptGuide(method,topic,duration){
-  const model=methodModel(method,topic),n=model.phases.length;
+  const model=methodModel(method,topic),timed=timedMethodPhases(method,topic,duration),n=model.phases.length;
   return "รูปแบบที่เลือก: "+model.title+"\nต้องใช้ขั้นตอนของรูปแบบนี้ให้ครบ "+n+" ขั้นตามลำดับ ห้ามยุบเป็น 3 ขั้นทั่วไป:\n"+
-    model.phases.map((p,i)=>(i+1)+". "+p[0]+" — "+p[1]+": "+p[2]).join("\n")+
-    "\nให้กระจายเวลา "+(duration||"ตามเวลาที่กำหนด")+" อย่างสมเหตุสมผลตามกิจกรรมจริง และคงลำดับขั้นของรูปแบบ";
+    timed.map((p,i)=>(i+1)+". "+p[0]+" — "+p[1]+" ("+p[3]+" นาที): "+p[2]).join("\n")+
+    "\nเมื่อผู้ใช้เปลี่ยนเวลา ให้ปรับกิจกรรม ความลึกของเนื้อหา ชิ้นงาน/ภาระงาน และการประเมินให้เหมาะกับเวลารวมใหม่ โดยคงมาตรฐาน ตัวชี้วัด และจุดประสงค์หลักเดิม เว้นแต่จำเป็นต่อความสอดคล้องทางการสอน";
 }
 
 function directPreviewData(){
@@ -425,7 +446,7 @@ function adaptiveScaleFromLoad(load,phaseCount){
 async function buildDirectPlanCanvas(){
   const c=$("directPlanCanvas");if(!c||!selected)return;
   const ctx=c.getContext("2d"),W=c.width,H=c.height,d=directPreviewData(),th=directTheme();
-  const model=methodModel(d.method,d.topic),phases=model.phases;
+  const model=methodModel(d.method,d.topic),phases=timedMethodPhases(d.method,d.topic,d.duration).map(p=>[p[0],p[1],p[2]+" (ประมาณ "+p[3]+" นาที)"]);
   const contentLoad=directContentLoad(d,phases),textScale=adaptiveScaleFromLoad(contentLoad,phases.length);
   const needApproval=!!$("includeSignatures")?.checked;
   let pageTextBoost=1;
@@ -2399,11 +2420,11 @@ function bind(){
 
   $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();updateSummary()});
   $("grade").onchange=buildSubjects;$("subject").onchange=buildIndicators;$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
-  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>$(id).oninput=()=>{
+  ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>{const el=$(id);if(!el)return;const refresh=()=>{
   if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
   if(id==="topic"&&$("topic").value.trim()!==autoTopicValue)autoTopicValue="";
   updateSummary()
-});
+};el.oninput=refresh;el.onchange=refresh});
   ["planDensity","planIconStyle","planBackground","planSectionFrame","planDecorationLevel","planTeacherPlacement"].forEach(id=>{if($(id))$(id).onchange=updateSummary});
   document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";syncTeacherSourceControls();updateSummary()});
   if($("planTeacherStyleUpload"))$("planTeacherStyleUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);planTeacherImageSource="upload";syncTeacherSourceControls();updateSummary()};
