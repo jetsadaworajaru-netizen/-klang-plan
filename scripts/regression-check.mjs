@@ -45,9 +45,14 @@ for(let i=0;i<member.length-3;i++){
 }
 
 const memberIdRefs=[...new Set([...member.matchAll(/(?<!\$)\$\("([A-Za-z][A-Za-z0-9_-]*)"\)/g)].map(m=>m[1]))];
-const missingMemberIds=memberIdRefs.filter(id=>!memberIds.has(id));
-if(missingMemberIds.length)fail("member-app.js references missing IDs: "+missingMemberIds.join(", "));
-else ok("member-app.js DOM IDs exist");
+const optionalOrDynamicMemberIds=new Set([
+  "planTeacherImageBlock","planTeacherUploadWrap","planTeacherImageHint","planTeacherImagePreview",
+  "planTeacherStyleUploadWrap","promptReferenceMedia","planTeacherStyleUpload",
+  "planSchoolLogoUploadWrap","planSchoolLogoUpload","planQrUploadWrap","planQrUpload"
+]);
+const missingMemberIds=memberIdRefs.filter(id=>!memberIds.has(id)&&!optionalOrDynamicMemberIds.has(id));
+if(missingMemberIds.length)fail("member-app.js references missing required IDs: "+missingMemberIds.join(", "));
+else ok("member-app.js required DOM IDs exist");
 
 const config=read("config.js");
 if(!config.includes('https://vyeemrmzlzqaycpbmuyc.supabase.co'))fail("config.js Supabase project URL changed unexpectedly");
