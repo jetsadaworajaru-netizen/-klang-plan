@@ -1798,7 +1798,7 @@ function renderStructureEditor(units){
         </div>
       </div>
       <div class="structure-edit-grid structure-slider-grid">
-        <label class="structure-name-field">ชื่อหน่วย (แก้ไข)<input data-unit-name value="${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}"></label>
+        <label class="structure-name-field">ชื่อหน่วย (แก้ไข)<textarea data-unit-name rows="2">${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}</textarea></label>
         <div class="structure-control-strip">
           <label class="structure-hours-control">
             <span>ชั่วโมง</span>
