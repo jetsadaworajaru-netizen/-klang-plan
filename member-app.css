@@ -1699,3 +1699,15 @@ button,
     min-width:84px!important;
   }
 }
+
+
+/* 2026-11-02 autosize full unit name text */
+#courseStructureList .structure-name-field textarea{
+  height:auto!important;
+  min-height:44px!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  resize:none!important;
+  white-space:pre-wrap!important;
+  word-break:break-word!important;
+}
