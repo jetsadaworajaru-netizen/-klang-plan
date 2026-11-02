@@ -70,10 +70,17 @@ function makeMemberClient(url){return window.supabase.createClient(url,CFG.supab
 async function auth(){
   if(!window.supabase||!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
   sb=makeMemberClient(CFG.supabaseUrl);
-  const {data,error}=await withTimeout(sb.auth.getSession(),8000,"ตรวจสอบการเข้าสู่ระบบ");
+  const loadingText=document.querySelector("#loadingGate .loading-text, #loadingGate p, #loadingGate b");
+  if(loadingText)loadingText.textContent="กำลังตรวจสอบการเข้าสู่ระบบ…";
+  const {data,error}=await withTimeout(sb.auth.getSession(),2500,"ตรวจสอบการเข้าสู่ระบบ");
   if(error||!data?.session){location.replace("/teacher.html");return false}
   user=data.session.user;
-  const {data:p}=await withTimeout(sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),8000,"โหลดข้อมูลสมาชิก");
+  if(loadingText)loadingText.textContent="กำลังโหลดข้อมูลสมาชิก…";
+  const {data:p}=await withTimeout(
+    sb.from("profiles").select("id,full_name,school_name,avatar_url,teacher_photo_url,school_logo_url,role,status,member_id,membership_started_at,membership_expires_at").eq("id",user.id).maybeSingle(),
+    3500,
+    "โหลดข้อมูลสมาชิก"
+  );
   if(!p||p.role!=="member"||p.status!=="active"){await sb.auth.signOut();location.replace("/teacher.html");return false}
   if(p.membership_expires_at&&new Date(p.membership_expires_at).getTime()<=Date.now()){
     await sb.auth.signOut();location.replace("/teacher.html?expired=1");return false
