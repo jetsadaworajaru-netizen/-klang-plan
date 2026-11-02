@@ -3,8 +3,12 @@ const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)]
 const nodes=s=>[...document.querySelectorAll(s)];
 function withTimeout(promise,ms,label="การเชื่อมต่อ"){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+" ใช้เวลานานเกินไป กรุณาลองใหม่")),ms))])}
 const CFG=window.KLANG_CONFIG||{};
-function memberRuntimeGuard(error){
+function memberRuntimeGuard(error,{background=false}={}){
   const message=(error&&error.message)||String(error||"เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+  if(background){
+    console.warn("Klang Plan background task warning",error);
+    return
+  }
   console.error("Klang Plan runtime error",error);
   const gate=document.getElementById("loadingGate");
   if(gate&&!gate.classList.contains("hidden")){
@@ -12,10 +16,17 @@ function memberRuntimeGuard(error){
     return
   }
   const toastEl=document.getElementById("toast");
-  if(toastEl){toastEl.textContent="ระบบพบข้อผิดพลาด กรุณารีเฟรชหน้า";toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),3500)}
+  if(toastEl){
+    const short=message.length>90?message.slice(0,87)+"…":message;
+    toastEl.textContent="ระบบขัดข้อง: "+short;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"),4500)
+  }
 }
 window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
-window.addEventListener("unhandledrejection",e=>memberRuntimeGuard(e.reason||new Error("promise rejected")));
+window.addEventListener("unhandledrejection",e=>{
+  memberRuntimeGuard(e.reason||new Error("promise rejected"),{background:true});
+});
 let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="none",planTeacherImageData="",planSchoolLogoSource="none",planSchoolLogoData="",planQrSource="none",planQrData="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
