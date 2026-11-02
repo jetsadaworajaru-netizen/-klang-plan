@@ -1637,20 +1637,12 @@ function suggestedUnitTitle(rows,index=0){
       .map(cleanCurriculumUnitTitle).filter(Boolean);
     return candidates.find(x=>!isBroadCurriculumTitle(x,r))||""
   }).filter(Boolean);
-  let text=list[0]||"";
-  if(list.length>1){
-    const second=list[1];
-    if(second && second!==text){
-      const left=text.length>34?text.slice(0,34).trim():text;
-      const right=second.length>30?second.slice(0,30).trim():second;
-      text=left+" และ "+right
-    }
-  }
+  const unique=[...new Set(list)];
+  let text=unique.join(" และ ");
   if(!text){
     const first=(rows||[])[0]||{},code=String(first.indicator||"").trim();
     text=code?`เรียนรู้ตามตัวชี้วัด ${code}`:`หน่วยการเรียนรู้ ${index+1}`
   }
-  if(text.length>72)text=text.slice(0,69).trim()+"…";
   return text
 }
 function curriculumIndicatorPriority(row){
@@ -1875,6 +1867,34 @@ function hasBroadUnitTitle(c,u,idx=0){
   const structureStandard=String(structureUnit.standard_name||structureUnit.source_standard||"").trim();
   return !title || title===strand || title===standard || title===structureStrand || title===structureStandard;
 }
+function repairGeneratedUnitTitles(rows,i){
+  const c=rows?.[i];
+  const oldUnits=c?.course_structure?.units||[];
+  if(!c||!oldUnits.length)return {course:c,repaired:false};
+  const fresh=autoUnits(c);
+  if(fresh.length!==oldUnits.length)return {course:c,repaired:false};
+  let changed=false;
+  const merged=oldUnits.map((u,idx)=>{
+    const f=fresh[idx];
+    const sameIds=JSON.stringify(u.indicator_ids||[])===JSON.stringify(f.indicator_ids||[]);
+    if(!sameIds)return u;
+    const oldBase=String(u.base_name||"").trim();
+    const newBase=String(f.base_name||"").trim();
+    if(!newBase||oldBase===newBase)return u;
+    const oldAutoName=contextualUnitName(oldBase,c);
+    const next={...u,base_name:newBase};
+    if(String(u.name||"").trim()===oldAutoName || String(u.name||"").trim()===oldBase){
+      next.name=contextualUnitName(newBase,c);
+    }
+    changed=true;
+    return next
+  });
+  if(!changed)return {course:c,repaired:false};
+  c.course_structure={...c.course_structure,version:7,units:merged,source:"Curriculum Engine v7: ชื่อหน่วยจากข้อความตัวชี้วัด/ผลลัพธ์แบบเต็ม ไม่ตัดกลางประโยค"};
+  rows[i]=c;
+  writeCourseDrafts(rows);
+  return {course:c,repaired:true}
+}
 function ensureCurriculumStructureCurrent(rows,i){
   let c=rows?.[i];
   if(!c)return {course:c,repaired:false};
@@ -1955,6 +1975,8 @@ function openCourseStructure(i){
   c=repaired.course;
   const hierarchyCheck=ensureCurriculumStructureCurrent(rows,i);
   c=hierarchyCheck.course;
+  const titleCheck=repairGeneratedUnitTitles(rows,i);
+  c=titleCheck.course;
   if(Number(c.hours||0)<=0){
     const suggested=recommendedCourseHours(c);
     if(suggested>0){c.hours=suggested;c.hours_source="curriculum_auto";c.hours_reference=curriculumTimeNote(c);rows[i]=c;writeCourseDrafts(rows)}
@@ -1965,7 +1987,7 @@ function openCourseStructure(i){
   $("courseStructureSource").innerHTML=`<b>ระบบสร้างอัตโนมัติจากหลักสูตรแกนกลาง</b> · ${esc(curriculumTimeNote(c))} · ใช้ ${selected.length||core.length} ตัวชี้วัดเป็นฐาน${c.curriculum_analysis?.context?` · บริบท: ${esc(c.curriculum_analysis.context)}`:""}${c.curriculum_analysis?.focus?` · จุดเน้น: ${esc(c.curriculum_analysis.focus)}`:""}<br><small>ชั่วโมงและน้ำหนักเป็นค่าตั้งต้นสำหรับจัดโครงสร้างรายวิชา ครูสามารถปรับตามหลักสูตรสถานศึกษาได้ โดยมาตรฐาน/ตัวชี้วัดต้นทางยังคงเดิม</small>`;
   const units=c.course_structure?.units?.length?c.course_structure.units:autoUnits(c);
   renderStructureEditor(units);
-  $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:(hierarchyCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างเป็น “สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด” แล้ว</div>':"");
+  $("courseStructureStatus").innerHTML=repaired?.repaired?`<div class="indicator-preview">✓ ปรับข้อมูลเดิมจาก ${repaired.from} → ${repaired.to} ชั่วโมงตามกรอบหลักสูตรอ้างอิง และสร้างโครงสร้างใหม่ให้แล้ว</div>`:(hierarchyCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างเป็น “สาระ/ด้าน → มาตรฐาน → หน่วยย่อยจากตัวชี้วัด” แล้ว</div>':(titleCheck?.repaired?'<div class="indicator-preview">✓ อัปเดตชื่อหน่วยให้แสดงข้อความตัวชี้วัด/ผลลัพธ์ครบแล้ว</div>':""));
   $("courseStructureModal").hidden=false
 }
 function generateCourseStructure(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],units=autoUnits(c);renderStructureEditor(units);toast("คืนค่าตามฐานหลักสูตรแล้ว ✓")}
@@ -1990,9 +2012,9 @@ function saveCourseStructure(){
   c.hours_source=(recommendedNow>0 && Number(c.hours)!==recommendedNow)?"teacher":"curriculum_auto";
   c.hours_reference=curriculumTimeNote(c);
   c.course_structure={
-    version:6,
+    version:7,
     units,
-    source:"Curriculum Engine v6: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → จัดกลุ่มตัวชี้วัดที่สัมพันธ์กัน → หน่วยการเรียนรู้",
+    source:"Curriculum Engine v7: สาระ/ด้าน → มาตรฐาน/ผลลัพธ์ → หน่วยจากข้อความตัวชี้วัดแบบเต็ม",
     source_curricula:c.curriculum_analysis?.curricula||[],
     saved_at:new Date().toISOString()
   };
