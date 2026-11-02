@@ -1628,17 +1628,18 @@ function deriveLearningUnit(c,u,i){
   }
 }
 function renderLearningUnits(units){
-  const areaLabel=curriculumAreaLabel(courseDrafts()[activeCourseIndex]?.subject);
-  $("learningUnitsList").innerHTML=units.map((u,i)=>`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(u.strand_name||"")}">
-    ${u.strand_name?`<div class="learning-unit-strand"><span>${esc(areaLabel)}</span><b>${esc(u.strand_name)}</b></div>`:""}
+  $("learningUnitsList").innerHTML=units.map((u,i)=>`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}'>
     <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
+    <label class="learning-unit-strand-field">สาระ
+      <input data-unit-strand type="text" value="${esc(u.strand_name||"")}" placeholder="เช่น การอ่าน">
+    </label>
     <label>สาระสำคัญ<textarea data-unit-concept rows="3">${esc(u.concept||"")}</textarea></label>
     <label>จุดประสงค์/ผลลัพธ์การเรียนรู้<textarea data-unit-objectives rows="4">${esc(u.objectives||"")}</textarea></label>
     <label>แนวทางการวัดและประเมินผล<textarea data-unit-assessment rows="3">${esc(u.assessment||"")}</textarea></label>
     <input type="hidden" data-unit-name value="${esc(u.name||"")}"><input type="hidden" data-unit-hours value="${Number(u.hours)||0}"><input type="hidden" data-unit-weight value="${Number(u.weight)||0}">
   </article>`).join("")
 }
-function readLearningUnits(){return $$('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:row.dataset.strandName||"",standard_name:courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]?.standard_name||"",structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
+function readLearningUnits(){return $('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:row.querySelector('[data-unit-strand]')?.value.trim()||"",standard_name:courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]?.standard_name||"",structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
 function openLearningUnits(i){
   const rows=courseDrafts();
   let c=rows[i];
@@ -1661,7 +1662,7 @@ function openLearningUnits(i){
   $("learningUnitsModal").hidden=false
 }
 function generateLearningUnits(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex];renderLearningUnits(c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)));toast("สร้างหน่วยการเรียนรู้แล้ว ✓")}
-function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจสาระสำคัญและจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.learning_units={version:Number(c.course_structure?.version||4),units,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ พร้อมต่อยอดเป็นแผนการสอน ใบงาน และการประเมิน</div>';renderCourses();toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
+function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.strand_name||!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจสาระ สาระสำคัญ และจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.learning_units={version:Number(c.course_structure?.version||4),units,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ พร้อมต่อยอดเป็นแผนการสอน ใบงาน และการประเมิน</div>';renderCourses();toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
 
 
 async function resolveCourseCloudId(c){if(c?._cloud_id)return c._cloud_id;if(!courseCloudReady||!sb||!user)return null;const {data,error}=await sb.from("courses").select("id").eq("user_id",user.id).eq("client_id",c.id).maybeSingle();if(error||!data)return null;c._cloud_id=data.id;const rows=courseDrafts(),idx=rows.findIndex(x=>x.id===c.id);if(idx>=0){rows[idx]=c;writeCourseDrafts(rows,{sync:false})}return data.id}
