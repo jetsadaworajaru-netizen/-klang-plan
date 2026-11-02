@@ -1903,10 +1903,14 @@ function courseStructureSummaryHtml(c){
   const periodLabel=(sem==="1"||sem==="2")?`ภาคเรียน ${sem}`:"ทั้งปี/ตามที่โรงเรียนกำหนด";
   const hourLabel=(sem==="1"||sem==="2")?"ชั่วโมง/ภาคเรียน":"ชั่วโมง";
   return `<div class="course-structure-summary">
-    <div class="course-summary-cell"><small>รายวิชา</small><b>${esc(c?.name||"-")}</b></div>
-    <div class="course-summary-cell"><small>ระดับชั้น</small><b>${esc(c?.grade||"-")}</b></div>
-    <div class="course-summary-cell"><small>ช่วงเวลา</small><b>${esc(periodLabel)}</b></div>
-    <div class="course-summary-cell course-summary-hours"><small>เวลาเรียน</small><b>${esc(c?.hours||"-")}</b><span>${hourLabel}</span></div>
+    <div class="course-summary-main">
+      <span class="course-summary-subject">${esc(c?.name||"-")}</span>
+      <span class="course-summary-dot">•</span>
+      <span>${esc(c?.grade||"-")}</span>
+      <span class="course-summary-dot">•</span>
+      <span>${esc(periodLabel)}</span>
+    </div>
+    <div class="course-summary-hours"><small>เวลาเรียน</small><b>${esc(c?.hours||"-")}</b><span>${hourLabel}</span></div>
   </div>`
 }
 function openCourseStructure(i){
