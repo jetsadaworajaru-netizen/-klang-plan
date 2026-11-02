@@ -1787,3 +1787,54 @@ button,
     justify-content:flex-end;
   }
 }
+
+
+/* 2026-11-03 inline semester selector on course cards */
+.course-meta-line{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:4px;
+  color:#71849a;
+  font-size:.82rem;
+  line-height:1.4;
+}
+.course-semester-select{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:.78rem;
+  font-weight:800;
+  color:#526d84;
+  white-space:nowrap;
+}
+.course-semester-select select{
+  width:54px;
+  min-width:54px;
+  height:30px;
+  padding:2px 22px 2px 8px;
+  border:1px solid #c9dbea;
+  border-radius:9px;
+  background:#fff;
+  color:#184f82;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+.course-semester-select select:focus{
+  outline:none;
+  border-color:#6fa9da;
+  box-shadow:0 0 0 3px rgba(86,151,209,.12);
+}
+@media(max-width:760px){
+  .course-meta-line{
+    gap:5px;
+    font-size:.76rem;
+  }
+  .course-semester-select select{
+    width:50px;
+    min-width:50px;
+    height:28px;
+  }
+}
