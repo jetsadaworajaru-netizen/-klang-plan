@@ -2060,7 +2060,26 @@ async function saveAssessmentCloud(c,u,item){if(!courseCloudReady||!sb||!user)re
 function createAssessmentPrompt(ci,type,ui=null){const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];if(!c||(!u&&type!=="final"))return;const prompt=assessmentPrompt(c,type,u),id=crypto.randomUUID?crypto.randomUUID():String(Date.now()),title=type==="final"?`ข้อสอบปลายภาค · ${c.name}`:`${type==="pretest"?"ก่อนเรียน":"หลังเรียน"} · ${u.name}`;const blueprint=type==="final"?{units:(c.learning_units?.units||[]).map(x=>({unit_id:x.id,name:x.name,hours:Number(x.hours)||0,weight:Number(x.weight)||0,indicator_ids:x.indicator_ids||[]})),total_weight:(c.learning_units?.units||[]).reduce((s,x)=>s+(Number(x.weight)||0),0)}:{unit_id:u.id,indicator_ids:u.indicator_ids||[]};c.assessments=c.assessments||{items:[]};const item={id,type,unit_id:u?.id||null,title,prompt,blueprint,created_at:new Date().toISOString()};c.assessments.items.push(item);c.assessments.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=`<div class="indicator-preview">สร้าง ${esc(title)} แล้ว ✓ ระบบบันทึก Prompt และ Blueprint ไว้กับรายวิชา</div>`;saveAssessmentCloud(c,u,item);switchTab("create");$("promptText").textContent=prompt;$("promptWrap").hidden=false;closeCourseAssessments();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt การประเมินแล้ว ✓")}
 
 function safeFilename(v){return String(v||"klang-plan").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim().slice(0,120)||"klang-plan"}
-function courseDocumentText(c){const out=[];const push=(...x)=>out.push(...x);push("คลังแผนการสอนหน้าเดียว","ชุดเอกสารรายวิชา","");push(`รายวิชา: ${c.name||"-"}`,`ระดับชั้น: ${c.grade||"-"}`,`กลุ่มสาระ/วิชา: ${c.subject||"-"}`,`ภาคเรียน: ${c.semester||"-"}   ปีการศึกษา: ${c.year||"-"}`,`เวลาเรียนรวม: ${c.hours||"-"} ชั่วโมง`,`สถานศึกษา: ${c.school||profile?.school_name||"-"}`,"");const cur=savedCurriculumRows(c);push("1. การวิเคราะห์หลักสูตร");if(cur.length){cur.forEach((r,i)=>push(`${i+1}. ${r.indicator||r.standard||""}${r.indicator_text?" — "+r.indicator_text:""}`))}else push("ยังไม่มีข้อมูลการวิเคราะห์หลักสูตร");push("","2. คำอธิบายรายวิชา",c.course_description?.text||"ยังไม่มีคำอธิบายรายวิชา","");push("3. โครงสร้างรายวิชา");(c.course_structure?.units||[]).forEach((u,i)=>push(`${i+1}. ${u.name||`หน่วยที่ ${i+1}`} — ${Number(u.hours)||0} ชั่วโมง — น้ำหนัก ${Number(u.weight)||0}%`));push("","4. กำหนดการสอน");(c.teaching_schedule?.rows||[]).forEach((r,i)=>push(`สัปดาห์ ${r.week||i+1}: ${r.unit||r.unit_name||""} — ${r.topic||""} (${Number(r.hours)||0} ชั่วโมง)`));push("","5. หน่วยการเรียนรู้");(c.learning_units?.units||[]).forEach((u,i)=>{push(`หน่วยที่ ${i+1} ${u.name||""} (${Number(u.hours)||0} ชั่วโมง)`,`สาระสำคัญ: ${u.concept||"-"}`,`จุดประสงค์/ผลลัพธ์:\n${u.objectives||"-"}`,`การวัดและประเมินผล: ${u.assessment||"-"}`,"")});push("6. แผนการสอนและสื่อ",`สถานะ: ${c.lesson_resources?.saved_at?"มีการสร้างแผน/สื่อจากหน่วยแล้ว":"ยังไม่มีข้อมูล"}`,"");push("7. การประเมินผล");const items=c.assessments?.items||[];if(items.length){items.forEach((a,i)=>{push(`${i+1}. ${a.title||a.type||"การประเมิน"}`);if(a.blueprint)push(`Blueprint: ${typeof a.blueprint==="string"?a.blueprint:JSON.stringify(a.blueprint,null,2)}`);if(a.prompt)push(`Prompt:\n${a.prompt}`);push("")})}else push("ยังไม่มีข้อมูลการประเมิน");push("","8. บันทึกเอกสาร",`สร้างจาก Klang Plan เมื่อ ${new Date().toLocaleString("th-TH")}`);return out.join("\n")}
+function courseDocumentText(c){
+  const out=[],push=(...x)=>out.push(...x),cur=savedCurriculumRows(c),units=c.course_structure?.units||[],schedule=c.teaching_schedule?.rows||[],learning=c.learning_units?.units||[];
+  const weekFrame=courseTeachingWeeks(c);
+  push("ชุดเอกสารรายวิชาและแผนการจัดการเรียนรู้ฉบับเต็ม","");
+  push(`รายวิชา: ${c.name||"-"}`,`ระดับชั้น: ${c.grade||"-"}`,`กลุ่มสาระ/วิชา: ${c.subject||"-"}`,`ภาคเรียน: ${c.semester||"-"}   ปีการศึกษา: ${c.year||"-"}`,`เวลาเรียนรวม: ${c.hours||"-"} ชั่วโมง · กรอบ ${weekFrame} สัปดาห์`,`สถานศึกษา: ${c.school||profile?.school_name||"-"}`,"");
+  push("1. การวิเคราะห์หลักสูตร");
+  if(cur.length)cur.forEach((r,i)=>push(`${i+1}. ${r.domain||"-"} | ${r.standard||"-"} | ${r.indicator||"-"} — ${r.indicator_text||""}`));else push("ยังไม่มีข้อมูลการวิเคราะห์หลักสูตร");
+  push("","2. คำอธิบายรายวิชา",c.course_description?.text||"ยังไม่มีคำอธิบายรายวิชา","");
+  push("3. โครงสร้างรายวิชา");
+  units.forEach((u,i)=>push(`${i+1}. ${u.name||`หน่วยที่ ${i+1}`} | ${u.strand_name||"-"} | ${(u.source_indicator_codes||[]).join(", ")||"-"} | ${Number(u.hours)||0} ชั่วโมง | น้ำหนัก ${Number(u.weight)||0}%`));
+  push("","4. กำหนดการสอน");
+  schedule.forEach((r,i)=>push(`สัปดาห์ ${r.week||i+1}: ${r.unit_name||""} — ${r.topic||""} | ${(r.indicator_codes||[]).join(", ")||"-"} | ${Number(r.hours)||0} ชั่วโมง`));
+  push("","5. หน่วยการเรียนรู้");
+  learning.forEach((u,i)=>push(`หน่วยที่ ${i+1} ${u.name||""} (${Number(u.hours)||0} ชั่วโมง)`,`สาระ/มาตรฐาน: ${u.strand_name||"-"} · ${u.standard_name||"-"}`,`สาระสำคัญ: ${u.concept||"-"}`,`จุดประสงค์/ผลลัพธ์:\n${u.objectives||"-"}`,`การวัดและประเมินผล: ${u.assessment||"-"}`,""));
+  push("6. แผนการจัดการเรียนรู้ฉบับเต็ม",`จัดทำแผนประจำหน่วย ${learning.length||units.length} แผน โดยเชื่อมมาตรฐาน ตัวชี้วัด จุดประสงค์ กิจกรรม สื่อ และการประเมิน`,"");
+  push("7. การวัดและประเมินผล",c.assessments?.items?.length?`มีรายการประเมิน ${c.assessments.items.length} รายการ พร้อม Blueprint/แบบทดสอบที่ระบบบันทึกไว้`:"ยังไม่มีข้อมูลการประเมิน","");
+  push("8. บันทึกหลังสอนและการรับรอง","มีแบบบันทึกผลการจัดการเรียนรู้ ปัญหา/อุปสรรค แนวทางแก้ไข และช่องลงชื่อผู้สอน/ผู้รับรองในไฟล์ Word ฉบับเต็ม","");
+  push(`สร้างจาก Klang Plan เมื่อ ${new Date().toLocaleString("th-TH")}`);
+  return out.join("\n")
+}
 function xmlText(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 const CRC_TABLE=(()=>{const a=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;a[n]=c>>>0}return a})();
 function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=CRC_TABLE[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}
@@ -2068,6 +2087,176 @@ function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}function u32(n){retur
 function catBytes(parts){const n=parts.reduce((s,x)=>s+x.length,0),o=new Uint8Array(n);let p=0;for(const x of parts){o.set(x,p);p+=x.length}return o}
 function zipStored(entries,mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"){const te=new TextEncoder(),locals=[],centrals=[];let offset=0;for(const [name,content] of entries){const nb=te.encode(name),data=typeof content==="string"?te.encode(content):content,crc=crc32(data);const local=catBytes([u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),nb,data]);locals.push(local);const central=catBytes([u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nb]);centrals.push(central);offset+=local.length}const centralSize=centrals.reduce((s,x)=>s+x.length,0),end=catBytes([u32(0x06054b50),u16(0),u16(0),u16(entries.length),u16(entries.length),u32(centralSize),u32(offset),u16(0)]);return new Blob([...locals,...centrals,end],{type:mime})}
 function makeDocxBlob(title,text){const lines=String(text||"").split(/\r?\n/);const paras=lines.map(line=>{if(line==="[[PAGE_BREAK]]")return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;const isHead=/^\d+\.\s/.test(line)||line==="คลังแผนการสอนหน้าเดียว"||line==="ชุดเอกสารรายวิชา";return `<w:p>${isHead?'<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>':''}<w:r><w:rPr><w:rFonts w:ascii="TH Sarabun New" w:hAnsi="TH Sarabun New" w:eastAsia="TH Sarabun New"/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t xml:space="preserve">${xmlText(line||" ")}</w:t></w:r></w:p>`}).join("");const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`;const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:qFormat/><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style></w:styles>`;return zipStored([["[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`],["_rels/.rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`],["word/document.xml",doc],["word/styles.xml",styles],["word/_rels/document.xml.rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`]])}
+function makeCourseDocxBlob(c){
+  const cur=savedCurriculumRows(c),structure=c.course_structure?.units||[],schedule=c.teaching_schedule?.rows||[],learning=c.learning_units?.units||[];
+  const byId=new Map(cur.map(r=>[r.dataset_id,r]));
+  const noProof='<w:noProof/><w:lang w:val="th-TH" w:eastAsia="th-TH"/>';
+  const run=(text,bold=false,size=28,color="1F2937")=>{
+    const parts=String(text??"").split("\n");
+    return parts.map((part,i)=>'<w:r><w:rPr>'+(bold?'<w:b/>':'')+'<w:rFonts w:ascii="TH Sarabun New" w:hAnsi="TH Sarabun New" w:eastAsia="TH Sarabun New"/><w:color w:val="'+color+'"/><w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/>'+noProof+'</w:rPr><w:t xml:space="preserve">'+xmlText(part||" ")+'</w:t>'+(i<parts.length-1?'<w:br/>':'')+'</w:r>').join("")
+  };
+  const para=(text,opt={})=>{
+    const align=opt.align?'<w:jc w:val="'+opt.align+'"/>':'';
+    const spacing='<w:spacing w:before="'+(opt.before||0)+'" w:after="'+(opt.after??80)+'" w:line="'+(opt.line||300)+'" w:lineRule="auto"/>';
+    const keep=opt.keep?'<w:keepNext/>':'';
+    const shd=opt.fill?'<w:shd w:fill="'+opt.fill+'"/>':'';
+    return '<w:p><w:pPr>'+align+spacing+keep+shd+'</w:pPr>'+run(text,!!opt.bold,opt.size||28,opt.color||"1F2937")+'</w:p>'
+  };
+  const cell=(text,width,opt={})=>{
+    const fill=opt.fill?'<w:shd w:fill="'+opt.fill+'"/>':'';
+    const valign='<w:vAlign w:val="'+(opt.valign||"center")+'"/>';
+    const tcPr='<w:tcPr><w:tcW w:w="'+width+'" w:type="dxa"/>'+fill+valign+'</w:tcPr>';
+    return '<w:tc>'+tcPr+para(text,{bold:!!opt.bold,size:opt.size||26,align:opt.align||"left",after:20,line:260})+'</w:tc>'
+  };
+  const table=(rows,widths,header=true)=>{
+    const borders='<w:tblBorders><w:top w:val="single" w:sz="6" w:color="B7C7D8"/><w:left w:val="single" w:sz="6" w:color="B7C7D8"/><w:bottom w:val="single" w:sz="6" w:color="B7C7D8"/><w:right w:val="single" w:sz="6" w:color="B7C7D8"/><w:insideH w:val="single" w:sz="4" w:color="D7E0E8"/><w:insideV w:val="single" w:sz="4" w:color="D7E0E8"/></w:tblBorders>';
+    return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="fixed"/>'+borders+'</w:tblPr>'+
+      rows.map((r,ri)=>'<w:tr>'+(header&&ri===0?'<w:trPr><w:tblHeader/></w:trPr>':'')+
+        r.map((v,ci)=>cell(v,widths[ci]||1200,{bold:header&&ri===0,fill:header&&ri===0?"E8F1F8":"FFFFFF",align:(ci===0&&header)?"center":"left",size:header&&ri===0?25:24})).join("")+'</w:tr>').join("")+'</w:tbl>'
+  };
+  const pageBreak=()=>'<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  const h1=t=>para(t,{bold:true,size:36,color:"174D7A",before:120,after:120,keep:true});
+  const h2=t=>para(t,{bold:true,size:32,color:"174D7A",before:100,after:80,keep:true});
+  const label=(k,v)=>table([[k,v]],[2100,6500],false);
+  const indicatorTextForUnit=u=>(u.indicator_ids||[]).map(id=>byId.get(id)).filter(Boolean).map(r=>(r.indicator||"")+" "+(r.indicator_text||"")).join("\n") || (u.source_indicator_codes||[]).join(", ") || "-";
+  const unitLearning=(u,i)=>learning[i]||{
+    name:u.name,hours:u.hours,weight:u.weight,strand_name:u.strand_name,standard_name:u.standard_name,
+    concept:(u.name||"สาระสำคัญ")+" โดยเชื่อมโยงมาตรฐานและตัวชี้วัดของหน่วย",
+    objectives:(u.indicator_ids||[]).map((id,j)=>{const r=byId.get(id);return (j+1)+". ผู้เรียนสามารถ"+String(r?.indicator_text||u.name||"เรียนรู้ตามตัวชี้วัด").replace(/^ผู้เรียนสามารถ\s*/,"")}).join("\n"),
+    assessment:"ประเมินจากภาระงาน/ชิ้นงาน การสังเกต การตอบคำถาม และหลักฐานการเรียนรู้ตามตัวชี้วัด"
+  };
+
+  let body="";
+  body+=para("ชุดเอกสารรายวิชาและแผนการจัดการเรียนรู้ฉบับเต็ม",{bold:true,size:44,align:"center",color:"123D63",after:160});
+  body+=para(c.name||"รายวิชา",{bold:true,size:40,align:"center",color:"174D7A",after:80});
+  body+=para([c.grade,c.subject,"ภาคเรียน "+(c.semester||"-")+" / "+(c.year||"-")].filter(Boolean).join(" · "),{size:30,align:"center",color:"52677A",after:220});
+  body+=table([
+    ["รายการ","ข้อมูล"],
+    ["รายวิชา",c.name||"-"],
+    ["ระดับชั้น",c.grade||"-"],
+    ["กลุ่มสาระ/วิชา",c.subject||"-"],
+    ["ภาคเรียน / ปีการศึกษา",(c.semester||"-")+" / "+(c.year||"-")],
+    ["เวลาเรียน",String(c.hours||"-")+" ชั่วโมง · กรอบ "+courseTeachingWeeks(c)+" สัปดาห์"],
+    ["สถานศึกษา",c.school||profile?.school_name||"-"],
+    ["ผู้สอน",profile?.full_name||profile?.name||"-"],
+    ["หลักสูตรอ้างอิง",c.hours_reference||curriculumTimeNote(c)]
+  ],[2500,6000],true);
+  body+=pageBreak();
+
+  body+=h1("1. การวิเคราะห์หลักสูตร");
+  body+=para("วิเคราะห์มาตรฐานการเรียนรู้/ตัวชี้วัดและสาระการเรียนรู้ที่ใช้จริงในรายวิชา เพื่อเป็นฐานของหน่วย การจัดกิจกรรม และการประเมิน",{size:27,color:"52677A"});
+  const curRows=[["ลำดับ","สาระ/ด้าน","มาตรฐาน","ตัวชี้วัด","สาระ/ข้อความตัวชี้วัด","ประเภท"]];
+  cur.forEach((r,i)=>curRows.push([String(i+1),r.domain||"-",r.standard||"-",r.indicator||"-",r.indicator_text||"-",r.classification||"-"]));
+  body+=table(curRows,[650,1300,1200,1100,3500,900],true);
+
+  body+=h1("2. คำอธิบายรายวิชา");
+  body+=para(c.course_description?.text||"ยังไม่มีคำอธิบายรายวิชา",{size:28,line:340});
+  body+=para("เวลาเรียนรวม "+(c.hours||"-")+" ชั่วโมง · "+(c.hours_reference||curriculumTimeNote(c)),{bold:true,size:27,color:"52677A"});
+
+  body+=pageBreak()+h1("3. โครงสร้างรายวิชา");
+  const sRows=[["หน่วยที่","ชื่อหน่วยการเรียนรู้","สาระ/มาตรฐาน/ตัวชี้วัด","สาระสำคัญ","เวลา (ชม.)","น้ำหนัก (%)"]];
+  structure.forEach((u,i)=>{
+    const lu=unitLearning(u,i);
+    sRows.push([
+      String(i+1),u.name||"-",
+      [u.strand_name||"-",u.standard_name||u.source_standard||"-",(u.source_indicator_codes||[]).join(", ")||"-"].join("\n"),
+      lu.concept||"-",String(Number(u.hours)||0),String(Number(u.weight)||0)
+    ])
+  });
+  body+=table(sRows,[650,1700,2200,2500,800,800],true);
+  body+=para("รวม "+structure.reduce((s,u)=>s+(Number(u.hours)||0),0)+" ชั่วโมง · น้ำหนักรวม "+structure.reduce((s,u)=>s+(Number(u.weight)||0),0)+"%",{bold:true,size:27,align:"right",before:60});
+
+  body+=pageBreak()+h1("4. กำหนดการสอน");
+  body+=para("กรอบเวลา "+courseTeachingWeeks(c)+" สัปดาห์ โดยระบบกระจายชั่วโมงจากโครงสร้างรายวิชาให้สอดคล้องกับเวลาเรียนรวม",{size:27,color:"52677A"});
+  const schRows=[["สัปดาห์","หน่วย","เรื่อง/หัวข้อ","ตัวชี้วัด","เวลา (ชม.)"]];
+  schedule.forEach(r=>schRows.push([String(r.week||"-"),r.unit_name||"-",r.topic||"-",(r.indicator_codes||[]).join(", ")||"-",String(Number(r.hours)||0)]));
+  body+=table(schRows,[750,1800,2800,1800,850],true);
+
+  body+=pageBreak()+h1("5. หน่วยการเรียนรู้อิงมาตรฐาน");
+  structure.forEach((u,i)=>{
+    const lu=unitLearning(u,i);
+    body+=h2("หน่วยที่ "+(i+1)+" "+(u.name||""));
+    body+=label("สาระ / มาตรฐาน",(u.strand_name||"-")+" · "+(u.standard_name||u.source_standard||"-"));
+    body+=label("ตัวชี้วัด",indicatorTextForUnit(u));
+    body+=label("เวลา / น้ำหนัก",(Number(u.hours)||0)+" ชั่วโมง · "+(Number(u.weight)||0)+"%");
+    body+=h2("สาระสำคัญ");body+=para(lu.concept||"-");
+    body+=h2("จุดประสงค์/ผลลัพธ์การเรียนรู้");body+=para(lu.objectives||"-");
+    body+=h2("สาระการเรียนรู้ K–S–A");
+    body+=table([
+      ["ด้าน","สาระ"],
+      ["K — ความรู้",lu.concept||u.name||"-"],
+      ["S — ทักษะ/กระบวนการ","อ่าน/คิด/สื่อสาร/ปฏิบัติ/สร้างชิ้นงานตามธรรมชาติของรายวิชาและตัวชี้วัด"],
+      ["A — เจตคติ/คุณลักษณะ","ใฝ่เรียนรู้ มีวินัย มุ่งมั่นในการทำงาน และรับผิดชอบต่อภาระงาน"]
+    ],[1900,6600],true);
+    body+=h2("ชิ้นงาน/ภาระงาน");body+=para("ภาระงานหรือชิ้นงานที่สะท้อนการบรรลุตัวชี้วัดของหน่วย และสามารถใช้เป็นหลักฐานการเรียนรู้ตามสภาพจริง");
+    body+=h2("การวัดและประเมินผล");body+=para(lu.assessment||"-");
+    if(i<structure.length-1)body+=pageBreak()
+  });
+
+  body+=pageBreak()+h1("6. แผนการจัดการเรียนรู้ฉบับเต็ม");
+  structure.forEach((u,i)=>{
+    const lu=unitLearning(u,i),unitH=Math.max(1,Math.round(Number(u.hours)||1));
+    const phase=allocateExactTotal(unitH,[1,3,1],unitH>=3?1:0);
+    body+=h2("แผนการจัดการเรียนรู้ที่ "+(i+1)+" เรื่อง "+(u.name||""));
+    body+=table([
+      ["ข้อมูล","รายละเอียด"],
+      ["รายวิชา / ชั้น",(c.name||"-")+" / "+(c.grade||"-")],
+      ["หน่วยการเรียนรู้","หน่วยที่ "+(i+1)+" "+(u.name||"-")],
+      ["เวลา",String(Number(u.hours)||0)+" ชั่วโมง"],
+      ["สาระ / มาตรฐาน",(u.strand_name||"-")+" · "+(u.standard_name||u.source_standard||"-")],
+      ["ตัวชี้วัด",indicatorTextForUnit(u)]
+    ],[2100,6400],true);
+    body+=h2("1) สาระสำคัญ/ความคิดรวบยอด");body+=para(lu.concept||"-");
+    body+=h2("2) จุดประสงค์การเรียนรู้");body+=para(lu.objectives||"-");
+    body+=h2("3) สาระการเรียนรู้");body+=para("ความรู้ (K): "+(lu.concept||u.name||"-")+"\nทักษะ/กระบวนการ (S): ปฏิบัติภาระงาน สื่อสาร คิดวิเคราะห์ และประยุกต์ใช้ตามตัวชี้วัด\nเจตคติ/คุณลักษณะ (A): ใฝ่เรียนรู้ มีวินัย รับผิดชอบ และมุ่งมั่นในการทำงาน");
+    body+=h2("4) สมรรถนะสำคัญของผู้เรียน");body+=para("ความสามารถในการสื่อสาร · การคิด · การแก้ปัญหา · การใช้ทักษะชีวิต · การใช้เทคโนโลยี (เลือกใช้ตามกิจกรรม)");
+    body+=h2("5) คุณลักษณะอันพึงประสงค์");body+=para("มีวินัย · ใฝ่เรียนรู้ · มุ่งมั่นในการทำงาน · มีจิตสาธารณะ (ปรับตามบริบทของหน่วย)");
+    body+=h2("6) กิจกรรมการเรียนรู้");
+    body+=table([
+      ["ขั้น","เวลา","แนวทางกิจกรรม"],
+      ["นำเข้าสู่การเรียนรู้",String(phase[0]||0)+" ชม.","เชื่อมโยงประสบการณ์เดิม กระตุ้นความสนใจ ตั้งคำถามสำคัญ และแจ้งเป้าหมายการเรียนรู้"],
+      ["เรียนรู้/ลงมือปฏิบัติ",String(phase[1]||0)+" ชม.","ผู้เรียนสำรวจ อ่าน ฟัง พูด เขียน คิด วิเคราะห์ ปฏิบัติภาระงาน ทำงานเดี่ยว/คู่/กลุ่ม และสร้างหลักฐานการเรียนรู้ตามตัวชี้วัด"],
+      ["สรุปและสะท้อนผล",String(phase[2]||0)+" ชม.","ผู้เรียนสรุปองค์ความรู้ นำเสนอผลงาน สะท้อนการเรียนรู้ ครูให้ข้อมูลย้อนกลับ และเชื่อมโยงการนำไปใช้"]
+    ],[1700,900,5900],true);
+    body+=h2("7) สื่อ/แหล่งเรียนรู้");body+=para("หนังสือเรียน/ใบความรู้ · ใบงาน/ชิ้นงาน · สื่อดิจิทัลหรือภาพประกอบ · แหล่งเรียนรู้ในโรงเรียน/ชุมชนตามความเหมาะสม");
+    body+=h2("8) การวัดและประเมินผล");
+    body+=table([
+      ["สิ่งที่ประเมิน","วิธีการ","เครื่องมือ/หลักฐาน","เกณฑ์"],
+      ["ความรู้/ความเข้าใจ","คำถาม/แบบทดสอบ/การอธิบาย","คำตอบ แบบทดสอบ หรือบันทึกการเรียนรู้","ผ่านตามเกณฑ์ที่สถานศึกษากำหนด"],
+      ["ทักษะ/กระบวนการ","สังเกตการปฏิบัติและตรวจภาระงาน","แบบสังเกต ชิ้นงาน/ภาระงาน หรือ Rubric","คุณภาพตั้งแต่ระดับผ่านขึ้นไป"],
+      ["คุณลักษณะ","สังเกตพฤติกรรมระหว่างเรียน","แบบสังเกตพฤติกรรม","ผ่านตามเกณฑ์ที่กำหนด"]
+    ],[2100,1900,2500,1900],true);
+    body+=h2("9) การจัดการเรียนรู้ตามความแตกต่างระหว่างบุคคล");body+=para("จัดระดับความช่วยเหลือ/ความท้าทายตามความพร้อมของผู้เรียน ใช้สื่อหลายรูปแบบ ให้เวลาเพิ่มเติมหรือภาระงานเสริมตามความจำเป็น");
+    body+=h2("10) บันทึกหลังสอน");body+=para("ผลการจัดการเรียนรู้: ........................................................................................................................\nปัญหา/อุปสรรค: .................................................................................................................................\nแนวทางแก้ไข/พัฒนาครั้งต่อไป: .............................................................................................................");
+    body+=h2("11) ลงชื่อและการรับรอง");body+=para("ลงชื่อ ........................................................ ผู้สอน      วันที่ ........../........../..........\nลงชื่อ ........................................................ ผู้ตรวจ/ผู้บริหาร  วันที่ ........../........../..........");
+    if(i<structure.length-1)body+=pageBreak()
+  });
+
+  body+=pageBreak()+h1("7. การวัดและประเมินผลรายวิชา");
+  const assess=c.assessments?.items||[];
+  if(assess.length){
+    body+=table([["ลำดับ","รายการ","ประเภท","รายละเอียด"]].concat(assess.map((a,i)=>[String(i+1),a.title||"การประเมิน",a.type||"-",a.blueprint?String(typeof a.blueprint==="string"?a.blueprint:"มี Blueprint"):(a.prompt?"มี Prompt/ข้อกำหนด":"-")])),[650,2600,1600,3650],true)
+  }else{
+    body+=para("ยังไม่มีแบบประเมิน/แบบทดสอบที่บันทึกไว้ในรายวิชา");
+  }
+
+  body+=pageBreak()+h1("8. ภาคผนวกสำหรับครู");
+  body+=para("รายการสื่อและตัวช่วยที่สามารถสร้างต่อจากระบบ: ใบงาน · ใบความรู้ · แบบทดสอบพร้อมเฉลย · Rubric · เกมการเรียนรู้ · บัตรภาพ/สื่อประกอบ · Teaching Pack");
+  body+=para("หมายเหตุ: เอกสารนี้สร้างจากข้อมูลหลักสูตรและข้อมูลที่ครูบันทึกในระบบ ครูควรตรวจสอบให้สอดคล้องกับหลักสูตรสถานศึกษา ปฏิทินโรงเรียน และบริบทของผู้เรียนก่อนนำไปใช้จริง",{size:27,color:"52677A"});
+
+  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="850" w:right="850" w:bottom="850" w:left="850"/></w:sectPr></w:body></w:document>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="TH Sarabun New" w:hAnsi="TH Sarabun New" w:eastAsia="TH Sarabun New"/><w:lang w:val="th-TH" w:eastAsia="th-TH"/><w:noProof/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:lang w:val="th-TH" w:eastAsia="th-TH"/><w:noProof/></w:rPr></w:style></w:styles>';
+  const settings='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:proofState w:spelling="clean" w:grammar="clean"/><w:defaultTabStop w:val="720"/><w:compat/></w:settings>';
+  return zipStored([
+    ["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/></Types>'],
+    ["_rels/.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+    ["word/document.xml",doc],
+    ["word/styles.xml",styles],
+    ["word/settings.xml",settings],
+    ["word/_rels/document.xml.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/></Relationships>']
+  ])
+}
+
 function saveBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
 function textPagesToJpegs(text){const W=1240,H=1754,M=96,MAX=W-M*2,lh=42,te=document.createElement("canvas"),ctx=te.getContext("2d");te.width=W;te.height=H;ctx.font='28px Tahoma, Arial, sans-serif';const logical=[];for(const raw of String(text||"").split(/\r?\n/)){if(raw==="[[PAGE_BREAK]]"){logical.push("__KLANG_PAGE_BREAK__");continue}if(!raw){logical.push("");continue}let line="";for(const ch of raw){const t=line+ch;if(ctx.measureText(t).width>MAX&&line){logical.push(line);line=ch}else line=t}logical.push(line)}const per=Math.floor((H-M*2)/lh),pageLines=[[]];for(const line of logical){const cur=pageLines[pageLines.length-1];if(line==="__KLANG_PAGE_BREAK__"){if(cur.length)pageLines.push([]);continue}if(cur.length>=per)pageLines.push([]);pageLines[pageLines.length-1].push(line)}const pages=[];for(const pageChunk of pageLines){if(!pageChunk.length)continue;const c=document.createElement("canvas"),x=c.getContext("2d");c.width=W;c.height=H;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#111";x.textBaseline="top";let y=M;pageChunk.forEach((line,j)=>{x.font=(/^(คลังแผนการสอนหน้าเดียว|ชุดเอกสารรายวิชา|\d+\.\s)/.test(line)?'bold 30px':'28px')+' Tahoma, Arial, sans-serif';x.fillText(line,M,y,MAX);y+=lh});const b64=c.toDataURL("image/jpeg",.9).split(",")[1],bin=atob(b64),bytes=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);pages.push({bytes,w:W,h:H})}return pages}
 function makePdfBlob(text){const imgs=textPagesToJpegs(text),te=new TextEncoder(),parts=[],offsets=[0];let len=0;const add=x=>{const b=typeof x==="string"?te.encode(x):x;parts.push(b);len+=b.length};add("%PDF-1.4\n%KLANG\n");const pageObjs=[],imgObjs=[],contentObjs=[];let next=3;for(let i=0;i<imgs.length;i++){pageObjs.push(next++);imgObjs.push(next++);contentObjs.push(next++)}const total=next-1;const obj=(n,body)=>{offsets[n]=len;add(`${n} 0 obj\n`);add(body);add("\nendobj\n")};obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,`<< /Type /Pages /Count ${imgs.length} /Kids [${pageObjs.map(n=>n+" 0 R").join(" ")}] >>`);imgs.forEach((im,i)=>{obj(pageObjs[i],`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im${i+1} ${imgObjs[i]} 0 R >> >> /Contents ${contentObjs[i]} 0 R >>`);offsets[imgObjs[i]]=len;add(`${imgObjs[i]} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`);add(im.bytes);add("\nendstream\nendobj\n");const stream=`q\n595.28 0 0 841.89 0 0 cm\n/Im${i+1} Do\nQ\n`;obj(contentObjs[i],`<< /Length ${te.encode(stream).length} >>\nstream\n${stream}endstream`)});const xref=len;add(`xref\n0 ${total+1}\n0000000000 65535 f \n`);for(let i=1;i<=total;i++)add(String(offsets[i]||0).padStart(10,"0")+" 00000 n \n");add(`trailer\n<< /Size ${total+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);return new Blob(parts,{type:"application/pdf"})}
@@ -2126,7 +2315,7 @@ async function makePdfBlobBranded(text,logoUrl,teacherUrl,styleKey="clean"){
 function markDocumentsReady(type){if(activeCourseIndex==null)return;const rows=courseDrafts(),c=rows[activeCourseIndex];if(!c)return;c.documents={...(c.documents||{}),saved_at:new Date().toISOString(),last_export:type,version:Number(c.documents?.version||0)+1};rows[activeCourseIndex]=c;writeCourseDrafts(rows);renderCourses();$("courseDocumentsStatus").innerHTML=`<div class="indicator-preview">สร้างไฟล์ ${type.toUpperCase()} แล้ว ✓ ขั้นที่ 8 สำเร็จ</div>`}
 function openCourseDocuments(i){const c=courseDrafts()[i];if(!c)return;const quality=courseQuality(c);if(!quality.ready){openCourseReadiness(i);toast("ตรวจพบข้อมูลที่ควรทำให้ครบก่อนส่งออก");return}activeCourseIndex=i;$("courseDocumentsMeta").textContent=`${c.name} · ${c.grade} · ภาคเรียน ${c.semester}/${c.year}`;const text=courseDocumentText(c);$("courseDocumentPreview").textContent=text;$("courseDocumentsStatus").innerHTML=c.documents?.saved_at?'<div class="indicator-preview">เอกสารเคยถูกสร้างแล้ว ✓ สามารถดาวน์โหลดเวอร์ชันใหม่ได้</div>':"";$("courseDocumentsModal").hidden=false}
 function closeCourseDocuments(){$("courseDocumentsModal").hidden=true;activeCourseIndex=null}
-function downloadCourseDocx(){const c=courseDrafts()[activeCourseIndex];if(!c)return;saveBlob(makeDocxBlob(c.name,courseDocumentText(c)),safeFilename(`${c.name}-${c.grade}-${c.year}`)+".docx");markDocumentsReady("docx")}
+function downloadCourseDocx(){const c=courseDrafts()[activeCourseIndex];if(!c)return;saveBlob(makeCourseDocxBlob(c),safeFilename(`${c.name}-${c.grade}-${c.year}-ฉบับเต็ม`)+".docx");markDocumentsReady("docx")}
 function downloadCoursePdf(){const c=courseDrafts()[activeCourseIndex];if(!c)return;saveBlob(makePdfBlob(courseDocumentText(c)),safeFilename(`${c.name}-${c.grade}-${c.year}`)+".pdf");markDocumentsReady("pdf")}
 function downloadWord(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(makeDocxBlobBranded(plan.title||"แผนการจัดการเรียนรู้",text,profile?.school_logo_url,profile?.teacher_photo_url||profile?.avatar_url),safeFilename(plan.title||"klang-plan")+".docx")}
 async function printPlanPdf(plan){const text=[plan.title||"แผนการจัดการเรียนรู้","",plan.prompt_text||"",plan.reflection_text?"\nบันทึกหลังสอน\n"+plan.reflection_text:""].join("\n");saveBlob(await makePdfBlobBranded(text,profile?.school_logo_url,profile?.teacher_photo_url||profile?.avatar_url),safeFilename(plan.title||"klang-plan")+".pdf")}
