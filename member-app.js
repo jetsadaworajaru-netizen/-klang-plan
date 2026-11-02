@@ -1925,7 +1925,7 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>{autoSizeUnitNameField(x);x.oninput=()=>{autoSizeUnitNameField(x);updateStructureTotal()}});
-  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
+  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
   bindStructureEditorControls();
   updateStructureTotal()
 }
@@ -1938,7 +1938,7 @@ function structureGroupUnitIndexes(units,groupStrand){
 }
 function addStructureUnitToGroup(groupNo){
   const units=structureEditorUnitsSnapshot();
-  const strandInput=$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===String(groupNo));
+  const strandInput=$$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===String(groupNo));
   const strandName=String(strandInput?.value||"สาระการเรียนรู้").trim()||"สาระการเรียนรู้";
   let insertAt=units.length,template=null;
   for(let i=0;i<units.length;i++){
@@ -1960,15 +1960,15 @@ function addStructureUnitToGroup(groupNo){
   renderStructureEditor(units);
   recalculateStructureWeights();
   updateStructureTotal();
-  const rows=$('#courseStructureList [data-unit-row]');
+  const rows=$$('#courseStructureList [data-unit-row]');
   rows[insertAt]?.querySelector('[data-unit-name]')?.focus();
 }
 function deleteStructureUnit(row){
   const units=structureEditorUnitsSnapshot();
-  const idx=$('#courseStructureList [data-unit-row]').indexOf(row);
+  const idx=$$('#courseStructureList [data-unit-row]').indexOf(row);
   if(idx<0)return;
   const strand=row.dataset.strandGroup;
-  const sameGroup=$('#courseStructureList [data-unit-row]').filter(x=>x.dataset.strandGroup===strand);
+  const sameGroup=$$('#courseStructureList [data-unit-row]').filter(x=>x.dataset.strandGroup===strand);
   if(sameGroup.length<=1){
     toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");
     return
@@ -1980,7 +1980,7 @@ function deleteStructureUnit(row){
 }
 function moveStructureUnit(row,direction){
   const units=structureEditorUnitsSnapshot();
-  const rows=$('#courseStructureList [data-unit-row]');
+  const rows=$$('#courseStructureList [data-unit-row]');
   const idx=rows.indexOf(row);
   if(idx<0)return;
   const strandName=units[idx]?.strand_name;
@@ -1995,9 +1995,9 @@ function moveStructureUnit(row,direction){
   updateStructureTotal();
 }
 function bindStructureEditorControls(){
-  $('#courseStructureList [data-add-unit-group]').forEach(btn=>btn.onclick=()=>addStructureUnitToGroup(btn.dataset.addUnitGroup));
-  $('#courseStructureList [data-delete-unit]').forEach(btn=>btn.onclick=()=>deleteStructureUnit(btn.closest('[data-unit-row]')));
-  $('#courseStructureList [data-move-unit]').forEach(btn=>btn.onclick=()=>moveStructureUnit(btn.closest('[data-unit-row]'),btn.dataset.moveUnit));
+  $$('#courseStructureList [data-add-unit-group]').forEach(btn=>btn.onclick=()=>addStructureUnitToGroup(btn.dataset.addUnitGroup));
+  $$('#courseStructureList [data-delete-unit]').forEach(btn=>btn.onclick=()=>deleteStructureUnit(btn.closest('[data-unit-row]')));
+  $$('#courseStructureList [data-move-unit]').forEach(btn=>btn.onclick=()=>moveStructureUnit(btn.closest('[data-unit-row]'),btn.dataset.moveUnit));
 }
 function recalculateStructureWeights(){
   const rows=$$('#courseStructureList [data-unit-row]');
