@@ -616,6 +616,16 @@
     <button id="closeCourseDocumentsBtn" class="modal-close" type="button">×</button>
     <div class="workspace-modal-head"><div><h2>📄 ศูนย์เอกสารรายวิชา</h2><p id="courseDocumentsMeta"></p></div><span class="workspace-status">ขั้นที่ 8 · Final</span></div>
     <div class="doc-source-note">รวมข้อมูลที่ทำไว้ทั้งรายวิชาเป็นเอกสารชุดเดียว ดาวน์โหลดได้ทันทีแบบ Word จริง (.docx) และ PDF จริง โดยไม่ต้องเปิดเว็บภายนอก</div>
+    <div class="document-template-toolbar">
+      <label>รูปแบบเอกสาร Word
+        <select id="courseDocTemplate">
+          <option value="government">ราชการมาตรฐาน</option>
+          <option value="academic">วิชาการเข้ม</option>
+          <option value="minimal">มินิมอลพิมพ์ง่าย</option>
+        </select>
+      </label>
+      <small>ข้อมูลเหมือนกันทุกแบบ ต่างเฉพาะการจัดหน้าและสไตล์เอกสาร</small>
+    </div>
     <div class="document-export-grid">
       <button id="downloadCourseDocxBtn" class="document-export-btn" type="button"><b>📘 Word (.docx)</b><small>เปิดแก้ไขต่อใน Microsoft Word / Google Docs ได้</small></button>
       <button id="downloadCoursePdfBtn" class="document-export-btn" type="button"><b>📕 PDF</b><small>สร้างไฟล์ PDF ลงเครื่องโดยตรง</small></button>
