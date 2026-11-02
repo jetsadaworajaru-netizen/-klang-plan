@@ -73,12 +73,15 @@
 
   <main>
     <section id="tab-create" class="page active">
-      <div class="progress-tabs">
-        <button class="progress-pill active" data-scroll="step1">1 หลักสูตร</button>
-        <button class="progress-pill" data-scroll="step2">2 รายละเอียด</button>
-        <button class="progress-pill" data-scroll="step3">3 ผู้สอน</button>
-        <button class="progress-pill" data-scroll="step4">4 สไตล์</button>
-        <button class="progress-pill" data-scroll="step5">5 สร้าง</button>
+      <div class="progress-tabs progress-tabs-with-save">
+        <div class="progress-tabs-main">
+          <button class="progress-pill active" data-scroll="step1">1 หลักสูตร</button>
+          <button class="progress-pill" data-scroll="step2">2 รายละเอียด</button>
+          <button class="progress-pill" data-scroll="step3">3 ผู้สอน</button>
+          <button class="progress-pill" data-scroll="step4">4 สไตล์</button>
+          <button class="progress-pill" data-scroll="step5">5 สร้าง</button>
+        </div>
+        <button id="saveDraftPlanTopBtn" class="primary-btn quick-save-plan-btn" type="button">💾 บันทึกแผน</button>
       </div>
 
       <section id="step1" class="card">
