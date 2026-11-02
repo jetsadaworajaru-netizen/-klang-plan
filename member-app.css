@@ -748,3 +748,29 @@ button,
   .weekday-grid{grid-template-columns:1fr 1fr}
   .calendar-action-row{align-items:stretch;flex-direction:column}
 }
+
+
+/* Auto-calculated unit weight */
+.structure-weight-auto{
+  display:grid;
+  align-content:center;
+  gap:4px;
+  padding:8px 10px;
+  border:1px solid #dbe7f3;
+  border-radius:12px;
+  background:#f8fbff;
+}
+.structure-weight-auto span{
+  font-size:.72rem;
+  font-weight:800;
+  color:#6d8296;
+}
+.structure-weight-auto b{
+  font-size:1.05rem;
+  color:#2454d6;
+}
+.structure-weight-auto small{
+  font-size:.62rem;
+  line-height:1.3;
+  color:#8192a3;
+}
