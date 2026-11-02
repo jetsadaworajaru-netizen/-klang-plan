@@ -16,7 +16,7 @@ function memberRuntimeGuard(error){
 }
 window.addEventListener("error",e=>memberRuntimeGuard(e.error||new Error(e.message||"runtime error")));
 window.addEventListener("unhandledrejection",e=>memberRuntimeGuard(e.reason||new Error("promise rejected")));
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="none",planTeacherImageData="",planSchoolLogoSource="none",planSchoolLogoData="",planQrSource="none",planQrData="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="none",planTeacherImageData="",planSchoolLogoSource="none",planSchoolLogoData="",planQrSource="none",planQrData="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -977,10 +977,25 @@ async function copy(){
   }
 }
 async function saveWork(t){
-  const payload={user_id:user.id,title:v("topic")||selected?.indicator||"แผนการจัดการเรียนรู้",stage,grade:$("grade").value||null,subject:$("subject").value||null,domain:selected?.domain||null,standard:selected?.standard||null,indicator:selected?.indicator||null,indicator_text:selected?.indicator_text||null,unit_name:v("unitName")||null,topic:v("topic")||null,duration:v("duration")||null,method:v("method")||null,semester:$("semester")?.value||null,academic_year:v("academicYear")||null,teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,affiliation_type:$("affiliationType")?.value||"obec",organization:v("organization")||null,teacher_name:v("teacherName")||null,school_name:v("schoolName")||null,style,palette,prompt_text:t,status:"ready"};if(activeCourseLessonContext){const c=courseDrafts()[activeCourseLessonContext.courseIndex],u=c?.learning_units?.units?.[activeCourseLessonContext.unitIndex];if(c?._cloud_id)payload.course_id=c._cloud_id;if(u?._cloud_id)payload.unit_id=u._cloud_id}
-  const {data,error}=await sb.from("lesson_plans").insert(payload).select("*").single();
-  if(error){console.warn("cloud save",error);return null}
-  cloudPlans.unshift(data);if(activeCourseLessonContext){const rows=courseDrafts(),c=rows[activeCourseLessonContext.courseIndex];if(c){c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({type:"lesson_plan",unit_id:activeCourseLessonContext.unitClientId||null,lesson_plan_id:data.id,title:data.title,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[activeCourseLessonContext.courseIndex]=c;writeCourseDrafts(rows);renderCourses()}}renderWork();return data
+  const payload={user_id:user.id,title:v("topic")||selected?.indicator||"แผนการจัดการเรียนรู้",stage,grade:$("grade").value||null,subject:$("subject").value||null,domain:selected?.domain||null,standard:selected?.standard||null,indicator:selected?.indicator||null,indicator_text:selected?.indicator_text||null,unit_name:v("unitName")||null,topic:v("topic")||null,duration:v("duration")||null,method:v("method")||null,semester:$("semester")?.value||null,academic_year:v("academicYear")||null,teaching_date:$("includeTeachingDate")?.checked&&v("teachingDate")?v("teachingDate"):null,affiliation_type:$("affiliationType")?.value||"obec",organization:v("organization")||null,teacher_name:v("teacherName")||null,school_name:v("schoolName")||null,style,palette,prompt_text:t,status:"ready"};
+  if(activeCourseLessonContext){const c=courseDrafts()[activeCourseLessonContext.courseIndex],u=c?.learning_units?.units?.[activeCourseLessonContext.unitIndex];if(c?._cloud_id)payload.course_id=c._cloud_id;if(u?._cloud_id)payload.unit_id=u._cloud_id}
+  let data,error;
+  if(editingPlanId){
+    ({data,error}=await sb.from("lesson_plans").update(payload).eq("id",editingPlanId).eq("user_id",user.id).select("*").single());
+  }else{
+    ({data,error}=await sb.from("lesson_plans").insert(payload).select("*").single());
+  }
+  if(error){console.warn("cloud save",error);toast("บันทึกแผนไม่สำเร็จ");return null}
+  if(editingPlanId){
+    const idx=cloudPlans.findIndex(x=>x.id===data.id);if(idx>=0)cloudPlans[idx]=data;else cloudPlans.unshift(data);
+    editingPlanId=null;
+    if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้";
+    toast("บันทึกการแก้ไขแผนแล้ว ✓");
+  }else{
+    cloudPlans.unshift(data);
+    if(activeCourseLessonContext){const rows=courseDrafts(),c=rows[activeCourseLessonContext.courseIndex];if(c){c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({type:"lesson_plan",unit_id:activeCourseLessonContext.unitClientId||null,lesson_plan_id:data.id,title:data.title,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[activeCourseLessonContext.courseIndex]=c;writeCourseDrafts(rows);renderCourses()}}
+  }
+  renderWork();return data
 }
 async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;renderAiAttachmentKit();ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
@@ -1018,7 +1033,70 @@ async function loadCloudPlans(){
   if(!sb||!user)return;const {data,error}=await sb.from("lesson_plans").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200);if(error){console.warn(error);return}cloudPlans=data||[];populatePlanFilters();renderWork()
 }
 function populatePlanFilters(){const grades=unique(cloudPlans.map(x=>x.grade)),subjects=unique(cloudPlans.map(x=>x.subject)),g=$("planGradeFilter"),s=$("planSubjectFilter");if(!g||!s)return;g.innerHTML='<option value="">ทุกชั้น</option>'+grades.map(x=>`<option>${esc(x)}</option>`).join("");s.innerHTML='<option value="">ทุกวิชา</option>'+subjects.map(x=>`<option>${esc(x)}</option>`).join("")}
-function renderWork(){const wrap=$("workList");if(!wrap)return;const q=($("planSearch")?.value||"").toLowerCase().trim(),g=$("planGradeFilter")?.value||"",s=$("planSubjectFilter")?.value||"";const rows=cloudPlans.filter(x=>(!g||x.grade===g)&&(!s||x.subject===s)&&(!q||[x.title,x.topic,x.unit_name,x.indicator,x.indicator_text,x.subject,x.grade].some(v=>String(v||"").toLowerCase().includes(q))));$("cloudPlanCount").textContent=cloudPlans.length;$("reflectionCount").textContent=cloudPlans.filter(x=>x.reflection_text?.trim()).length;const now=new Date();$("thisMonthPlanCount").textContent=cloudPlans.filter(x=>{const d=new Date(x.created_at);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;wrap.innerHTML=rows.map(x=>`<article class="plan-workspace-item"><div class="plan-workspace-main"><span class="plan-doc-icon">📘</span><div><b>${esc(x.title)}</b><small>${esc(x.grade||"")} · ${esc(x.subject||"")} · ${esc(x.indicator||"")}</small><em>${esc(x.unit_name||"")}${x.updated_at?` · แก้ไขล่าสุด ${new Date(x.updated_at).toLocaleDateString("th-TH")}`:""}</em></div></div><div class="plan-workspace-right">${x.reflection_text?'<span class="reflection-badge">มีบันทึกหลังสอน</span>':""}<button type="button" class="secondary-btn" data-open-cloud-plan="${x.id}">เปิด</button></div></article>`).join("")||'<div class="list-item">ยังไม่มีแผนที่บันทึกไว้</div>';$$('[data-open-cloud-plan]').forEach(b=>b.onclick=()=>openWorkspacePlan(b.dataset.openCloudPlan))}
+function renderWork(){
+  const wrap=$("workList");if(!wrap)return;
+  const q=($("planSearch")?.value||"").toLowerCase().trim(),g=$("planGradeFilter")?.value||"",s=$("planSubjectFilter")?.value||"";
+  const rows=cloudPlans.filter(x=>(!g||x.grade===g)&&(!s||x.subject===s)&&(!q||[x.title,x.topic,x.unit_name,x.indicator,x.indicator_text,x.subject,x.grade].some(v=>String(v||"").toLowerCase().includes(q))));
+  $("cloudPlanCount").textContent=cloudPlans.length;
+  $("reflectionCount").textContent=cloudPlans.filter(x=>x.reflection_text?.trim()).length;
+  const now=new Date();
+  $("thisMonthPlanCount").textContent=cloudPlans.filter(x=>{const d=new Date(x.created_at);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+  wrap.innerHTML=rows.map(x=>`<article class="plan-workspace-item">
+    <div class="plan-workspace-main"><span class="plan-doc-icon">📘</span><div><b>${esc(x.title)}</b><small>${esc(x.grade||"")} · ${esc(x.subject||"")} · ${esc(x.indicator||"")}</small><em>${esc(x.unit_name||"")}${x.updated_at?` · แก้ไขล่าสุด ${new Date(x.updated_at).toLocaleDateString("th-TH")}`:""}</em></div></div>
+    <div class="plan-workspace-right">
+      ${x.reflection_text?'<span class="reflection-badge">มีบันทึกหลังสอน</span>':""}
+      <div class="plan-workspace-actions">
+        <button type="button" class="secondary-btn" data-open-cloud-plan="${x.id}">เปิด</button>
+        <button type="button" class="secondary-btn" data-edit-cloud-plan="${x.id}">✏️ แก้ไข</button>
+        <button type="button" class="danger-btn" data-delete-cloud-plan="${x.id}">🗑️ ลบ</button>
+      </div>
+    </div>
+  </article>`).join("")||'<div class="list-item">ยังไม่มีแผนที่บันทึกไว้</div>';
+  $$('[data-open-cloud-plan]').forEach(b=>b.onclick=()=>openWorkspacePlan(b.dataset.openCloudPlan));
+  $$('[data-edit-cloud-plan]').forEach(b=>b.onclick=()=>editCloudPlan(b.dataset.editCloudPlan));
+  $$('[data-delete-cloud-plan]').forEach(b=>b.onclick=()=>deleteCloudPlanById(b.dataset.deleteCloudPlan))
+}
+function editCloudPlan(id){
+  const p=cloudPlans.find(x=>x.id===id);if(!p)return;
+  editingPlanId=p.id;activeCourseLessonContext=null;
+  switchTab("create");
+  stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
+  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  buildGrades();
+  if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
+  if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
+  const match=DATA.findIndex(x=>x.indicator===p.indicator&&x.subject===p.subject&&recordMatchesGrade(x,p.grade));
+  if(match>=0&&$("indicator")){const opt=[...$("indicator").options].find(o=>o.value===String(match));if(opt){$("indicator").value=String(match);selected=DATA[match]}}
+  if(selected)$("indicatorPreview").innerHTML=`<b>${esc(selected.indicator||selected.standard||"")}</b><br>${esc(selected.indicator_text||"")}<br><small>${esc(selected.classification||"")}</small>`;
+  if($("unitName"))$("unitName").value=p.unit_name||"";
+  if($("topic"))$("topic").value=p.topic||p.title||"";
+  setDurationValue(p.duration||autoDurationByGrade(p.grade,p.subject));
+  if($("method")&&p.method)$("method").value=p.method;
+  if($("semester"))$("semester").value=p.semester||"";
+  if($("academicYear"))$("academicYear").value=p.academic_year||"";
+  if($("teachingDate"))$("teachingDate").value=p.teaching_date||"";
+  if($("includeTeachingDate"))$("includeTeachingDate").checked=!!p.teaching_date;
+  if($("affiliationType")&&p.affiliation_type)$("affiliationType").value=p.affiliation_type;
+  if($("organization"))$("organization").value=p.organization||"";
+  if($("teacherName"))$("teacherName").value=p.teacher_name||profile?.full_name||"";
+  if($("schoolName"))$("schoolName").value=p.school_name||profile?.school_name||"";
+  if(p.style&&styleMeta[p.style])style=p.style;
+  if(p.palette&&palettes.includes(p.palette))palette=p.palette;
+  renderStyles();renderAffiliation();updateSummary();
+  if($("generateBtn"))$("generateBtn").textContent="💾 บันทึกการแก้ไขแผน";
+  $("step2")?.scrollIntoView({behavior:"smooth",block:"start"});
+  toast("เปิดแผนสำหรับแก้ไขแล้ว ✓")
+}
+async function deleteCloudPlanById(id){
+  const p=cloudPlans.find(x=>x.id===id);if(!p||!sb||!user)return;
+  if(!confirm(`ลบ “${p.title||"แผนการจัดการเรียนรู้"}” หรือไม่?\nการลบนี้ไม่สามารถย้อนกลับได้`))return;
+  const {error}=await sb.from("lesson_plans").delete().eq("id",id).eq("user_id",user.id);
+  if(error){toast("ลบแผนไม่สำเร็จ");console.warn(error);return}
+  cloudPlans=cloudPlans.filter(x=>x.id!==id);
+  if(activeWorkspacePlan?.id===id){activeWorkspacePlan=null;closeWorkspacePlan()}
+  if(editingPlanId===id){editingPlanId=null;if($("generateBtn"))$("generateBtn").textContent="✨ สร้าง Prompt แผนการจัดการเรียนรู้"}
+  populatePlanFilters();renderWork();toast("ลบแผนแล้ว ✓")
+}
 function openWorkspacePlan(id){activeWorkspacePlan=cloudPlans.find(x=>x.id===id);if(!activeWorkspacePlan)return;$("workspacePlanTitle").textContent=activeWorkspacePlan.title||"แผนการจัดการเรียนรู้";$("workspacePlanMeta").textContent=[activeWorkspacePlan.grade,activeWorkspacePlan.subject,activeWorkspacePlan.indicator].filter(Boolean).join(" · ");$("workspacePromptText").textContent=activeWorkspacePlan.prompt_text||"";$("workspaceReflection").value=activeWorkspacePlan.reflection_text||"";$("workspacePlanStatus").textContent=activeWorkspacePlan.reflection_text?"สอนแล้ว / มี Reflection":"พร้อมใช้";$("planWorkspaceModal").hidden=false}
 function closeWorkspacePlan(){$("planWorkspaceModal").hidden=true}
 function workspaceContinuation(type){if(!activeWorkspacePlan)return;const intro={worksheet:"สร้างใบงานจากแผนนี้ พร้อมคำชี้แจง พื้นที่ตอบ และเฉลย",quiz:"สร้างแบบทดสอบจากแผนนี้ พร้อมเฉลย",game:"สร้างเกมการเรียนรู้จากแผนนี้ พร้อมกติกา คำถาม เฉลย และแพลตฟอร์มที่เหมาะ",pack:"สร้าง Teaching Pack จากแผนนี้ ประกอบด้วย ใบความรู้ ใบงาน แบบทดสอบ Rubric และเกม"};switchTab("create");$("promptText").textContent=`${intro[type]||"สร้างสื่อการสอนต่อจากแผนนี้"}
@@ -1038,7 +1116,7 @@ function nextPlanFromActive(){
   const p=activeWorkspacePlan;if(!p)return;
   switchTab("create");
   stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
-  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
+  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
   if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
   if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
   const match=DATA.findIndex(x=>x.indicator===p.indicator&&x.subject===p.subject&&recordMatchesGrade(x,p.grade));
@@ -1056,7 +1134,7 @@ function nextPlanFromActive(){
 function legacyDownloadWord(plan){const body=`<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Tahoma,Arial;line-height:1.6;padding:24px}pre{white-space:pre-wrap;font-family:Tahoma,Arial}</style></head><body><h1>${esc(plan.title||"แผนการจัดการเรียนรู้")}</h1><pre>${esc(plan.prompt_text||"")}</pre>${plan.reflection_text?`<h2>บันทึกหลังสอน</h2><p>${esc(plan.reflection_text)}</p>`:""}</body></html>`;const blob=new Blob(["\ufeff",body],{type:"application/msword;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(plan.title||"klang-plan")+".doc";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function legacyPrintPlanPdf(plan){const w=window.open("","_blank");if(!w)return toast("เบราว์เซอร์ปิดกั้นหน้าต่าง");w.document.write(`<html><head><meta charset="utf-8"><style>body{font-family:Arial;padding:28px;line-height:1.65}pre{white-space:pre-wrap}</style></head><body><h2>${esc(plan.title||"แผนการจัดการเรียนรู้")}</h2><pre>${esc(plan.prompt_text||"")}</pre>${plan.reflection_text?`<h3>บันทึกหลังสอน</h3><p>${esc(plan.reflection_text)}</p>`:""}<script>setTimeout(()=>print(),250)<\/script></body></html>`);w.document.close()}
 async function saveReflection(){if(!activeWorkspacePlan)return;const text=$("workspaceReflection").value.trim();const {data,error}=await sb.from("lesson_plans").update({reflection_text:text||null}).eq("id",activeWorkspacePlan.id).select("*").single();if(error)return $("reflectionStatus").innerHTML=`<div class="error-box">${esc(error.message)}</div>`;const i=cloudPlans.findIndex(x=>x.id===data.id);if(i>=0)cloudPlans[i]=data;activeWorkspacePlan=data;$("reflectionStatus").innerHTML='<div class="indicator-preview">บันทึกหลังสอนแล้ว ✓</div>';renderWork()}
-async function deleteCloudPlan(){if(!activeWorkspacePlan||!confirm(`ลบ “${activeWorkspacePlan.title}” หรือไม่?`))return;const {error}=await sb.from("lesson_plans").delete().eq("id",activeWorkspacePlan.id);if(error)return toast(error.message);cloudPlans=cloudPlans.filter(x=>x.id!==activeWorkspacePlan.id);closeWorkspacePlan();renderWork();toast("ลบแผนแล้ว")}
+async function deleteCloudPlan(){if(!activeWorkspacePlan)return;await deleteCloudPlanById(activeWorkspacePlan.id)}
 
 function updateLibraryFilters(){
   const stageEl=$("libraryStage"),gradeEl=$("libraryGrade"),subjectEl=$("librarySubject");
@@ -1103,7 +1181,7 @@ function renderLibrary(rows){
 function useLibraryIndicator(){
   if(!librarySelected)return;
   stage=librarySelected.stage;
-  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
   const preferredGrade=$("libraryGrade")?.value||recordGrades(librarySelected)[0]||librarySelected.grade;
   buildGrades();
   $("grade").value=preferredGrade;buildSubjects();
