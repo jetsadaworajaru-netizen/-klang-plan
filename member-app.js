@@ -1038,7 +1038,7 @@ function nextPlanFromActive(){
   const p=activeWorkspacePlan;if(!p)return;
   switchTab("create");
   stage=p.stage||(String(p.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(p.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย");
-  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
+  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));buildGrades();
   if($("grade")){$("grade").value=p.grade||"";buildSubjects()}
   if($("subject")){$("subject").value=p.subject||"";buildIndicators()}
   const match=DATA.findIndex(x=>x.indicator===p.indicator&&x.subject===p.subject&&recordMatchesGrade(x,p.grade));
@@ -1103,7 +1103,7 @@ function renderLibrary(rows){
 function useLibraryIndicator(){
   if(!librarySelected)return;
   stage=librarySelected.stage;
-  $$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  $$$(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
   const preferredGrade=$("libraryGrade")?.value||recordGrades(librarySelected)[0]||librarySelected.grade;
   buildGrades();
   $("grade").value=preferredGrade;buildSubjects();
@@ -1653,8 +1653,8 @@ function saveCourseStructure(){
 
 function closeTeachingSchedule(){$("teachingScheduleModal").hidden=true;activeCourseIndex=null}
 function autoTeachingSchedule(c){const units=c.course_structure?.units||[];let week=1;const out=[];for(let ui=0;ui<units.length;ui++){const u=units[ui],h=Math.max(0,Number(u.hours)||0),strand=u.strand_name||u.strand_base||"",codes=u.source_indicator_codes||[];if(!h){out.push({week:week++,unit_index:ui,strand_name:strand,unit_name:u.name,topic:u.name,hours:0,indicator_ids:u.indicator_ids||[],indicator_codes:codes});continue}let remaining=h;while(remaining>0){const block=Math.min(2,remaining);out.push({week:week++,unit_index:ui,strand_name:strand,unit_name:u.name,topic:remaining===h?u.name:`${u.name} (ต่อ)`,hours:block,indicator_ids:u.indicator_ids||[],indicator_codes:codes});remaining-=block}}return out}
-function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ"><input data-schedule-hours type="number" min="0" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()}
-function readTeachingSchedule(){return $('#teachingScheduleList [data-schedule-row]').map((row,i)=>{let ids=[],codes=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}try{codes=JSON.parse(row.dataset.indicatorCodes||"[]")}catch{}return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,strand_name:row.dataset.strandName||"",unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids,indicator_codes:codes}})}
+function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ"><input data-schedule-hours type="number" min="0" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';$$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()}
+function readTeachingSchedule(){return $$('#teachingScheduleList [data-schedule-row]').map((row,i)=>{let ids=[],codes=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}try{codes=JSON.parse(row.dataset.indicatorCodes||"[]")}catch{}return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,strand_name:row.dataset.strandName||"",unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids,indicator_codes:codes}})}
 function updateScheduleTotal(){const rows=readTeachingSchedule(),hours=rows.reduce((s,x)=>s+x.hours,0);$("teachingScheduleTotal").innerHTML=`รวม <b>${rows.length} ช่วงการสอน</b> · <b>${hours} ชั่วโมง</b>`}
 function openTeachingSchedule(i){
   const rows=courseDrafts();
@@ -2468,7 +2468,7 @@ function bind(){
     syncCourseQuickFields();
   });
 
-  $(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
+  $$(".stage-btn").forEach(b=>b.onclick=()=>{stage=b.dataset.stage;$$(".stage-btn").forEach(x=>x.classList.toggle("active",x===b));buildGrades();syncAutoDuration();updateSummary()});
   $("grade").onchange=()=>{buildSubjects();syncAutoDuration()};$("subject").onchange=()=>{buildIndicators();syncAutoDuration()};$("indicatorSearch").oninput=buildIndicators;$("indicator").onchange=chooseIndicator;
   ["unitName","topic","duration","method","semester","academicYear","teachingDate","teacherName","teacherPosition","schoolName","organization","province","studentCount","teacherSignatureName","directorName","directorPosition","approvalLayout","customStyleDirection","customAffiliationNote"].forEach(id=>{const el=$(id);if(!el)return;const refresh=()=>{
   if(id==="unitName"&&$("unitName").value.trim()!==autoUnitValue)autoUnitValue="";
