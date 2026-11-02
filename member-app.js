@@ -1796,18 +1796,41 @@ function renderStructureEditor(units){
         <label class="structure-range-field">ชั่วโมง <b data-hours-value>${Number(u.hours)||0}</b>
           <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
         </label>
-        <label class="structure-range-field">น้ำหนัก <b data-weight-value>${Number(u.weight)||0}%</b>
-          <input data-unit-weight type="range" min="0" max="100" step="1" value="${Number(u.weight)||0}">
-        </label>
+        <div class="structure-range-field structure-weight-auto">
+          <span>น้ำหนักอัตโนมัติ</span>
+          <b data-weight-value>${Number(u.weight)||0}%</b>
+          <small>คำนวณจากชั่วโมงของหน่วย ÷ ชั่วโมงรวมรายวิชา</small>
+          <input data-unit-weight type="hidden" value="${Number(u.weight)||0}">
+        </div>
       </div>
     </article>`;
   });
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>x.oninput=updateStructureTotal);
-  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;updateStructureTotal()});
-  $$('#courseStructureList [data-unit-weight]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-weight-value]").textContent=x.value+"%";updateStructureTotal()});
+  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest("label").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
   updateStructureTotal()
+}
+function recalculateStructureWeights(){
+  const rows=$('#courseStructureList [data-unit-row]');
+  const c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex];
+  const target=Math.max(0,Number(c?.hours)||rows.reduce((s,row)=>s+(Number(row.querySelector('[data-unit-hours]')?.value)||0),0));
+  const hours=rows.map(row=>Math.max(0,Number(row.querySelector('[data-unit-hours]')?.value)||0));
+  const totalHours=hours.reduce((a,b)=>a+b,0);
+  if(!rows.length)return;
+  let weights;
+  if(target>0 && Math.abs(totalHours-target)<.01){
+    weights=allocateExactTotal(100,hours,0)
+  }else if(totalHours>0){
+    weights=allocateExactTotal(100,hours,0)
+  }else{
+    weights=Array(rows.length).fill(0)
+  }
+  rows.forEach((row,i)=>{
+    const inp=row.querySelector('[data-unit-weight]'),out=row.querySelector('[data-weight-value]');
+    if(inp)inp.value=weights[i]||0;
+    if(out)out.textContent=(weights[i]||0)+"%"
+  })
 }
 function readStructureEditor(){
   const strandMap=new Map();
@@ -1873,7 +1896,7 @@ function ensureCurriculumStructureCurrent(rows,i){
   writeCourseDrafts(rows);
   return {course:c,repaired:true}
 }
-function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนัก <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับตัวเลื่อนให้ผลรวมตรง"}</span>`}
+function updateStructureTotal(){const u=readStructureEditor(),h=u.reduce((s,x)=>s+x.hours,0),w=u.reduce((s,x)=>s+x.weight,0),c=activeCourseIndex===null?null:courseDrafts()[activeCourseIndex],target=Number(c?.hours||0);const okW=w===100,okH=!target||h===target;$("courseStructureTotal").innerHTML=`รวม <b>${h} ชั่วโมง</b>${target?` / เป้าหมาย ${target}`:""} · น้ำหนักอัตโนมัติ <b>${w}%</b> <span class="${okH&&okW?"structure-total-ok":"structure-total-warn"}">${okH&&okW?"✓ พร้อมบันทึก":"ปรับเฉพาะชั่วโมงให้ผลรวมตรง"}</span>`}
 function repairLegacyCourseHours(rows,i){
   const c=rows?.[i];
   if(!c)return {course:c,repaired:false};
