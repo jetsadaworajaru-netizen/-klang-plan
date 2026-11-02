@@ -1882,7 +1882,7 @@ function renderStructureEditor(units){
       html+=`<section class="structure-strand-card" data-strand-group="${areaNo}">
         <div class="structure-strand-badge">${esc(areaLabel)} ${areaNo}</div>
         <label>ชื่อ${esc(areaLabel)} (แก้ได้)<input data-strand-name data-strand-group-input="${areaNo}" value="${esc(area)}"></label>
-        <button type="button" class="structure-add-unit-btn" data-add-unit-group="${areaNo}">＋ เพิ่มหน่วย</button>
+        <button type="button" class="structure-add-unit-btn" data-structure-action="add" data-strand-group-action="${areaNo}">＋ เพิ่มหน่วย</button>
       </section>`;
       lastArea=area;
     }
@@ -1899,10 +1899,10 @@ function renderStructureEditor(units){
           <b>หน่วยการเรียนรู้: ${esc(u.base_name||u.name||`หน่วยที่ ${unitNo}`)}</b>
           <small><span class="structure-book-icon">▣</span> ${u.source_indicator_codes?.length?esc(u.source_indicator_codes.join(", "))+" · ":""}${u.indicator_ids?.length||0} ตัวชี้วัด/ผลลัพธ์</small>
         </div>
-        <div class="structure-unit-actions" aria-label="จัดการหน่วย">
-          <button type="button" data-move-unit="up" title="เลื่อนขึ้น">↑</button>
-          <button type="button" data-move-unit="down" title="เลื่อนลง">↓</button>
-          <button type="button" data-delete-unit class="danger" title="ลบหน่วย">ลบ</button>
+        <div class="structure-unit-actions">
+          <button type="button" data-structure-action="up" title="เลื่อนขึ้น">↑</button>
+          <button type="button" data-structure-action="down" title="เลื่อนลง">↓</button>
+          <button type="button" data-structure-action="delete" class="danger" title="ลบหน่วย">ลบ</button>
         </div>
       </div>
       <div class="structure-edit-grid structure-slider-grid">
@@ -1925,79 +1925,80 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>{autoSizeUnitNameField(x);x.oninput=()=>{autoSizeUnitNameField(x);updateStructureTotal()}});
-  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
-  bindStructureEditorControls();
+  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
+  const list=$("courseStructureList");
+  if(list&&!list.dataset.structureActionsBound){
+    list.dataset.structureActionsBound="1";
+    list.addEventListener("click",handleStructureEditorAction);
+  }
   updateStructureTotal()
 }
 
-function structureEditorUnitsSnapshot(){
+function structureUnitsFromEditor(){
   return readStructureEditor()
 }
-function structureGroupUnitIndexes(units,groupStrand){
-  return units.map((u,i)=>({u,i})).filter(x=>x.u.strand_name===groupStrand)
-}
-function addStructureUnitToGroup(groupNo){
-  const units=structureEditorUnitsSnapshot();
-  const strandInput=$$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===String(groupNo));
-  const strandName=String(strandInput?.value||"สาระการเรียนรู้").trim()||"สาระการเรียนรู้";
-  let insertAt=units.length,template=null;
-  for(let i=0;i<units.length;i++){
-    if(units[i].strand_name===strandName){insertAt=i+1;template=units[i]}
+function handleStructureEditorAction(event){
+  const btn=event.target.closest("[data-structure-action]");
+  if(!btn)return;
+  const action=btn.dataset.structureAction;
+  const units=structureUnitsFromEditor();
+
+  if(action==="add"){
+    const group=String(btn.dataset.strandGroupAction||"");
+    const strandInput=$('#courseStructureList [data-strand-name]').find(x=>String(x.dataset.strandGroupInput)===group);
+    const strandName=String(strandInput?.value||"สาระการเรียนรู้").trim()||"สาระการเรียนรู้";
+    const rows=$('#courseStructureList [data-unit-row]');
+    const groupRows=rows.filter(r=>String(r.dataset.strandGroup)===group);
+    const lastRow=groupRows[groupRows.length-1];
+    const lastIndex=lastRow?rows.indexOf(lastRow):-1;
+    const template=lastIndex>=0?units[lastIndex]:null;
+    const insertAt=lastIndex>=0?lastIndex+1:units.length;
+    units.splice(insertAt,0,{
+      name:"หน่วยการเรียนรู้ใหม่",
+      base_name:"หน่วยการเรียนรู้ใหม่",
+      strand_name:strandName,
+      strand_base:strandName,
+      standard_name:template?.standard_name||"มาตรฐาน/ผลลัพธ์",
+      source_standard:template?.source_standard||template?.standard_name||"",
+      source_indicator_codes:[],
+      indicator_ids:[],
+      hours:0,
+      weight:0
+    });
+    renderStructureEditor(units);
+    recalculateStructureWeights();
+    updateStructureTotal();
+    return;
   }
-  const newUnit={
-    name:"หน่วยการเรียนรู้ใหม่",
-    base_name:"หน่วยการเรียนรู้ใหม่",
-    strand_name:strandName,
-    strand_base:strandName,
-    standard_name:template?.standard_name||"มาตรฐาน/ผลลัพธ์",
-    source_standard:template?.source_standard||template?.standard_name||"",
-    source_indicator_codes:[],
-    indicator_ids:[],
-    hours:0,
-    weight:0
-  };
-  units.splice(insertAt,0,newUnit);
-  renderStructureEditor(units);
-  recalculateStructureWeights();
-  updateStructureTotal();
-  const rows=$$('#courseStructureList [data-unit-row]');
-  rows[insertAt]?.querySelector('[data-unit-name]')?.focus();
-}
-function deleteStructureUnit(row){
-  const units=structureEditorUnitsSnapshot();
-  const idx=$$('#courseStructureList [data-unit-row]').indexOf(row);
-  if(idx<0)return;
-  const strand=row.dataset.strandGroup;
-  const sameGroup=$$('#courseStructureList [data-unit-row]').filter(x=>x.dataset.strandGroup===strand);
-  if(sameGroup.length<=1){
-    toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");
-    return
-  }
-  units.splice(idx,1);
-  renderStructureEditor(units);
-  recalculateStructureWeights();
-  updateStructureTotal();
-}
-function moveStructureUnit(row,direction){
-  const units=structureEditorUnitsSnapshot();
-  const rows=$$('#courseStructureList [data-unit-row]');
+
+  const row=btn.closest("[data-unit-row]");
+  if(!row)return;
+  const rows=$('#courseStructureList [data-unit-row]');
   const idx=rows.indexOf(row);
   if(idx<0)return;
-  const strandName=units[idx]?.strand_name;
-  const candidates=units.map((u,i)=>({u,i})).filter(x=>x.u.strand_name===strandName);
-  const pos=candidates.findIndex(x=>x.i===idx);
-  const targetPos=direction==="up"?pos-1:pos+1;
-  if(pos<0||targetPos<0||targetPos>=candidates.length)return;
-  const targetIdx=candidates[targetPos].i;
-  const tmp=units[idx];units[idx]=units[targetIdx];units[targetIdx]=tmp;
-  renderStructureEditor(units);
-  recalculateStructureWeights();
-  updateStructureTotal();
-}
-function bindStructureEditorControls(){
-  $$('#courseStructureList [data-add-unit-group]').forEach(btn=>btn.onclick=()=>addStructureUnitToGroup(btn.dataset.addUnitGroup));
-  $$('#courseStructureList [data-delete-unit]').forEach(btn=>btn.onclick=()=>deleteStructureUnit(btn.closest('[data-unit-row]')));
-  $$('#courseStructureList [data-move-unit]').forEach(btn=>btn.onclick=()=>moveStructureUnit(btn.closest('[data-unit-row]'),btn.dataset.moveUnit));
+  const group=String(row.dataset.strandGroup||"");
+
+  if(action==="delete"){
+    const groupRows=rows.filter(r=>String(r.dataset.strandGroup)===group);
+    if(groupRows.length<=1){toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");return}
+    units.splice(idx,1);
+    renderStructureEditor(units);
+    recalculateStructureWeights();
+    updateStructureTotal();
+    return;
+  }
+
+  if(action==="up"||action==="down"){
+    const sameGroupIndexes=rows.map((r,i)=>({r,i})).filter(x=>String(x.r.dataset.strandGroup)===group).map(x=>x.i);
+    const pos=sameGroupIndexes.indexOf(idx);
+    const targetPos=action==="up"?pos-1:pos+1;
+    if(pos<0||targetPos<0||targetPos>=sameGroupIndexes.length)return;
+    const targetIdx=sameGroupIndexes[targetPos];
+    [units[idx],units[targetIdx]]=[units[targetIdx],units[idx]];
+    renderStructureEditor(units);
+    recalculateStructureWeights();
+    updateStructureTotal();
+  }
 }
 function recalculateStructureWeights(){
   const rows=$$('#courseStructureList [data-unit-row]');
