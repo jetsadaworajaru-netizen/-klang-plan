@@ -1417,3 +1417,35 @@ button,
     padding:16px!important;
   }
 }
+
+
+/* 2026-11-02 compact hours control */
+#courseStructureList .structure-edit-grid.structure-slider-grid{
+  grid-template-columns:minmax(0,1.9fr) minmax(120px,.58fr) 96px!important;
+  gap:16px!important;
+}
+#courseStructureList .structure-hours-control{
+  max-width:190px!important;
+  justify-self:start!important;
+}
+#courseStructureList .structure-hours-control input[type=range]{
+  width:100%!important;
+  max-width:180px!important;
+}
+#courseStructureList .structure-hours-control b{
+  font-size:.84rem!important;
+}
+#courseStructureList .structure-hours-control b::after{
+  font-size:.56rem!important;
+}
+@media(max-width:760px){
+  #courseStructureList .structure-edit-grid.structure-slider-grid{
+    grid-template-columns:minmax(0,1fr) 92px!important;
+  }
+  #courseStructureList .structure-hours-control{
+    max-width:none!important;
+  }
+  #courseStructureList .structure-hours-control input[type=range]{
+    max-width:none!important;
+  }
+}
