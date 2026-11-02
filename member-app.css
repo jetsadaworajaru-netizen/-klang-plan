@@ -823,3 +823,45 @@ button,
   .structure-slider-grid{grid-template-columns:1fr!important}
   .structure-range-field,.structure-weight-auto{min-height:auto}
 }
+
+
+/* Emphasize unit name, keep controls secondary */
+.structure-slider-grid{
+  grid-template-columns:minmax(0,1fr) 104px 112px!important;
+  grid-template-areas:
+    "name name name"
+    ". hours weight";
+}
+.structure-name-field{
+  grid-area:name;
+  display:grid;
+  gap:5px;
+  font-size:.68rem;
+  font-weight:800;
+  color:#6d8296;
+}
+.structure-name-field input{
+  width:100%;
+  min-height:48px!important;
+  padding:10px 12px!important;
+  border:1px solid #cfddec!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#143f68!important;
+  font-size:1rem!important;
+  font-weight:900!important;
+  line-height:1.25;
+}
+.structure-range-field{
+  align-self:start;
+}
+.structure-slider-grid .structure-range-field:nth-child(2){grid-area:hours}
+.structure-slider-grid .structure-weight-auto{grid-area:weight}
+@media(max-width:760px){
+  .structure-slider-grid{
+    grid-template-columns:1fr 1fr!important;
+    grid-template-areas:
+      "name name"
+      "hours weight";
+  }
+}
