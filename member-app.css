@@ -233,3 +233,20 @@ button,
   .prompt-head{align-items:stretch;flex-direction:column}
   .copy-prompt-primary{width:100%;min-width:0}
 }
+
+.structure-strand-card{
+  display:flex;align-items:center;gap:12px;
+  margin:16px 0 8px;padding:12px 14px;
+  border:1px solid #cfe0f2;border-radius:14px;
+  background:linear-gradient(135deg,#eef6ff,#f8fbff);
+}
+.structure-strand-badge{
+  flex:0 0 auto;padding:7px 10px;border-radius:10px;
+  background:#2876d4;color:#fff;font-weight:900;font-size:.78rem;
+}
+.structure-strand-card label{margin:0;flex:1;font-size:.72rem;color:#5f7385;font-weight:700}
+.structure-strand-card input{width:100%;margin-top:4px;font-weight:800;color:#173f67}
+.structure-subunit{margin-left:18px;position:relative}
+.structure-subunit:before{content:"";position:absolute;left:-12px;top:-8px;bottom:-8px;width:3px;border-radius:3px;background:#d7e7f7}
+.structure-subunit .structure-unit-head>div>b{color:#214f78}
+@media(max-width:700px){.structure-subunit{margin-left:8px}.structure-strand-card{align-items:stretch;flex-direction:column}}
