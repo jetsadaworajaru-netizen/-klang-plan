@@ -2014,8 +2014,111 @@ function autoTeachingSchedule(c){
   return out
 }
 
-function renderTeachingSchedule(rows){$("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ"><input data-schedule-hours type="number" min="0" step="0.25" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';$$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()}
-function readTeachingSchedule(){return $$('#teachingScheduleList [data-schedule-row]').map((row,i)=>{let ids=[],codes=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}try{codes=JSON.parse(row.dataset.indicatorCodes||"[]")}catch{}return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,strand_name:row.dataset.strandName||"",unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids,indicator_codes:codes}})}
+function parseLocalISODate(value){
+  const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return null;
+  const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  return Number.isNaN(d.getTime())?null:d
+}
+function toLocalISODate(d){
+  if(!(d instanceof Date)||Number.isNaN(d.getTime()))return "";
+  return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")
+}
+function formatTeachingDate(value){
+  const d=parseLocalISODate(value);if(!d)return value||"";
+  return new Intl.DateTimeFormat("th-TH",{day:"numeric",month:"short",year:"2-digit"}).format(d)
+}
+function readRealTeachingCalendarConfig(){
+  const enabled=!!$("useRealTeachingCalendar")?.checked,start_date=$("termStartDate")?.value||"",end_date=$("termEndDate")?.value||"";
+  const weekdays={};
+  $("[data-calendar-day]").forEach(ch=>{
+    if(ch.checked){
+      const day=Number(ch.dataset.calendarDay),hours=Number($(`[data-calendar-hours="${day}"]`)?.value)||1;
+      if(day>=0&&day<=6&&hours>0)weekdays[day]=roundQuarterHour(hours)
+    }
+  });
+  const holidays=String($("teachingHolidayDates")?.value||"").split(/[\s,;]+/).map(x=>x.trim()).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x));
+  return {enabled,start_date,end_date,weekdays,holidays:unique(holidays)}
+}
+function writeRealTeachingCalendarConfig(config={}){
+  if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").checked=!!config.enabled;
+  if($("realTeachingCalendarFields"))$("realTeachingCalendarFields").hidden=!config.enabled;
+  if($("termStartDate"))$("termStartDate").value=config.start_date||"";
+  if($("termEndDate"))$("termEndDate").value=config.end_date||"";
+  $("[data-calendar-day]").forEach(ch=>{
+    const day=Number(ch.dataset.calendarDay),hours=Number(config.weekdays?.[day]||0);
+    ch.checked=hours>0;
+    const h=$(`[data-calendar-hours="${day}"]`);if(h&&hours>0)h.value=hours
+  });
+  if($("teachingHolidayDates"))$("teachingHolidayDates").value=(config.holidays||[]).join("\n")
+}
+function realTeachingSlots(c,config,totalHours){
+  if(!config?.enabled)return {slots:[],error:""};
+  const start=parseLocalISODate(config.start_date);
+  if(!start)return {slots:[],error:"กรุณาระบุวันเปิดภาคเรียน"};
+  const days=Object.keys(config.weekdays||{}).map(Number).filter(d=>Number(config.weekdays[d])>0);
+  if(!days.length)return {slots:[],error:"กรุณาเลือกวันเรียนประจำสัปดาห์อย่างน้อย 1 วัน"};
+  const holidays=new Set(config.holidays||[]),end=config.end_date?parseLocalISODate(config.end_date):null;
+  if(end&&end<start)return {slots:[],error:"วันปิดภาคเรียนต้องอยู่หลังวันเปิดภาคเรียน"};
+  const slots=[];let accumulated=0,d=new Date(start),guard=0;
+  while(accumulated<totalHours-.001&&guard<500){
+    guard++;
+    if(end&&d>end)break;
+    const iso=toLocalISODate(d),weekday=d.getDay(),hours=Number(config.weekdays?.[weekday]||0);
+    if(hours>0&&!holidays.has(iso)){
+      const week=Math.floor((d-start)/86400000/7)+1;
+      slots.push({date:iso,week,hours:roundQuarterHour(hours)});
+      accumulated+=hours
+    }
+    d.setDate(d.getDate()+1)
+  }
+  if(accumulated<totalHours-.001)return {slots,error:`ปฏิทินที่กำหนดมีเวลาไม่พอสำหรับรายวิชา (จัดได้ ${roundQuarterHour(accumulated)} จาก ${totalHours} ชั่วโมง)`};
+  return {slots,error:""}
+}
+function applyRealCalendarToRows(rows,c,config){
+  rows=(rows||[]).map(r=>({...r,teaching_dates:[]}));
+  if(!config?.enabled)return {rows,error:"",scheduledHours:0};
+  const total=roundQuarterHour(rows.reduce((s,r)=>s+(Number(r.hours)||0),0)),slotResult=realTeachingSlots(c,config,total);
+  if(slotResult.error)return {rows,error:slotResult.error,scheduledHours:0};
+  const slots=slotResult.slots.map(x=>({...x,remaining:x.hours}));
+  let si=0,scheduled=0;
+  for(const row of rows){
+    let need=Number(row.hours)||0;
+    while(need>.001&&si<slots.length){
+      const slot=slots[si],take=roundQuarterHour(Math.min(need,slot.remaining));
+      row.teaching_dates.push({date:slot.date,hours:take,week:slot.week});
+      if(!row.real_week)row.real_week=slot.week;
+      need=roundQuarterHour(need-take);slot.remaining=roundQuarterHour(slot.remaining-take);scheduled+=take;
+      if(slot.remaining<=.001)si++
+    }
+    if(row.real_week)row.week=row.real_week;
+  }
+  return {rows,error:"",scheduledHours:roundQuarterHour(scheduled)}
+}
+function applyRealTeachingCalendar(){
+  if(activeCourseIndex===null)return;
+  const c=courseDrafts()[activeCourseIndex],config=readRealTeachingCalendarConfig(),rows=readTeachingSchedule();
+  if(!config.enabled){renderTeachingSchedule(rows.map(r=>({...r,teaching_dates:[]})));$("realTeachingCalendarSummary").textContent="ปิดปฏิทินสอนจริง — ใช้กำหนดการแบบสัปดาห์";return}
+  const result=applyRealCalendarToRows(rows,c,config);
+  if(result.error){$("realTeachingCalendarSummary").textContent=result.error;toast(result.error);return}
+  renderTeachingSchedule(result.rows);
+  const dates=result.rows.flatMap(r=>r.teaching_dates||[]);
+  $("realTeachingCalendarSummary").textContent=dates.length?`จัดวันที่สอนแล้ว ${dates.length} คาบ/ช่วง · ${formatTeachingDate(dates[0].date)} ถึง ${formatTeachingDate(dates[dates.length-1].date)}`:"ยังไม่มีวันที่สอน";
+  toast("คำนวณวันที่สอนจริงแล้ว ✓")
+}
+function renderTeachingSchedule(rows){
+  $("teachingScheduleList").innerHTML=rows.map((r,i)=>`<div class="schedule-row" data-schedule-row="${i}" data-unit-index="${Number(r.unit_index)||0}" data-indicator-ids='${esc(JSON.stringify(r.indicator_ids||[]))}' data-indicator-codes='${esc(JSON.stringify(r.indicator_codes||[]))}' data-teaching-dates='${esc(JSON.stringify(r.teaching_dates||[]))}' data-strand-name="${esc(r.strand_name||"")}"><input data-schedule-week type="number" min="1" value="${Number(r.week)||i+1}" title="สัปดาห์"><div class="schedule-strand">${esc(r.strand_name||"-")}</div><input data-schedule-unit value="${esc(r.unit_name||"")}" readonly><div class="schedule-topic-cell"><input data-schedule-topic value="${esc(r.topic||r.unit_name||"")}" placeholder="เรื่อง/หัวข้อ">${(r.teaching_dates||[]).length?`<small class="schedule-real-dates">📅 ${(r.teaching_dates||[]).map(x=>`${formatTeachingDate(x.date)}${Number(x.hours)!==1?` (${x.hours} ชม.)`:""}`).join(" · ")}</small>`:""}</div><input data-schedule-hours type="number" min="0" step="0.25" value="${Number(r.hours)||0}" title="ชั่วโมง"><div class="schedule-indicator-codes">${(r.indicator_codes||[]).length?(r.indicator_codes||[]).map(x=>`<span>${esc(x)}</span>`).join(""):"<span>-</span>"}</div></div>`).join("")||'<div class="list-item">ยังไม่มีหน่วยจากโครงสร้างรายวิชา</div>';
+  $$('#teachingScheduleList input').forEach(x=>x.oninput=updateScheduleTotal);updateScheduleTotal()
+}
+function readTeachingSchedule(){
+  return $$('#teachingScheduleList [data-schedule-row]').map((row,i)=>{
+    let ids=[],codes=[],teachingDates=[];
+    try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}
+    try{codes=JSON.parse(row.dataset.indicatorCodes||"[]")}catch{}
+    try{teachingDates=JSON.parse(row.dataset.teachingDates||"[]")}catch{}
+    return {week:Number(row.querySelector('[data-schedule-week]').value)||i+1,unit_index:Number(row.dataset.unitIndex)||0,strand_name:row.dataset.strandName||"",unit_name:row.querySelector('[data-schedule-unit]').value.trim(),topic:row.querySelector('[data-schedule-topic]').value.trim(),hours:Number(row.querySelector('[data-schedule-hours]').value)||0,indicator_ids:ids,indicator_codes:codes,teaching_dates:teachingDates}
+  })
+}
 function updateScheduleTotal(){const rows=readTeachingSchedule(),hours=roundQuarterHour(rows.reduce((s,x)=>s+x.hours,0)),weeks=unique(rows.map(x=>x.week)).length,targetWeeks=activeCourseIndex===null?0:courseTeachingWeeks(courseDrafts()[activeCourseIndex]);$("teachingScheduleTotal").innerHTML=`รวม <b>${weeks} สัปดาห์</b>${targetWeeks?` / กรอบ ${targetWeeks} สัปดาห์`:""} · <b>${rows.length} ช่วงการสอน</b> · <b>${hours} ชั่วโมง</b>`}
 function openTeachingSchedule(i){
   const rows=courseDrafts();
@@ -2033,12 +2136,34 @@ function openTeachingSchedule(i){
   });
   $("teachingScheduleMeta").textContent=`${c.name} · ${c.grade} · ภาคเรียน ${c.semester}/${c.year}`;
   $("teachingScheduleSource").innerHTML=`รับข้อมูลจาก <b>${c.course_structure.units?.length||0} หน่วยการเรียนรู้</b> · เวลาเรียนรวม <b>${c.hours||0} ชั่วโมง</b> · กรอบ <b>${courseTeachingWeeks(c)} สัปดาห์</b> (${String(c.semester||"").trim()==="1"||String(c.semester||"").trim()==="2"?"1 ภาคเรียน":"1 ปีการศึกษา"}) — ระบบกระจายชั่วโมงต่อสัปดาห์อัตโนมัติ ครูปรับหัวข้อได้`;
+  writeRealTeachingCalendarConfig(c.teaching_schedule?.calendar||{enabled:false,weekdays:{},holidays:[]});
   renderTeachingSchedule(scheduleStale?autoTeachingSchedule(c):savedRows);
+  if($("realTeachingCalendarSummary")){
+    const d=(scheduleStale?[]:savedRows.flatMap(r=>r.teaching_dates||[]));
+    $("realTeachingCalendarSummary").textContent=d.length?`มีวันที่สอนจริง ${d.length} คาบ/ช่วง · ${formatTeachingDate(d[0].date)} ถึง ${formatTeachingDate(d[d.length-1].date)}`:"ยังไม่ได้คำนวณวันที่สอนจริง"
+  }
   $("teachingScheduleStatus").innerHTML=structureCheck.repaired?'<div class="indicator-preview">✓ อัปเกรดโครงสร้างรายวิชาเป็นหน่วยย่อยตามตัวชี้วัดของวิชา/ชั้นนี้แล้ว</div>':(scheduleStale&&savedRows.length?'<div class="indicator-preview">✓ ปรับกำหนดการสอนให้ตรงกับชื่อหน่วยจากหลักสูตรล่าสุดแล้ว</div>':"");
   $("teachingScheduleModal").hidden=false
 }
-function generateTeachingSchedule(){if(activeCourseIndex===null)return;renderTeachingSchedule(autoTeachingSchedule(courseDrafts()[activeCourseIndex]));toast("สร้างกำหนดการสอนแล้ว ✓")}
-function saveTeachingSchedule(){if(activeCourseIndex===null)return;const a=courseDrafts(),c=a[activeCourseIndex],rows=readTeachingSchedule(),hours=roundQuarterHour(rows.reduce((s,x)=>s+x.hours,0)),maxWeek=Math.max(0,...rows.map(x=>Number(x.week)||0)),weekLimit=courseTeachingWeeks(c);if(Math.abs(hours-Number(c.hours||0))>.01){$("teachingScheduleStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${hours} ยังไม่ตรงกับรายวิชา ${c.hours||0} ชั่วโมง</div>`;return}if(maxWeek>weekLimit){$("teachingScheduleStatus").innerHTML=`<div class="error-box">กำหนดการเกินกรอบ ${weekLimit} สัปดาห์ (${String(c.semester||"").trim()==="1"||String(c.semester||"").trim()==="2"?"1 ภาคเรียน":"1 ปีการศึกษา"}) กรุณาสร้างกำหนดการอัตโนมัติใหม่</div>`;return}c.teaching_schedule={structure_version:Number(c.course_structure?.version||6),weeks:weekLimit,rows,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("teachingScheduleStatus").innerHTML='<div class="indicator-preview">บันทึกกำหนดการสอนแล้ว ✓ พร้อมออกแบบหน่วยการเรียนรู้</div>';renderCourses();toast("บันทึกกำหนดการสอนแล้ว ✓")}
+function generateTeachingSchedule(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex],config=readRealTeachingCalendarConfig();let rows=autoTeachingSchedule(c);if(config.enabled){const result=applyRealCalendarToRows(rows,c,config);if(result.error){toast(result.error);$("realTeachingCalendarSummary").textContent=result.error}else rows=result.rows}renderTeachingSchedule(rows);toast("สร้างกำหนดการสอนแล้ว ✓")}
+function saveTeachingSchedule(){
+  if(activeCourseIndex===null)return;
+  const a=courseDrafts(),c=a[activeCourseIndex],config=readRealTeachingCalendarConfig();
+  let rows=readTeachingSchedule();
+  const hours=roundQuarterHour(rows.reduce((s,x)=>s+x.hours,0)),maxWeek=Math.max(0,...rows.map(x=>Number(x.week)||0)),weekLimit=courseTeachingWeeks(c);
+  if(Math.abs(hours-Number(c.hours||0))>.01){$("teachingScheduleStatus").innerHTML=`<div class="error-box">ชั่วโมงรวม ${hours} ยังไม่ตรงกับรายวิชา ${c.hours||0} ชั่วโมง</div>`;return}
+  if(config.enabled){
+    const result=applyRealCalendarToRows(rows,c,config);
+    if(result.error){$("teachingScheduleStatus").innerHTML=`<div class="error-box">${esc(result.error)}</div>`;return}
+    rows=result.rows;
+  }else if(maxWeek>weekLimit){
+    $("teachingScheduleStatus").innerHTML=`<div class="error-box">กำหนดการเกินกรอบ ${weekLimit} สัปดาห์ (${String(c.semester||"").trim()==="1"||String(c.semester||"").trim()==="2"?"1 ภาคเรียน":"1 ปีการศึกษา"}) กรุณาสร้างกำหนดการอัตโนมัติใหม่</div>`;return
+  }
+  c.teaching_schedule={structure_version:Number(c.course_structure?.version||6),weeks:weekLimit,calendar:config,rows,saved_at:new Date().toISOString()};
+  a[activeCourseIndex]=c;writeCourseDrafts(a);renderTeachingSchedule(rows);
+  $("teachingScheduleStatus").innerHTML=`<div class="indicator-preview">บันทึกกำหนดการสอนแล้ว ✓${config.enabled?" พร้อมวันที่สอนจริงตามตารางที่ครูกำหนด":""} พร้อมออกแบบหน่วยการเรียนรู้</div>`;
+  renderCourses();toast("บันทึกกำหนดการสอนแล้ว ✓")
+}
 
 function closeLearningUnits(){$("learningUnitsModal").hidden=true;activeCourseIndex=null}
 function deriveLearningUnit(c,u,i){
@@ -2275,9 +2400,9 @@ function makeCourseDocxBlob(c,template="government"){
 
   body+=pageBreak()+h1("4. กำหนดการสอน");
   body+=para("กรอบเวลา "+courseTeachingWeeks(c)+" สัปดาห์ โดยระบบกระจายชั่วโมงจากโครงสร้างรายวิชาให้สอดคล้องกับเวลาเรียนรวม",{size:27,color:"52677A"});
-  const schRows=[["สัปดาห์","หน่วย","เรื่อง/หัวข้อ","ตัวชี้วัด","เวลา (ชม.)"]];
-  schedule.forEach(r=>schRows.push([String(r.week||"-"),r.unit_name||"-",r.topic||"-",(r.indicator_codes||[]).join(", ")||"-",String(Number(r.hours)||0)]));
-  body+=table(schRows,[750,1800,2800,1800,850],true);
+  const schRows=[["สัปดาห์","วันที่สอนจริง","หน่วย","เรื่อง/หัวข้อ","ตัวชี้วัด","เวลา (ชม.)"]];
+  schedule.forEach(r=>schRows.push([String(r.week||"-"),(r.teaching_dates||[]).map(x=>formatTeachingDate(x.date)).join("\\n")||"-",r.unit_name||"-",r.topic||"-",(r.indicator_codes||[]).join(", ")||"-",String(Number(r.hours)||0)]));
+  body+=table(schRows,[650,1200,1600,2300,1700,750],true);
 
   body+=pageBreak()+h1("5. หน่วยการเรียนรู้อิงมาตรฐาน");
   structure.forEach((u,i)=>{
@@ -3110,7 +3235,7 @@ function bind(){
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
-  if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
+  if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").onchange=()=>{$("realTeachingCalendarFields").hidden=!$("useRealTeachingCalendar").checked};if($("applyRealTeachingCalendarBtn"))$("applyRealTeachingCalendarBtn").onclick=applyRealTeachingCalendar;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   $$("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
   $("libraryStage").onchange=updateLibraryFilters;$("libraryGrade").onchange=updateLibrarySubjects;$("librarySubject").onchange=applyLibraryFilters;$("librarySearch").oninput=applyLibraryFilters;$("useLibraryIndicatorBtn").onclick=useLibraryIndicator;
   $("includeTeachingDate").onchange=()=>{$("teachingDateFields").hidden=!$("includeTeachingDate").checked;updateSummary()};
