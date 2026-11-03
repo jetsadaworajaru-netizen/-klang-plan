@@ -1838,3 +1838,51 @@ button,
     height:28px;
   }
 }
+
+
+/* 2026-11-03 clear two-semester course toggle */
+.course-semester-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin:0 2px;
+  white-space:nowrap;
+}
+.course-semester-toggle>span{
+  font-size:.78rem;
+  font-weight:900;
+  color:#526d84;
+}
+.course-semester-toggle button{
+  min-width:34px;
+  height:30px;
+  padding:0 10px;
+  border:1px solid #c9dbea;
+  border-radius:9px;
+  background:#fff;
+  color:#245d92;
+  font:inherit;
+  font-size:.78rem;
+  font-weight:900;
+  cursor:pointer;
+}
+.course-semester-toggle button:hover{
+  background:#f2f7fc;
+  border-color:#9ec3e3;
+}
+.course-semester-toggle button.active{
+  background:#2f7bd4;
+  color:#fff;
+  border-color:#2f7bd4;
+  box-shadow:0 2px 6px rgba(47,123,212,.18);
+}
+@media(max-width:760px){
+  .course-semester-toggle>span{
+    font-size:.74rem;
+  }
+  .course-semester-toggle button{
+    min-width:32px;
+    height:28px;
+    padding:0 8px;
+  }
+}
