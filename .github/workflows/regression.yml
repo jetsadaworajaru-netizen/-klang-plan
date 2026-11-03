@@ -75,7 +75,7 @@ jobs:
         run: |
           set -e
           curl --fail --silent --location https://klang-plan.pages.dev/member-app.js -o /tmp/member.js
-          ! grep -q '\$\$\ /tmp/member.js
+          ! grep -q '\$\$ ' /tmp/member.js
           grep -q 'function downloadTeachingPack' /tmp/member.js
           grep -q 'function openQuizStudio' /tmp/member.js
           grep -q 'function openRubricStudio' /tmp/member.js
