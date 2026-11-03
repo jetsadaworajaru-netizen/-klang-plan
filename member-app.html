@@ -899,6 +899,26 @@
   </section>
 </div>
 
+
+<div id="resourceConfigModal" class="modal" hidden>
+  <button id="resourceConfigBackdrop" class="modal-backdrop" type="button"></button>
+  <section class="modal-card resource-config-card">
+    <button id="closeResourceConfigBtn" class="modal-close" type="button">×</button>
+    <div class="workspace-modal-head">
+      <div><h2 id="resourceConfigTitle">ตั้งค่างาน</h2><p id="resourceConfigMeta"></p></div>
+      <span class="workspace-status">สร้าง Prompt ภาพพร้อมใช้</span>
+    </div>
+    <div class="resource-config-note">
+      เลือกรูปแบบก่อนสร้าง ระบบจะนำค่าที่เลือกไปประกอบ Prompt พร้อมข้อมูลหน่วยและตัวชี้วัดอัตโนมัติ
+    </div>
+    <div id="resourceConfigFields" class="resource-config-grid"></div>
+    <div class="resource-config-actions">
+      <button id="cancelResourceConfigBtn" class="secondary-btn" type="button">ยกเลิก</button>
+      <button id="confirmResourceConfigBtn" class="primary-btn" type="button">✨ สร้าง Prompt ภาพ</button>
+    </div>
+  </section>
+</div>
+
 <div id="profileModal" class="modal" hidden>
   <button id="profileBackdrop" class="modal-backdrop" type="button"></button>
   <section class="modal-card">
