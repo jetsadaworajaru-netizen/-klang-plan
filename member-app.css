@@ -2332,3 +2332,21 @@ button,
   .unit-resource-section{padding:10px}
   .sublesson-tool-drawer{padding:8px}
 }
+
+
+/* resource configurator v1 */
+.resource-config-card{width:min(92vw,760px);max-width:760px;border-radius:22px;padding:22px 24px}
+.resource-config-note{margin:12px 0 16px;padding:12px 14px;border:1px solid #dbe7f2;border-radius:14px;background:#f7fbff;color:#5f7488;font-size:.88rem;line-height:1.5}
+.resource-config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.resource-config-field{display:flex;flex-direction:column;gap:6px}
+.resource-config-field>span{font-size:.8rem;font-weight:800;color:#496276}
+.resource-config-field select,.resource-config-field input{width:100%;min-height:44px;border:1px solid #cfdeeb;border-radius:11px;background:#fff;padding:9px 11px;font:inherit;color:#173d62}
+.resource-config-field select:focus,.resource-config-field input:focus{outline:2px solid rgba(49,120,211,.16);border-color:#8ab7e8}
+.resource-config-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #e5edf4}
+.resource-config-actions button{min-width:150px}
+@media(max-width:680px){
+  .resource-config-card{width:96vw;padding:18px 16px}
+  .resource-config-grid{grid-template-columns:1fr}
+  .resource-config-actions{flex-direction:column-reverse}
+  .resource-config-actions button{width:100%}
+}
