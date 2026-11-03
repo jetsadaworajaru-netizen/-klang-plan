@@ -66,11 +66,46 @@ function recordMatchesGrade(x,g){return !g||recordGrades(x).includes(g)}
 function displayGradeForRecord(x,fallback=""){return fallback||recordGrades(x)[0]||x?.grade||""}
 function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
 function avatar(v){const p={"avatar:teacher":"👩‍🏫","avatar:teacher_male":"👨‍🏫","avatar:book":"📚","avatar:star":"⭐"};if(p[v])return p[v];if(v?.startsWith("data:image/"))return `<img src="${v}" alt="">`;return "👤"}
+function loadExternalScript(url,timeout=2200){
+  return new Promise((resolve,reject)=>{
+    if(window.supabase?.createClient)return resolve(true);
+    const s=document.createElement("script");
+    let done=false;
+    const finish=(ok,err)=>{
+      if(done)return;
+      done=true;
+      clearTimeout(timer);
+      if(!ok)s.remove();
+      ok?resolve(true):reject(err||new Error("โหลด Supabase SDK ไม่สำเร็จ"));
+    };
+    s.src=url;
+    s.async=true;
+    s.crossOrigin="anonymous";
+    s.onload=()=>window.supabase?.createClient?finish(true):finish(false,new Error("Supabase SDK ไม่พร้อมใช้งาน"));
+    s.onerror=()=>finish(false,new Error("โหลด Supabase SDK ไม่สำเร็จ"));
+    const timer=setTimeout(()=>finish(false,new Error("โหลด Supabase SDK ใช้เวลานานเกินไป")),timeout);
+    document.head.appendChild(s);
+  })
+}
+async function ensureSupabaseSdk(){
+  if(window.supabase?.createClient)return true;
+  const sources=[
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+    "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+  ];
+  let lastError=null;
+  for(const src of sources){
+    try{await loadExternalScript(src,2200);return true}catch(err){lastError=err}
+  }
+  throw lastError||new Error("ไม่สามารถโหลดระบบสมาชิกได้")
+}
 function makeMemberClient(url){return window.supabase.createClient(url,CFG.supabasePublishableKey||CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"klang-member-auth"}})}
 async function auth(){
-  if(!window.supabase||!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
-  sb=makeMemberClient(CFG.supabaseUrl);
+  if(!CFG.supabaseUrl||!(CFG.supabasePublishableKey||CFG.supabaseAnonKey)){location.replace("/teacher.html");return false}
   const loadingText=document.querySelector("#loadingGate .loading-text, #loadingGate p, #loadingGate b");
+  if(loadingText)loadingText.textContent="กำลังเตรียมระบบสมาชิก…";
+  await ensureSupabaseSdk();
+  sb=makeMemberClient(CFG.supabaseUrl);
   if(loadingText)loadingText.textContent="กำลังตรวจสอบการเข้าสู่ระบบ…";
   const {data,error}=await withTimeout(sb.auth.getSession(),2500,"ตรวจสอบการเข้าสู่ระบบ");
   if(error||!data?.session){location.replace("/teacher.html");return false}
