@@ -6,3 +6,8 @@
 
 
 /member-app /member-app.html 302
+
+/ /index.html 302
+/teacher /teacher.html 302
+/join /join.html 302
+/admin-panel /admin-panel.html 302
