@@ -2824,11 +2824,11 @@ function openCourseLessons(i){
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
   $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
-  $('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงาน':'− ปิดเครื่องมือ'}});
-  $('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
-  $('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');createUnitResourcePrompt(i,Number(ui),type,Number(si))});
-  $('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
-  $('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type,null)});
+  $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงาน':'− ปิดเครื่องมือ'}});
+  $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
+  $$('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');createUnitResourcePrompt(i,Number(ui),type,Number(si))});
+  $$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
+  $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type,null)});
   $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ชั่วโมงเป็นจำนวนเต็ม ครูเพิ่มหรือลดเรื่องย่อยได้จากปุ่มท้ายหน่วย และเลือกสร้างแผนรายเรื่องหรือสร้างแผนทั้งหน่วยได้</div>';
   $('courseLessonsModal').hidden=false
 }
