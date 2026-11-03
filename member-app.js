@@ -1985,11 +1985,14 @@ function renderStructureEditor(units){
       <div class="structure-edit-grid structure-slider-grid">
         <label class="structure-name-field">ชื่อหน่วย (แก้ไข)<textarea data-unit-name rows="2">${esc(u.name||u.base_name||`หน่วยที่ ${unitNo}`)}</textarea></label>
         <div class="structure-control-strip">
-          <label class="structure-hours-control">
+          <div class="structure-hours-control">
             <span>ชั่วโมง</span>
-            <b data-hours-value>${Number(u.hours)||0}</b>
-            <input data-unit-hours type="range" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}">
-          </label>
+            <div class="structure-hours-stepper">
+              <button type="button" data-structure-action="hours-minus" aria-label="ลดชั่วโมง">−</button>
+              <input data-unit-hours type="number" min="0" max="${maxHours}" step="1" value="${Number(u.hours)||0}" inputmode="numeric">
+              <button type="button" data-structure-action="hours-plus" aria-label="เพิ่มชั่วโมง">+</button>
+            </div>
+          </div>
           <div class="structure-weight-pill">
             <span>น้ำหนัก</span>
             <b data-weight-value>${Number(u.weight)||0}%</b>
@@ -2002,7 +2005,7 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>{autoSizeUnitNameField(x);x.oninput=()=>{autoSizeUnitNameField(x);updateStructureTotal()}});
-  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{x.closest(".structure-hours-control").querySelector("[data-hours-value]").textContent=x.value;recalculateStructureWeights();updateStructureTotal()});
+  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{recalculateStructureWeights();updateStructureTotal()});
   const list=$("courseStructureList");
   if(list&&!list.dataset.structureActionsBound){
     list.dataset.structureActionsBound="1";
@@ -2103,6 +2106,16 @@ function handleStructureEditorAction(event){
   if(action==="close-indicators"){btn.closest(".structure-indicator-picker")?.remove();return}
   if(action==="save-indicators"){saveStructureIndicatorPicker(btn.closest(".structure-indicator-picker"));return}
   if(action==="indicators"){openStructureIndicatorPicker(btn.closest("[data-unit-row]"));return}
+  if(action==="hours-minus"||action==="hours-plus"){
+    const row=btn.closest("[data-unit-row]");
+    const input=row?.querySelector("[data-unit-hours]");
+    if(!input)return;
+    const min=Number(input.min||0),max=Number(input.max||999),step=Number(input.step||1)||1;
+    const current=Number(input.value||0);
+    input.value=String(Math.min(max,Math.max(min,current+(action==="hours-plus"?step:-step))));
+    recalculateStructureWeights();updateStructureTotal();
+    return
+  }
   const units=structureUnitsFromEditor();
 
   if(action==="add"){
