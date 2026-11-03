@@ -1514,7 +1514,7 @@ $$('[data-course-lessons]').forEach(b=>b.onclick=()=>openCourseLessons(Number(b.
 $$('[data-course-assessments]').forEach(b=>b.onclick=()=>openCourseAssessments(Number(b.dataset.courseAssessments)));
 $$('[data-course-documents]').forEach(b=>b.onclick=()=>openCourseDocuments(Number(b.dataset.courseDocuments)));
 $$('[data-course-use]').forEach(b=>b.onclick=()=>{const c=courseDrafts()[Number(b.dataset.courseUse)];if(!c)return;prefillCourseToCreate(c,null);toast("นำข้อมูลรายวิชามาใช้แล้ว ✓")});
-$('[data-course-semester-btn]').forEach(btn=>btn.onclick=()=>{
+$$('[data-course-semester-btn]').forEach(btn=>btn.onclick=()=>{
   const rows=courseDrafts(),i=Number(btn.dataset.courseSemesterBtn),c=rows[i];
   if(!c)return;
   c.semester=btn.dataset.semesterValue||"1";
