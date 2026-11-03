@@ -2968,7 +2968,7 @@ function collectResourceConfiguratorOptions(type){
     result[field.key]=field.type==="number"?Number(value):value;
     labels.push(field.label+": "+resourceOptionLabel(field,value))
   });
-  result.summary=labels.join("\\n");
+  result.summary=labels.join("\n");
   return result
 }
 function confirmResourceConfigurator(){
@@ -2984,7 +2984,7 @@ function visualOutputRules(type){
     "ข้อความภาษาไทยในภาพต้องอ่านง่าย ถูกต้อง และไม่มีข้อความสุ่ม",
     "งานต้องพร้อมใช้งานจริงในชั้นเรียนและเหมาะกับระดับชั้น"
   ];
-  if(["worksheet","knowledge","quiz"].includes(type))base.push("จัดหน้าเป็น A4 แนวตั้ง 210 × 297 มม. จำนวน 1 หน้า เว้นแต่ข้อมูลจำเป็นต้องแยกหน้า");
+  if(["worksheet","knowledge","quiz"].includes(type))base.push("จัดหน้าเป็น A4 แนวตั้ง 210 × 297 มม. จำนวน 1 หน้าเท่านั้น พร้อมพิมพ์");
   return base.map((x,i)=>`${i+1}) ${x}`).join("\n")
 }
 function createUnitResourcePrompt(ci,ui,type,si=null,options={}){
@@ -3009,14 +3009,14 @@ ${sub?`เรื่องย่อย: ${sub.title}
 `:""}สาระสำคัญ: ${sub?.concept||u.concept||""}
 จุดประสงค์: ${sub?.objective||u.objectives||""}
 ตัวชี้วัด:
-${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\\n")}
+${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}
 
 ข้อกำหนดทางวิชาการ:
 - ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่
 - เนื้อหาต้องเหมาะกับระดับชั้น
 - เชื่อมโยงกับกิจกรรมและการประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
 - หากเป็นใบงาน/แบบทดสอบ ให้มีพื้นที่ให้นักเรียนเขียน ตอบ ลากเส้น วาด หรือทำกิจกรรมตามความเหมาะสม
-- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ครูเลือกฉบับเฉลย`;
+${type==="quiz"&&options.studentVersion==="answer"?"- แสดงเฉลยอย่างชัดเจน เพราะครูเลือกฉบับเฉลย":type==="quiz"&&options.studentVersion==="both"?"- สร้างส่วนสำหรับนักเรียนโดยไม่แสดงเฉลย และแยกส่วนเฉลยออกจากกันอย่างชัดเจน":"- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน"}`;
   c.lesson_resources=c.lesson_resources||{items:[]};const label=resourceTypeLabel(type);
   c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,options,created_at:new Date().toISOString()});
   c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ภาพ${label}แล้ว ✓`)
