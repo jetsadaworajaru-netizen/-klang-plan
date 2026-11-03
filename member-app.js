@@ -2673,9 +2673,11 @@ function unitWorkStatus(c,u){
 function lessonSessionHours(c){return curriculumFrameworkMode(c)==="early_childhood"?.5:1}
 function deriveUnitSublessons(c,u,ui){
   const saved=(u.sublessons||[]).filter(Boolean);
-  if(saved.length&&Math.abs(saved.reduce((s,x)=>s+(Number(x.hours)||0),0)-(Number(u.hours)||0))<.01)return saved;
+  const totalHours=Math.max(.25,Number(u.hours)||1);
+  const looksLegacyPerHour=saved.length>8&&saved.length>=Math.ceil(totalHours/1.25)&&saved.every(x=>(Number(x.hours)||0)<=1);
+  if(saved.length&&!looksLegacyPerHour&&Math.abs(saved.reduce((s,x)=>s+(Number(x.hours)||0),0)-totalHours)<.01)return saved;
   const refs=savedCurriculumRows(c).filter(x=>(u.indicator_ids||[]).includes(x.dataset_id));
-  const total=Math.max(.25,Number(u.hours)||1);
+  const total=totalHours;
   const cleanTitle=t=>cleanCurriculumUnitTitle(t||'').replace(/^(บอก|อธิบาย|ระบุ|อ่าน|เขียน|ฟัง|พูด|ปฏิบัติ|ใช้|สร้าง|วิเคราะห์|จำแนก|เปรียบเทียบ)\s*/,'').replace(/\s+/g,' ').trim();
   const baseTopics=unique(refs.map(r=>cleanTitle(r.indicator_text)).filter(Boolean));
   const topicCount=Math.max(1,Math.min(8,Math.max(baseTopics.length,Math.ceil(total/3))));
