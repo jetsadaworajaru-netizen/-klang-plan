@@ -2675,14 +2675,40 @@ function deriveUnitSublessons(c,u,ui){
   const saved=(u.sublessons||[]).filter(Boolean);
   if(saved.length&&Math.abs(saved.reduce((s,x)=>s+(Number(x.hours)||0),0)-(Number(u.hours)||0))<.01)return saved;
   const refs=savedCurriculumRows(c).filter(x=>(u.indicator_ids||[]).includes(x.dataset_id));
-  const total=Math.max(.25,Number(u.hours)||1),session=lessonSessionHours(c),count=Math.max(1,Math.ceil(total/session));
-  const out=[];let used=0;
-  for(let i=0;i<count;i++){
-    const left=total-used,hrs=i===count-1?left:Math.min(session,left),r=refs[i%Math.max(1,refs.length)]||null;
-    let base=cleanCurriculumUnitTitle(r?.indicator_text||u.name||`เรื่องที่ ${i+1}`);if(count>1)base=`${base} ${i+1}`;
-    out.push({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+ui*100+i)),lesson_no:i+1,title:base,hours:roundQuarterHour(hrs),indicator_ids:r?.dataset_id?[r.dataset_id]:(u.indicator_ids||[]),objective:r?.indicator_text?`ผู้เรียนสามารถ${String(r.indicator_text).replace(/^ผู้เรียนสามารถ\s*/,"")}`:(u.objectives||"").split("\n")[0]||"",concept:u.concept||""});
-    used+=hrs
+  const total=Math.max(.25,Number(u.hours)||1);
+  const cleanTitle=t=>cleanCurriculumUnitTitle(t||'').replace(/^(บอก|อธิบาย|ระบุ|อ่าน|เขียน|ฟัง|พูด|ปฏิบัติ|ใช้|สร้าง|วิเคราะห์|จำแนก|เปรียบเทียบ)\s*/,'').replace(/\s+/g,' ').trim();
+  const baseTopics=unique(refs.map(r=>cleanTitle(r.indicator_text)).filter(Boolean));
+  const topicCount=Math.max(1,Math.min(8,Math.max(baseTopics.length,Math.ceil(total/3))));
+  const topics=[...baseTopics];
+  const enrich=['เรียนรู้พื้นฐานและความหมาย','ฝึกทักษะจากตัวอย่าง','ฝึกปฏิบัติและประยุกต์ใช้','เชื่อมโยงกับสถานการณ์ใกล้ตัว','ทบทวนและสรุปความรู้','ภาระงานและการประเมินผล'];
+  let k=0;
+  while(topics.length<topicCount){
+    const stem=String(u.name||'หน่วยการเรียนรู้').trim();
+    const suffix=enrich[k%enrich.length];
+    const candidate=(topics.length===0?stem+' : ':'')+suffix;
+    if(!topics.includes(candidate))topics.push(candidate);
+    k++;
   }
+  const count=Math.max(1,topics.length),raw=total/count;
+  let used=0;const out=[];
+  for(let i=0;i<count;i++){
+    let hrs=i===count-1?roundQuarterHour(total-used):roundQuarterHour(raw);
+    if(hrs<=0)hrs=.25;
+    if(i===count-1)hrs=roundQuarterHour(total-used);
+    const r=refs[i%Math.max(1,refs.length)]||null;
+    out.push({
+      id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+ui*100+i)),
+      lesson_no:i+1,
+      title:topics[i]||('เรื่องที่ '+(i+1)),
+      hours:hrs,
+      indicator_ids:r?.dataset_id?[r.dataset_id]:(u.indicator_ids||[]),
+      objective:r?.indicator_text?('ผู้เรียนสามารถ'+String(r.indicator_text).replace(/^ผู้เรียนสามารถ\s*/,'')):(u.objectives||'').split('\n')[0]||'',
+      concept:u.concept||''
+    });
+    used=roundQuarterHour(used+hrs);
+  }
+  const diff=roundQuarterHour(total-out.reduce((s,x)=>s+(Number(x.hours)||0),0));
+  if(out.length&&Math.abs(diff)>.001)out[out.length-1].hours=roundQuarterHour(Number(out[out.length-1].hours||0)+diff);
   return out
 }
 function ensureCourseSublessons(c){if(!c?.learning_units?.units)return c;c.learning_units.units.forEach((u,ui)=>{u.sublessons=deriveUnitSublessons(c,u,ui)});c.learning_units.sublessons_version=1;return c}
