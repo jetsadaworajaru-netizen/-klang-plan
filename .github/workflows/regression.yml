@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Check member app JavaScript syntax
+        run: node --check member-app.js
+
       - name: Run regression checks
         run: node scripts/regression-check.mjs
 
@@ -73,9 +76,34 @@ jobs:
       - name: Check production member runtime markers
         shell: bash
         run: |
-          set -e
-          curl --fail --silent --location https://klang-plan.pages.dev/member-app.js -o /tmp/member.js
-          ! grep -q '\$\$ ' /tmp/member.js
+          set -euo pipefail
+          expected_js="$(grep -o 'member-app.js?v=[0-9]*' member-app.html | tail -1)"
+          expected_build="$(grep -o 'data-build="[0-9]*"' member-app.html | tail -1)"
+          echo "Waiting for production: $expected_js / $expected_build"
+
+          ready=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            curl --fail --silent --location --connect-timeout 10 --max-time 30 \
+              "https://klang-plan.pages.dev/member-app.html?smoke=${GITHUB_SHA}" -o /tmp/member.html || true
+
+            if grep -q "$expected_js" /tmp/member.html && grep -q "$expected_build" /tmp/member.html; then
+              ready=1
+              break
+            fi
+
+            echo "Production has not reached the latest member app build yet (attempt $attempt/8)"
+            sleep 15
+          done
+
+          test "$ready" = "1"
+
+          curl --fail --silent --location --connect-timeout 10 --max-time 30 \
+            "https://klang-plan.pages.dev/member-app.js?smoke=${GITHUB_SHA}" -o /tmp/member.js
+
+          node --check /tmp/member.js
+          grep -q "function openResourceConfigurator" /tmp/member.js
+          grep -q "\$\$('\[data-sublesson-resource\]').forEach" /tmp/member.js
+          grep -q "\$\$('\[data-unit-resource\]').forEach" /tmp/member.js
           grep -q 'function downloadTeachingPack' /tmp/member.js
           grep -q 'function openQuizStudio' /tmp/member.js
           grep -q 'function openRubricStudio' /tmp/member.js
