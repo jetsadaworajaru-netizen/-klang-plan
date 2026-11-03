@@ -2017,7 +2017,7 @@ function structureUnitsFromEditor(){
 }
 function decorateStructureEditor(){
   const list=$("courseStructureList");if(!list)return;
-  const strandCards=$("#courseStructureList .structure-strand-card");
+  const strandCards=$$("#courseStructureList .structure-strand-card");
   strandCards.forEach(card=>{
     const group=String(card.dataset.strandGroup||"");
     const addBtn=card.querySelector(".structure-add-unit-btn");
@@ -2025,7 +2025,7 @@ function decorateStructureEditor(){
     let footer=list.querySelector(`[data-strand-add-footer="${group}"]`);
     if(!footer){footer=document.createElement("div");footer.className="structure-strand-footer";footer.dataset.strandAddFooter=group}
     footer.appendChild(addBtn);
-    const rows=$("#courseStructureList [data-unit-row]").filter(r=>String(r.dataset.strandGroup)===group);
+    const rows=$$("#courseStructureList [data-unit-row]").filter(r=>String(r.dataset.strandGroup)===group);
     const lastRow=rows[rows.length-1];
     if(lastRow)lastRow.insertAdjacentElement("afterend",footer);
   });
