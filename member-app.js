@@ -2673,15 +2673,15 @@ function unitWorkStatus(c,u){
 function lessonSessionHours(c){return curriculumFrameworkMode(c)==="early_childhood"?.5:1}
 function deriveUnitSublessons(c,u,ui){
   const saved=(u.sublessons||[]).filter(Boolean);
-  const totalHours=Math.max(.25,Number(u.hours)||1);
-  const looksLegacyPerHour=saved.length>8&&saved.length>=Math.ceil(totalHours/1.25)&&saved.every(x=>(Number(x.hours)||0)<=1);
-  if(saved.length&&!looksLegacyPerHour&&Math.abs(saved.reduce((s,x)=>s+(Number(x.hours)||0),0)-totalHours)<.01)return saved;
+  const total=Math.max(1,Math.round(Number(u.hours)||1));
+  const hasDecimalHours=saved.some(x=>!Number.isInteger(Number(x.hours)||0));
+  const looksLegacyPerHour=saved.length>8&&saved.length>=Math.ceil(total/1.25)&&saved.every(x=>(Number(x.hours)||0)<=1);
+  if(saved.length&&!hasDecimalHours&&!looksLegacyPerHour&&saved.reduce((s,x)=>s+(Number(x.hours)||0),0)===total)return saved;
   const refs=savedCurriculumRows(c).filter(x=>(u.indicator_ids||[]).includes(x.dataset_id));
-  const total=totalHours;
   const cleanTitle=t=>cleanCurriculumUnitTitle(t||'').replace(/^(บอก|อธิบาย|ระบุ|อ่าน|เขียน|ฟัง|พูด|ปฏิบัติ|ใช้|สร้าง|วิเคราะห์|จำแนก|เปรียบเทียบ)\s*/,'').replace(/\s+/g,' ').trim();
   const baseTopics=unique(refs.map(r=>cleanTitle(r.indicator_text)).filter(Boolean));
-  const topicCount=Math.max(1,Math.min(8,Math.max(baseTopics.length,Math.ceil(total/3))));
-  const topics=[...baseTopics];
+  const topicCount=Math.max(1,Math.min(total,8,Math.max(baseTopics.length,Math.ceil(total/3))));
+  const topics=[...baseTopics].slice(0,topicCount);
   const enrich=['เรียนรู้พื้นฐานและความหมาย','ฝึกทักษะจากตัวอย่าง','ฝึกปฏิบัติและประยุกต์ใช้','เชื่อมโยงกับสถานการณ์ใกล้ตัว','ทบทวนและสรุปความรู้','ภาระงานและการประเมินผล'];
   let k=0;
   while(topics.length<topicCount){
@@ -2691,34 +2691,26 @@ function deriveUnitSublessons(c,u,ui){
     if(!topics.includes(candidate))topics.push(candidate);
     k++;
   }
-  const count=Math.max(1,topics.length),raw=total/count;
-  let used=0;const out=[];
-  for(let i=0;i<count;i++){
-    let hrs=i===count-1?roundQuarterHour(total-used):roundQuarterHour(raw);
-    if(hrs<=0)hrs=.25;
-    if(i===count-1)hrs=roundQuarterHour(total-used);
+  const base=Math.floor(total/topicCount),extra=total%topicCount;
+  return topics.map((title,i)=>{
     const r=refs[i%Math.max(1,refs.length)]||null;
-    out.push({
+    return {
       id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+ui*100+i)),
       lesson_no:i+1,
-      title:topics[i]||('เรื่องที่ '+(i+1)),
-      hours:hrs,
+      title:title||('เรื่องที่ '+(i+1)),
+      hours:base+(i<extra?1:0),
       indicator_ids:r?.dataset_id?[r.dataset_id]:(u.indicator_ids||[]),
       objective:r?.indicator_text?('ผู้เรียนสามารถ'+String(r.indicator_text).replace(/^ผู้เรียนสามารถ\s*/,'')):(u.objectives||'').split('\n')[0]||'',
       concept:u.concept||''
-    });
-    used=roundQuarterHour(used+hrs);
-  }
-  const diff=roundQuarterHour(total-out.reduce((s,x)=>s+(Number(x.hours)||0),0));
-  if(out.length&&Math.abs(diff)>.001)out[out.length-1].hours=roundQuarterHour(Number(out[out.length-1].hours||0)+diff);
-  return out
+    }
+  })
 }
 function ensureCourseSublessons(c){if(!c?.learning_units?.units)return c;c.learning_units.units.forEach((u,ui)=>{u.sublessons=deriveUnitSublessons(c,u,ui)});c.learning_units.sublessons_version=1;return c}
 function saveSublessonTitle(ci,ui,si,value){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],s=u?.sublessons?.[si];if(!s)return;s.title=String(value||"").trim()||`เรื่องที่ ${si+1}`;rows[ci]=c;writeCourseDrafts(rows)}
 function normalizeSublessonNumbers(u){(u.sublessons||[]).forEach((s,i)=>s.lesson_no=i+1)}
 function saveSublessonHours(ci,ui,si,value){
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],s=u?.sublessons?.[si];if(!s)return;
-  s.hours=Math.max(.25,roundQuarterHour(Number(value)||.25));
+  s.hours=Math.max(1,Math.round(Number(value)||1));
   normalizeSublessonNumbers(u);rows[ci]=c;writeCourseDrafts(rows)
 }
 function mutateSublesson(ci,ui,si,action){
@@ -2737,9 +2729,21 @@ function mutateSublesson(ci,ui,si,action){
   }
   normalizeSublessonNumbers(u);u.sublessons=subs;rows[ci]=c;writeCourseDrafts(rows);openCourseLessons(ci)
 }
+function resizeUnitSublessons(ci,ui,delta){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;
+  const subs=u.sublessons||[];
+  if(delta>0){
+    const last=subs[subs.length-1]||{};
+    subs.push({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),lesson_no:subs.length+1,title:'เรื่องย่อยใหม่',hours:1,indicator_ids:[...(last.indicator_ids||u.indicator_ids||[])],objective:last.objective||'',concept:u.concept||''});
+  }else{
+    if(subs.length<=1){toast('ต้องมีอย่างน้อย 1 เรื่องย่อย');return}
+    subs.pop();
+  }
+  normalizeSublessonNumbers(u);u.sublessons=subs;rows[ci]=c;writeCourseDrafts(rows);openCourseLessons(ci)
+}
 function sublessonHoursStatus(u){
-  const target=roundQuarterHour(Number(u.hours)||0),sum=roundQuarterHour((u.sublessons||[]).reduce((s,x)=>s+(Number(x.hours)||0),0));
-  return {target,sum,ok:Math.abs(target-sum)<.01}
+  const target=Math.round(Number(u.hours)||0),sum=(u.sublessons||[]).reduce((s,x)=>s+(Math.round(Number(x.hours)||0)),0);
+  return {target,sum,ok:target===sum}
 }
 function closeCourseLessons(){$("courseLessonsModal").hidden=true;activeCourseIndex=null}
 function openCourseLessons(i){
