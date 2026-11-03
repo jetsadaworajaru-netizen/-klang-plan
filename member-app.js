@@ -2052,7 +2052,7 @@ function structureIndicatorUsage(units){
 function openStructureIndicatorPicker(row){
   if(!row||activeCourseIndex===null)return;
   $$("#courseStructureList .structure-indicator-picker").forEach(x=>x.remove());
-  const course=courseDrafts()[activeCourseIndex],units=readStructureEditor(),rows=$("#courseStructureList [data-unit-row]");
+  const course=courseDrafts()[activeCourseIndex],units=readStructureEditor(),rows=$$("#courseStructureList [data-unit-row]");
   const unitIndex=rows.indexOf(row);if(unitIndex<0)return;
   const unit=units[unitIndex],current=new Set(unit.indicator_ids||[]),usage=structureIndicatorUsage(units);
   const strandName=unit.strand_name||unit.strand_base||"";
