@@ -2771,7 +2771,7 @@ function openCourseLessons(i){
           <button type="button" data-sublesson-action="down:${ui}:${si}" title="เลื่อนลง">↓</button>
           <button type="button" data-sublesson-action="delete:${ui}:${si}" class="danger" title="ลบเรื่อง">ลบ</button>
         </div>
-        <button class="sublesson-create-btn" type="button" data-sublesson-tools="${ui}:${si}">＋ สร้างงานจากแผนนี้</button>
+        <button class="sublesson-create-btn" type="button" data-sublesson-tools="${ui}:${si}">＋ สร้างงานแผนนี้</button>
         <div class="sublesson-tool-drawer" data-sublesson-toolbox="${ui}:${si}" hidden>
           <div class="sublesson-resource-head">
             <div><b>สร้างงานจากแผนย่อยนี้</b><small>${esc(s.title||`แผน ${si+1}`)} · ใช้ข้อมูลเรื่องย่อย เวลา และตัวชี้วัดของแผนนี้อัตโนมัติ</small></div>
@@ -2827,7 +2827,7 @@ function openCourseLessons(i){
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
   $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
-  $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงานจากแผนนี้':'− ปิดชุดสร้างงาน'}});
+  $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงานแผนนี้':'− ปิดชุดงาน'}});
   $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
   $$('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');openResourceConfigurator(i,Number(ui),type,Number(si))});
   $$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
