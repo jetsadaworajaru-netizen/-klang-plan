@@ -2836,28 +2836,60 @@ async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci]
 function resourceIntro(type,u,c,sub=null){
   const scope=sub?`เรื่อง “${sub.title}” ในหน่วย “${u.name}”`:`หน่วย “${u.name}”`;
   const m={
-    teaching_media:`สร้างสื่อการสอนสำหรับ${scope} ของ ${c.grade} เลือกรูปแบบสื่อให้เหมาะกับเนื้อหาและวัย พร้อมวิธีใช้ในชั้นเรียน`,
-    worksheet:`สร้างใบงานสำหรับ${scope} ของ ${c.grade} มีคำชี้แจง กิจกรรม พื้นที่ตอบ และเฉลย`,
-    visual_card:`สร้างชุดบัตรภาพ/แฟลชการ์ดสำหรับ${scope} ของ ${c.grade} ภาพชัดเจน คำสั้น อ่านง่าย เหมาะกับวัย`,
-    knowledge:`สร้างใบความรู้สำหรับ${scope} ของ ${c.grade} สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย`,
-    learning_game:`ออกแบบเกมการเรียนรู้สำหรับ${scope} ของ ${c.grade} ระบุกติกา อุปกรณ์ วิธีเล่น เวลา และการสรุปความรู้หลังเล่น`,
-    quiz:`สร้างแบบทดสอบสำหรับ${scope} ของ ${c.grade} ให้สอดคล้องกับตัวชี้วัดและจุดประสงค์ มีเฉลยและเกณฑ์ตรวจ`,
-    slides:`สร้างโครงสไลด์การสอนสำหรับ${scope} ของ ${c.grade} จัดลำดับจากนำเข้า เนื้อหา ตัวอย่าง กิจกรรม ตรวจความเข้าใจ และสรุป`
+    teaching_media:`สร้างภาพสื่อการสอนสำหรับ${scope} ของ ${c.grade} ให้เป็นผลงานภาพสำเร็จพร้อมใช้ในชั้นเรียน จัดองค์ประกอบให้อ่านง่าย เหมาะกับวัย และสอดคล้องกับกิจกรรม`,
+    worksheet:`สร้างภาพใบงานสำหรับ${scope} ของ ${c.grade} ขนาด A4 แนวตั้ง 210 × 297 มม. เป็นใบงานพร้อมพิมพ์ มีคำชี้แจง กิจกรรม พื้นที่ตอบ และองค์ประกอบภาพที่เหมาะกับวัย`,
+    visual_card:`สร้างภาพชุดบัตรภาพ/แฟลชการ์ดสำหรับ${scope} ของ ${c.grade} ให้เป็นการ์ดภาพสำเร็จพร้อมใช้ ภาพชัด คำสั้น อ่านง่าย และเหมาะกับวัย`,
+    knowledge:`สร้างภาพใบความรู้สำหรับ${scope} ของ ${c.grade} ขนาด A4 แนวตั้ง 210 × 297 มม. สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย เป็นภาพพร้อมพิมพ์`,
+    learning_game:`สร้างภาพเกมการเรียนรู้สำหรับ${scope} ของ ${c.grade} ให้เป็นเกมพร้อมใช้ เช่น บอร์ดเกม การ์ดเกม หรือใบเกม เลือกรูปแบบที่เหมาะกับเนื้อหา พร้อมกติกาสั้น กระชับ`,
+    quiz:`สร้างภาพแบบทดสอบสำหรับ${scope} ของ ${c.grade} ขนาด A4 พร้อมพิมพ์ ให้สอดคล้องกับตัวชี้วัดและจุดประสงค์ มีพื้นที่ตอบ และจัดหน้าอ่านง่าย`,
+    slides:`สร้างภาพสไลด์การสอนสำหรับ${scope} ของ ${c.grade} เป็นภาพสไลด์สำเร็จพร้อมใช้ ลำดับเนื้อหาจากนำเข้า เนื้อหา ตัวอย่าง กิจกรรม ตรวจความเข้าใจ และสรุป`
   };
-  return m[type]||`สร้างสื่อการเรียนรู้สำหรับ${scope}`
+  return m[type]||`สร้างภาพสื่อการเรียนรู้สำหรับ${scope} เป็นผลงานภาพสำเร็จพร้อมใช้`
 }
 function resourceTypeLabel(type){return ({teaching_media:"สื่อการสอน",worksheet:"ใบงาน",visual_card:"บัตรภาพ",knowledge:"ใบความรู้",learning_game:"เกมการเรียนรู้",quiz:"แบบทดสอบ",slides:"สไลด์"})[type]||"สื่อการเรียนรู้"}
+function visualOutputRules(type){
+  const base=[
+    "ผลลัพธ์ต้องเป็นภาพที่สร้างเสร็จทันที",
+    "ห้ามตอบเป็นบทความ ห้ามสร้าง Writing Block ห้ามสร้างไฟล์ Word/PDF แทนภาพ",
+    "ห้ามอธิบายขั้นตอนก่อนสร้าง ให้เริ่มสร้างภาพโดยตรง",
+    "ข้อความภาษาไทยในภาพต้องอ่านง่าย ถูกต้อง และไม่มีข้อความสุ่ม",
+    "งานต้องพร้อมใช้งานจริงในชั้นเรียนและเหมาะกับระดับชั้น"
+  ];
+  if(["worksheet","knowledge","quiz"].includes(type))base.push("จัดหน้าเป็น A4 แนวตั้ง 210 × 297 มม. จำนวน 1 หน้า เว้นแต่ข้อมูลจำเป็นต้องแยกหน้า");
+  return base.map((x,i)=>`${i+1}) ${x}`).join("\n")
+}
 function createUnitResourcePrompt(ci,ui,type,si=null){
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
   const ids=sub?.indicator_ids?.length?sub.indicator_ids:(u.indicator_ids||[]);
   const refs=savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id));
-  const text=`${resourceIntro(type,u,c,sub)}\n\nข้อมูลอ้างอิงที่ต้องใช้:\nรายวิชา: ${c.name}\nชั้น: ${c.grade}\nภาคเรียน: ${c.semester}/${c.year}\nหน่วย: ${u.name}\n${sub?`เรื่องย่อย: ${sub.title}\nเวลา: ${Number(sub.hours)||0} ชั่วโมง\n`:""}สาระสำคัญ: ${sub?.concept||u.concept||""}\nจุดประสงค์: ${sub?.objective||u.objectives||""}\nตัวชี้วัด:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด: ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่ เนื้อหาต้องเหมาะกับระดับชั้น และเชื่อมกับกิจกรรม/การประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง`;
+  const text=`${resourceIntro(type,u,c,sub)}
+
+ข้อกำหนดผลลัพธ์ภาพ:
+${visualOutputRules(type)}
+
+ข้อมูลอ้างอิงที่ต้องใช้:
+รายวิชา: ${c.name}
+ชั้น: ${c.grade}
+ภาคเรียน: ${c.semester}/${c.year}
+หน่วย: ${u.name}
+${sub?`เรื่องย่อย: ${sub.title}
+เวลา: ${Number(sub.hours)||0} ชั่วโมง
+`:""}สาระสำคัญ: ${sub?.concept||u.concept||""}
+จุดประสงค์: ${sub?.objective||u.objectives||""}
+ตัวชี้วัด:
+${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}
+
+ข้อกำหนดทางวิชาการ:
+- ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่
+- เนื้อหาต้องเหมาะกับระดับชั้น
+- เชื่อมโยงกับกิจกรรมและการประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
+- หากเป็นใบงาน/แบบทดสอบ ให้มีพื้นที่ให้นักเรียนเขียน ตอบ ลากเส้น วาด หรือทำกิจกรรมตามความเหมาะสม
+- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ผู้ใช้ระบุว่าต้องการฉบับเฉลย`;
   c.lesson_resources=c.lesson_resources||{items:[]};
   const label=resourceTypeLabel(type);
   c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,created_at:new Date().toISOString()});
-  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ${label}แล้ว ✓`)
+  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ภาพ${label}แล้ว ✓`)
 }
-
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
 function assessmentPrompt(c,type,u=null){const refs=assessmentRefs(c,u), typeLabel={pretest:"ข้อสอบก่อนเรียน",posttest:"ข้อสอบหลังเรียน",final:"ข้อสอบปลายภาค"}[type]||"แบบประเมิน";const scope=u?`หน่วย: ${u.name}\nสาระสำคัญ: ${u.concept||""}\nจุดประสงค์: ${u.objectives||""}`:`ขอบเขตทั้งรายวิชา: ${c.learning_units?.units?.map((x,i)=>`${i+1}. ${x.name} (${x.hours} ชม.)`).join("\n")||"-"}`;const count=type==="final"?30:10;return `สร้าง${typeLabel}สำหรับรายวิชา “${c.name}” ชั้น ${c.grade}\nภาคเรียน ${c.semester}/${c.year}\n${scope}\n\nตัวชี้วัดที่อนุญาตให้ใช้เท่านั้น:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด:\n1) จำนวน ${count} ข้อ แบบปรนัย 4 ตัวเลือก เว้นแต่เนื้อหาเหมาะกับรูปแบบอื่นอย่างชัดเจน\n2) ระดับความยากง่ายสมดุล เหมาะกับวัย\n3) ทุกข้อระบุตัวชี้วัด/จุดประสงค์ที่วัด\n4) มีเฉลยพร้อมคำอธิบายสั้น ๆ\n5) ห้ามสร้างรหัสตัวชี้วัดใหม่\n${type==="final"?"6) สร้างตาราง Blueprint ก่อนข้อสอบ แสดงหน่วย ตัวชี้วัด จำนวนข้อ และสัดส่วนคะแนน รวม 100%\n7) กระจายข้อสอบตามชั่วโมงและน้ำหนักของหน่วย ไม่กระจุกอยู่หน่วยเดียว":"6) ให้ครอบคลุมจุดประสงค์สำคัญของหน่วย"}`}
