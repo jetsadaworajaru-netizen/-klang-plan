@@ -2742,18 +2742,50 @@ function sublessonHoursStatus(u){
 function closeCourseLessons(){$("courseLessonsModal").hidden=true;activeCourseIndex=null}
 function openCourseLessons(i){
   const rows=courseDrafts();let c=rows[i];const structureCheck=ensureCurriculumStructureCurrent(rows,i);c=structureCheck.course;
-  if(structureCheck.repaired){toast("อัปเกรดโครงสร้างตามหลักสูตรล่าสุดแล้ว กรุณาตรวจลำดับงานต่อจากกำหนดการสอน");openTeachingSchedule(i);return}
-  if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}
+  if(structureCheck.repaired){toast('อัปเกรดโครงสร้างตามหลักสูตรล่าสุดแล้ว กรุณาตรวจลำดับงานต่อจากกำหนดการสอน');openTeachingSchedule(i);return}
+  if(!c?.learning_units?.saved_at){toast('กรุณาบันทึกหน่วยการเรียนรู้ก่อน');return}
   const currentVersion=Number(c.course_structure?.version||0);
-  if((c.learning_units.units||[]).some((u,idx)=>Number(u.structure_version||0)<currentVersion||!u.strand_name||hasBroadUnitTitle(c,u,idx))){c.learning_units={version:currentVersion,units:c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)),saved_at:new Date().toISOString()};c.lesson_resources=null;c.assessments=null;c.documents=null}
+  if((c.learning_units.units||[]).some((u,idx)=>Number(u.structure_version||0)<currentVersion||!u.strand_name||hasBroadUnitTitle(c,u,idx))){
+    c.learning_units={version:currentVersion,units:c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)),saved_at:new Date().toISOString()};
+    c.lesson_resources=null;c.assessments=null;c.documents=null
+  }
   c=ensureCourseSublessons(c);rows[i]=c;writeCourseDrafts(rows);activeCourseIndex=i;
   const lessonCount=(c.learning_units.units||[]).reduce((s,u)=>s+(u.sublessons?.length||0),0);
-  $("courseLessonsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย · ${lessonCount} แผนรายคาบ`;
-  $("courseLessonsList").innerHTML=c.learning_units.units.map((u,ui)=>{const st=unitWorkStatus(c,u),subs=(u.sublessons||[]).map((s,si)=>`<div class="sublesson-row"><span class="sublesson-no">แผน ${si+1}</span><input data-sublesson-title="${ui}:${si}" value="${esc(s.title||"")}" aria-label="ชื่อเรื่องย่อย"><span class="sublesson-hours">${Number(s.hours)||0} ชม.</span><button type="button" data-sublesson-plan="${ui}:${si}">สร้างแผน</button></div>`).join("");return `<article class="course-lesson-unit"><div>${u.strand_name?`<div class="course-lesson-strand"><span>${esc(curriculumAreaLabel(c.subject))}</span><b>${esc(u.strand_name)}</b></div>`:""}<b>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</b><small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:""}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด · ${u.sublessons?.length||0} แผนรายคาบ</small><div class="unit-progress-wrap"><div class="unit-progress-bar"><i style="width:${st.percent}%"></i></div><div class="unit-progress-meta"><span>ความพร้อมหน่วย ${st.percent}%</span><span>${st.done}/${st.total} งานหลัก</span></div></div><div class="sublesson-list">${subs}</div></div><div class="course-lesson-actions"><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div></article>`}).join("");
-  $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(":").map(Number);saveSublessonTitle(i,ui,si,inp.value)});
-  $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(":").map(Number);startUnitPlan(i,ui,si)});
-  $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(":");createUnitResourcePrompt(i,Number(ui),type)});
-  $("courseLessonsStatus").innerHTML='<div class="indicator-preview">ระบบแยกหน่วยเป็นแผนรายคาบอัตโนมัติ ครูแก้ชื่อเรื่องแต่ละคาบได้ก่อนสร้างแผน</div>';$("courseLessonsModal").hidden=false
+  $('courseLessonsMeta').textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย · ${lessonCount} เรื่องย่อย/แผน`;
+  $('courseLessonsList').innerHTML=c.learning_units.units.map((u,ui)=>{
+    const st=unitWorkStatus(c,u),hs=sublessonHoursStatus(u);
+    const subs=(u.sublessons||[]).map((s,si)=>`
+      <div class="sublesson-row">
+        <span class="sublesson-no">แผน ${si+1}</span>
+        <input class="sublesson-title-input" data-sublesson-title="${ui}:${si}" value="${esc(s.title||'')}" aria-label="ชื่อเรื่องย่อย">
+        <div class="sublesson-hour-edit"><input data-sublesson-hours="${ui}:${si}" type="number" min="0.25" step="0.25" value="${Number(s.hours)||1}"><span>ชม.</span></div>
+        <div class="sublesson-order-actions">
+          <button type="button" data-sublesson-action="up:${ui}:${si}" title="เลื่อนขึ้น">↑</button>
+          <button type="button" data-sublesson-action="down:${ui}:${si}" title="เลื่อนลง">↓</button>
+          <button type="button" data-sublesson-action="add:${ui}:${si}" title="เพิ่มเรื่องต่อจากนี้">＋</button>
+          <button type="button" data-sublesson-action="delete:${ui}:${si}" class="danger" title="ลบเรื่อง">ลบ</button>
+        </div>
+        <button class="sublesson-create-btn" type="button" data-sublesson-plan="${ui}:${si}">สร้างแผน</button>
+      </div>`).join('');
+    return `<article class="course-lesson-unit">
+      <div class="course-lesson-main">
+        ${u.strand_name?`<div class="course-lesson-strand"><span>${esc(curriculumAreaLabel(c.subject))}</span><b>${esc(u.strand_name)}</b></div>`:''}
+        <b>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</b>
+        <small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:''}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด · ${u.sublessons?.length||0} เรื่องย่อย</small>
+        <div class="sublesson-hours-summary ${hs.ok?'ok':'warn'}">รวมเรื่องย่อย <b>${hs.sum}/${hs.target} ชั่วโมง</b> ${hs.ok?'✓':'⚠️ ปรับชั่วโมงให้ตรงกับหน่วย'}</div>
+        <div class="unit-progress-wrap"><div class="unit-progress-bar"><i style="width:${st.percent}%"></i></div><div class="unit-progress-meta"><span>ความพร้อมหน่วย ${st.percent}%</span><span>${st.done}/${st.total} งานหลัก</span></div></div>
+        <div class="sublesson-list">${subs}</div>
+      </div>
+      <div class="course-lesson-actions"><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div>
+    </article>`
+  }).join('');
+  $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(':').map(Number);saveSublessonTitle(i,ui,si,inp.value)});
+  $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
+  $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
+  $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
+  $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type)});
+  $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ระบบจัดเรื่องย่อยจากเนื้อหาและตัวชี้วัดก่อน แล้วกระจายเวลาให้เหมาะสม ครูสามารถแก้ชื่อ เพิ่ม ลบ เลื่อนลำดับ และปรับชั่วโมงได้เอง</div>';
+  $('courseLessonsModal').hidden=false
 }
 async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui,sub);toast(sub?"นำข้อมูลแผนรายคาบเข้าสู่แบบสร้างแผนแล้ว ✓":"นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
 function resourceIntro(type,u,c){const m={worksheet:`สร้างใบงานสำหรับหน่วย “${u.name}” ของ ${c.grade} มีคำชี้แจง กิจกรรม พื้นที่ตอบ และเฉลย`,visual_card:`สร้างชุดบัตรภาพประกอบการสอนสำหรับหน่วย “${u.name}” ของ ${c.grade} ภาพชัดเจน เหมาะกับวัย พร้อมคำกำกับเฉพาะที่จำเป็น`,knowledge:`สร้างใบความรู้สำหรับหน่วย “${u.name}” ของ ${c.grade} สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย`};return m[type]||`สร้างสื่อการเรียนรู้สำหรับหน่วย “${u.name}”`}
