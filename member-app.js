@@ -2742,6 +2742,17 @@ function resizeUnitSublessons(ci,ui,delta){
   }
   normalizeSublessonNumbers(u);u.sublessons=subs;rows[ci]=c;writeCourseDrafts(rows);openCourseLessons(ci)
 }
+function restoreUnitSublessonsFromCurriculum(ci,ui){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;
+  const source={...u,sublessons:[]};
+  const restored=deriveUnitSublessons(c,source,ui);
+  u.sublessons=restored;
+  normalizeSublessonNumbers(u);
+  rows[ci]=c;
+  writeCourseDrafts(rows);
+  openCourseLessons(ci);
+  toast('คืนค่าเรื่องย่อยจากหลักสูตรแล้ว ✓')
+}
 function sublessonHoursStatus(u){
   const target=Math.round(Number(u.hours)||0),sum=(u.sublessons||[]).reduce((s,x)=>s+(Math.round(Number(x.hours)||0)),0);
   return {target,sum,ok:target===sum}
@@ -2806,6 +2817,7 @@ function openCourseLessons(i){
         <div class="sublesson-resize-actions">
           <button type="button" data-sublesson-resize="minus:${ui}">− ลดเรื่องย่อย</button>
           <button type="button" data-sublesson-resize="plus:${ui}" class="primary">＋ เพิ่มเรื่องย่อย</button>
+          <button type="button" data-sublesson-restore="${ui}" class="restore-curriculum-btn" title="สร้างเรื่องย่อยกลับจากข้อมูลหลักสูตรของหน่วยนี้">↺ คืนค่าเดิมจากหลักสูตร</button>
         </div>
       </div>
       <section class="unit-resource-section">
@@ -2826,7 +2838,8 @@ function openCourseLessons(i){
   $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(':').map(Number);saveSublessonTitle(i,ui,si,inp.value)});
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
-  $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
+  $('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
+  $('[data-sublesson-restore]').forEach(b=>b.onclick=()=>restoreUnitSublessonsFromCurriculum(i,Number(b.dataset.sublessonRestore)));
   $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงานแผนนี้':'− ปิดชุดงาน'}});
   $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
   $$('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');openResourceConfigurator(i,Number(ui),type,Number(si))});
