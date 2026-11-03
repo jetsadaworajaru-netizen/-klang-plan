@@ -2431,3 +2431,25 @@ button,
     width:100%;
   }
 }
+
+
+/* restore curriculum button */
+.restore-curriculum-btn{
+  border:1px solid #cfddeb !important;
+  background:#fff !important;
+  color:#365d7f !important;
+  font-weight:800;
+}
+.restore-curriculum-btn:hover{
+  background:#f1f7fc !important;
+  border-color:#9ebbd3 !important;
+}
+@media(max-width:700px){
+  .sublesson-resize-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .restore-curriculum-btn{
+    grid-column:1/-1;
+  }
+}
