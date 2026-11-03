@@ -2713,6 +2713,32 @@ function deriveUnitSublessons(c,u,ui){
 }
 function ensureCourseSublessons(c){if(!c?.learning_units?.units)return c;c.learning_units.units.forEach((u,ui)=>{u.sublessons=deriveUnitSublessons(c,u,ui)});c.learning_units.sublessons_version=1;return c}
 function saveSublessonTitle(ci,ui,si,value){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],s=u?.sublessons?.[si];if(!s)return;s.title=String(value||"").trim()||`เรื่องที่ ${si+1}`;rows[ci]=c;writeCourseDrafts(rows)}
+function normalizeSublessonNumbers(u){(u.sublessons||[]).forEach((s,i)=>s.lesson_no=i+1)}
+function saveSublessonHours(ci,ui,si,value){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],s=u?.sublessons?.[si];if(!s)return;
+  s.hours=Math.max(.25,roundQuarterHour(Number(value)||.25));
+  normalizeSublessonNumbers(u);rows[ci]=c;writeCourseDrafts(rows)
+}
+function mutateSublesson(ci,ui,si,action){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;
+  const subs=u.sublessons||[];
+  if(action==='add'){
+    const base=subs[si]||{};
+    subs.splice(si+1,0,{id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),lesson_no:si+2,title:'เรื่องย่อยใหม่',hours:1,indicator_ids:[...(base.indicator_ids||u.indicator_ids||[])],objective:base.objective||'',concept:u.concept||''})
+  }else if(action==='delete'){
+    if(subs.length<=1){toast('ต้องมีอย่างน้อย 1 เรื่องย่อย');return}
+    subs.splice(si,1)
+  }else if(action==='up'&&si>0){
+    [subs[si-1],subs[si]]=[subs[si],subs[si-1]]
+  }else if(action==='down'&&si<subs.length-1){
+    [subs[si+1],subs[si]]=[subs[si],subs[si+1]]
+  }
+  normalizeSublessonNumbers(u);u.sublessons=subs;rows[ci]=c;writeCourseDrafts(rows);openCourseLessons(ci)
+}
+function sublessonHoursStatus(u){
+  const target=roundQuarterHour(Number(u.hours)||0),sum=roundQuarterHour((u.sublessons||[]).reduce((s,x)=>s+(Number(x.hours)||0),0));
+  return {target,sum,ok:Math.abs(target-sum)<.01}
+}
 function closeCourseLessons(){$("courseLessonsModal").hidden=true;activeCourseIndex=null}
 function openCourseLessons(i){
   const rows=courseDrafts();let c=rows[i];const structureCheck=ensureCurriculumStructureCurrent(rows,i);c=structureCheck.course;
