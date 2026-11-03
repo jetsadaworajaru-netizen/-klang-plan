@@ -1975,3 +1975,33 @@ button,
     max-width:none!important;
   }
 }
+
+/* 2026-11-03 editable topic-based sublesson rows */
+.course-lesson-unit{align-items:flex-start}
+.course-lesson-main{min-width:0;flex:1}
+.sublesson-hours-summary{margin-top:9px;padding:7px 9px;border-radius:9px;font-size:.68rem;font-weight:800}
+.sublesson-hours-summary.ok{background:#eef9f2;color:#2e6f49}
+.sublesson-hours-summary.warn{background:#fff5e8;color:#94601f}
+.sublesson-row{
+  grid-template-columns:58px minmax(220px,1fr) 88px 156px 94px;
+  gap:8px;
+}
+.sublesson-title-input{width:100%}
+.sublesson-hour-edit{display:flex;align-items:center;gap:4px}
+.sublesson-hour-edit input{width:60px;text-align:center;padding:8px 5px}
+.sublesson-hour-edit span{font-size:.66rem;font-weight:800;color:#687f93}
+.sublesson-order-actions{display:flex;gap:4px}
+.sublesson-order-actions button{min-width:32px;padding:7px 6px}
+.sublesson-order-actions .danger{color:#a84545;border-color:#edcccc;background:#fffafa}
+.sublesson-create-btn{white-space:nowrap}
+@media(max-width:900px){
+  .sublesson-row{grid-template-columns:52px minmax(0,1fr) 82px}
+  .sublesson-order-actions{grid-column:2/4}
+  .sublesson-create-btn{grid-column:2/4}
+}
+@media(max-width:600px){
+  .sublesson-row{grid-template-columns:48px minmax(0,1fr)}
+  .sublesson-hour-edit{grid-column:1/3}
+  .sublesson-order-actions{grid-column:1/3}
+  .sublesson-create-btn{grid-column:1/3}
+}
