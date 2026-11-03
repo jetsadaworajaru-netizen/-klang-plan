@@ -2233,3 +2233,73 @@ button,
   .sublesson-resize-actions{flex-direction:column}
   .sublesson-resize-actions button{width:100%}
 }
+
+
+/* learning units large modal v1 */
+#learningUnitsModal{
+  padding:18px;
+  align-items:center;
+  justify-content:center;
+}
+#learningUnitsModal .learning-units-modal-card{
+  width:min(92vw,1240px);
+  max-width:1240px;
+  height:min(92vh,920px);
+  max-height:92vh;
+  margin:auto;
+  border-radius:24px;
+  display:flex;
+  flex-direction:column;
+  overflow:auto;
+  padding:22px 24px 24px;
+}
+#learningUnitsModal .workspace-modal-head{
+  position:sticky;
+  top:-22px;
+  z-index:4;
+  background:#fff;
+  margin:-22px -24px 14px;
+  padding:22px 56px 16px 24px;
+  border-bottom:1px solid #e6edf5;
+}
+#learningUnitsModal .modal-close{
+  position:sticky;
+  top:12px;
+  margin-left:auto;
+  z-index:7;
+  flex:0 0 auto;
+}
+#learningUnitsModal .learning-units-list{
+  flex:1 1 auto;
+  min-height:0;
+}
+#learningUnitsModal .doc-action-row{
+  position:sticky;
+  bottom:-24px;
+  z-index:4;
+  background:#fff;
+  margin:18px -24px -24px;
+  padding:14px 24px 18px;
+  border-top:1px solid #e6edf5;
+}
+@media(max-width:768px){
+  #learningUnitsModal{padding:8px}
+  #learningUnitsModal .learning-units-modal-card{
+    width:96vw;
+    max-width:96vw;
+    height:94vh;
+    max-height:94vh;
+    border-radius:18px;
+    padding:18px 16px 20px;
+  }
+  #learningUnitsModal .workspace-modal-head{
+    top:-18px;
+    margin:-18px -16px 12px;
+    padding:18px 52px 14px 16px;
+  }
+  #learningUnitsModal .doc-action-row{
+    bottom:-20px;
+    margin:16px -16px -20px;
+    padding:12px 16px 14px;
+  }
+}
