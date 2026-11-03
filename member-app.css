@@ -1886,3 +1886,33 @@ button,
     padding:0 8px;
   }
 }
+
+/* 2026-11-03 safe unit indicator assignment UI */
+#courseStructureList .structure-strand-footer{margin:10px 0 24px 28px;padding:10px 0 2px;display:flex;justify-content:flex-start;border-top:1px dashed #c9ddec}
+#courseStructureList .structure-strand-footer .structure-add-unit-btn{margin-top:8px}
+#courseStructureList .structure-indicator-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #e2ebf3}
+#courseStructureList .structure-indicator-summary{min-width:0;display:flex;flex-direction:column;gap:2px}
+#courseStructureList .structure-indicator-summary b{font-size:.68rem;color:#526d84}
+#courseStructureList .structure-indicator-summary span{font-size:.71rem;color:#71869a;white-space:normal;word-break:break-word}
+#courseStructureList .structure-indicator-btn{flex:0 0 auto;min-height:34px;padding:7px 11px;border:1px solid #bfd7eb;border-radius:10px;background:#f6fbff;color:#1e6096;font:inherit;font-size:.68rem;font-weight:900;cursor:pointer}
+#courseStructureList .structure-indicator-picker{margin-top:12px;padding:14px;border:1px solid #bcd8ee;border-radius:14px;background:#f8fbfe;box-shadow:0 8px 22px rgba(39,87,128,.08)}
+#courseStructureList .structure-indicator-picker-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+#courseStructureList .structure-indicator-picker-head>div{display:flex;flex-direction:column;gap:2px}
+#courseStructureList .structure-indicator-picker-head b{font-size:.82rem;color:#153f67}
+#courseStructureList .structure-indicator-picker-head small{color:#71869a;font-size:.66rem}
+#courseStructureList .structure-indicator-picker-head>button{width:30px;height:30px;border:1px solid #d3e1ec;border-radius:9px;background:#fff;cursor:pointer}
+#courseStructureList .structure-indicator-picker-list{display:grid;gap:8px;max-height:360px;overflow:auto;padding-right:4px}
+#courseStructureList .structure-indicator-option{display:grid;grid-template-columns:22px minmax(0,1fr);gap:9px;align-items:start;padding:10px 11px;border:1px solid #dbe7f0;border-radius:11px;background:#fff;cursor:pointer}
+#courseStructureList .structure-indicator-option.is-used{background:#fffaf4;border-color:#ead7ba}
+#courseStructureList .structure-indicator-option input{margin-top:4px}
+#courseStructureList .structure-indicator-option span{display:block;min-width:0}
+#courseStructureList .structure-indicator-option b{display:block;font-size:.75rem;color:#173f64}
+#courseStructureList .structure-indicator-option small{display:block;margin-top:2px;color:#71869a;font-size:.63rem}
+#courseStructureList .structure-indicator-option p{margin:5px 0 6px;color:#405e78;font-size:.69rem;line-height:1.42}
+#courseStructureList .structure-indicator-option em{display:inline-block;padding:3px 7px;border-radius:999px;font-size:.60rem;font-style:normal;font-weight:800}
+#courseStructureList .structure-indicator-option em.free{background:#eaf8ef;color:#247145}
+#courseStructureList .structure-indicator-option em.used{background:#fff0df;color:#9b5c18}
+#courseStructureList .structure-indicator-picker-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+#courseStructureList .structure-indicator-picker-actions button{min-height:36px;padding:7px 12px;border:1px solid #cbddea;border-radius:10px;background:#fff;font:inherit;font-size:.69rem;font-weight:900;cursor:pointer}
+#courseStructureList .structure-indicator-picker-actions .primary-btn{background:#2f7bd4;color:#fff;border-color:#2f7bd4}
+@media(max-width:760px){#courseStructureList .structure-strand-footer{margin-left:14px}#courseStructureList .structure-indicator-row{align-items:flex-start;flex-direction:column}#courseStructureList .structure-indicator-picker-list{max-height:300px}}
