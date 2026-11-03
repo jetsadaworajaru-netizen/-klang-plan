@@ -2755,38 +2755,43 @@ function openCourseLessons(i){
   const lessonCount=(c.learning_units.units||[]).reduce((s,u)=>s+(u.sublessons?.length||0),0);
   $('courseLessonsMeta').textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย · ${lessonCount} เรื่องย่อย/แผน`;
   $('courseLessonsList').innerHTML=c.learning_units.units.map((u,ui)=>{
-    const st=unitWorkStatus(c,u),hs=sublessonHoursStatus(u);
-    const subs=(u.sublessons||[]).map((s,si)=>`
-      <div class="sublesson-row">
-        <span class="sublesson-no">แผน ${si+1}</span>
-        <input class="sublesson-title-input" data-sublesson-title="${ui}:${si}" value="${esc(s.title||'')}" aria-label="ชื่อเรื่องย่อย">
-        <div class="sublesson-hour-edit"><input data-sublesson-hours="${ui}:${si}" type="number" min="0.25" step="0.25" value="${Number(s.hours)||1}"><span>ชม.</span></div>
-        <div class="sublesson-order-actions">
+    const st=unitWorkStatus(c,u),hs=sublessonHoursStatus(u),subs=u.sublessons||[];
+    const rowsHtml=subs.map((s,si)=>`
+      <div class="sublesson-row simple">
+        <div class="sublesson-index"><small>แผน</small><b>${si+1}</b></div>
+        <label class="sublesson-title-wrap"><small>ชื่อเรื่องย่อย</small><input class="sublesson-title-input" data-sublesson-title="${ui}:${si}" value="${esc(s.title||'')}" aria-label="ชื่อเรื่องย่อย"></label>
+        <label class="sublesson-hour-edit"><small>ชั่วโมง</small><div><input data-sublesson-hours="${ui}:${si}" type="number" min="0.25" step="0.25" value="${Number(s.hours)||1}"><span>ชม.</span></div></label>
+        <div class="sublesson-order-actions compact">
           <button type="button" data-sublesson-action="up:${ui}:${si}" title="เลื่อนขึ้น">↑</button>
           <button type="button" data-sublesson-action="down:${ui}:${si}" title="เลื่อนลง">↓</button>
-          <button type="button" data-sublesson-action="add:${ui}:${si}" title="เพิ่มเรื่องต่อจากนี้">＋</button>
           <button type="button" data-sublesson-action="delete:${ui}:${si}" class="danger" title="ลบเรื่อง">ลบ</button>
         </div>
         <button class="sublesson-create-btn" type="button" data-sublesson-plan="${ui}:${si}">สร้างแผน</button>
       </div>`).join('');
-    return `<article class="course-lesson-unit">
+    return `<article class="course-lesson-unit simplified">
       <div class="course-lesson-main">
-        ${u.strand_name?`<div class="course-lesson-strand"><span>${esc(curriculumAreaLabel(c.subject))}</span><b>${esc(u.strand_name)}</b></div>`:''}
-        <b>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</b>
-        <small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:''}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด · ${u.sublessons?.length||0} เรื่องย่อย</small>
-        <div class="sublesson-hours-summary ${hs.ok?'ok':'warn'}">รวมเรื่องย่อย <b>${hs.sum}/${hs.target} ชั่วโมง</b> ${hs.ok?'✓':'⚠️ ปรับชั่วโมงให้ตรงกับหน่วย'}</div>
+        <div class="course-lesson-unit-head">
+          <div>
+            ${u.strand_name?`<div class="course-lesson-strand"><span>${esc(curriculumAreaLabel(c.subject))}</span><b>${esc(u.strand_name)}</b></div>`:''}
+            <h3>หน่วยที่ ${ui+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${ui+1}`)}</h3>
+            <small>${u.standard_name?`มาตรฐาน: ${esc(u.standard_name)} · `:''}${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด · ${subs.length} เรื่องย่อย</small>
+          </div>
+          <div class="sublesson-hours-summary ${hs.ok?'ok':'warn'}"><span>รวมเวลา</span><b>${hs.sum}/${hs.target} ชม.</b><small>${hs.ok?'✓ ครบ':'⚠️ ยังไม่ตรง'}</small></div>
+        </div>
         <div class="unit-progress-wrap"><div class="unit-progress-bar"><i style="width:${st.percent}%"></i></div><div class="unit-progress-meta"><span>ความพร้อมหน่วย ${st.percent}%</span><span>${st.done}/${st.total} งานหลัก</span></div></div>
-        <div class="sublesson-list">${subs}</div>
+        <div class="sublesson-list simple">${rowsHtml}</div>
+        <button type="button" class="sublesson-add-main" data-sublesson-add-unit="${ui}">＋ เพิ่มเรื่องย่อย</button>
       </div>
-      <div class="course-lesson-actions"><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div>
+      <div class="course-lesson-actions simplified"><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div>
     </article>`
   }).join('');
   $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(':').map(Number);saveSublessonTitle(i,ui,si,inp.value)});
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
+  $$('[data-sublesson-add-unit]').forEach(b=>b.onclick=()=>{const ui=Number(b.dataset.sublessonAddUnit),u=c.learning_units.units[ui],si=Math.max(0,(u.sublessons||[]).length-1);mutateSublesson(i,ui,si,'add')});
   $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
   $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type)});
-  $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ระบบจัดเรื่องย่อยจากเนื้อหาและตัวชี้วัดก่อน แล้วกระจายเวลาให้เหมาะสม ครูสามารถแก้ชื่อ เพิ่ม ลบ เลื่อนลำดับ และปรับชั่วโมงได้เอง</div>';
+  $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ครูแก้ชื่อเรื่อง ชั่วโมง ลำดับ เพิ่มหรือลบเรื่องย่อยได้เอง และระบบตรวจผลรวมเวลาให้ตรงกับหน่วย</div>';
   $('courseLessonsModal').hidden=false
 }
 async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui,sub);toast(sub?"นำข้อมูลแผนรายคาบเข้าสู่แบบสร้างแผนแล้ว ✓":"นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
