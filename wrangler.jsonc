@@ -4,6 +4,7 @@
   "name": "klang-plan",
   "compatibility_date": "2026-10-12",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "html_handling": "none"
   }
 }
