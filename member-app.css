@@ -2388,3 +2388,46 @@ button,
 @media(max-width:560px){
   .sublesson-resource-grid{grid-template-columns:1fr}
 }
+
+
+/* sublesson create button overflow fix */
+.sublesson-row.simple{
+  grid-template-columns:72px minmax(220px,1fr) 110px 140px minmax(180px,210px);
+  gap:10px;
+  align-items:center;
+}
+.sublesson-create-btn{
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  min-height:44px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  box-sizing:border-box;
+  flex-shrink:1;
+}
+@media(max-width:1180px){
+  .sublesson-row.simple{
+    grid-template-columns:64px minmax(200px,1fr) 100px 130px minmax(160px,190px);
+  }
+  .sublesson-create-btn{
+    font-size:.9rem;
+    padding:9px 10px;
+  }
+}
+@media(max-width:900px){
+  .sublesson-row.simple{
+    grid-template-columns:64px minmax(180px,1fr) 100px 120px;
+  }
+  .sublesson-create-btn{
+    grid-column:1/-1;
+    width:100%;
+  }
+}
