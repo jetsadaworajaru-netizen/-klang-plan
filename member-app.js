@@ -2005,7 +2005,7 @@ function renderStructureEditor(units){
   $("courseStructureList").innerHTML=html;
   $$('#courseStructureList [data-strand-name]').forEach(x=>x.oninput=updateStructureTotal);
   $$('#courseStructureList [data-unit-name]').forEach(x=>{autoSizeUnitNameField(x);x.oninput=()=>{autoSizeUnitNameField(x);updateStructureTotal()}});
-  $('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{recalculateStructureWeights();updateStructureTotal()});
+  $$('#courseStructureList [data-unit-hours]').forEach(x=>x.oninput=()=>{recalculateStructureWeights();updateStructureTotal()});
   const list=$("courseStructureList");
   if(list&&!list.dataset.structureActionsBound){
     list.dataset.structureActionsBound="1";
