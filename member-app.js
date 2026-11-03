@@ -90,12 +90,12 @@ function loadExternalScript(url,timeout=2200){
 async function ensureSupabaseSdk(){
   if(window.supabase?.createClient)return true;
   const sources=[
-    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
-    "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+    "https://unpkg.com/@supabase/supabase-js@2"
   ];
   let lastError=null;
   for(const src of sources){
-    try{await loadExternalScript(src,2200);return true}catch(err){lastError=err}
+    try{await loadExternalScript(src,3500);return true}catch(err){lastError=err}
   }
   throw lastError||new Error("ไม่สามารถโหลดระบบสมาชิกได้")
 }
