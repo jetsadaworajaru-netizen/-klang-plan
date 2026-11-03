@@ -2029,7 +2029,7 @@ function decorateStructureEditor(){
     const lastRow=rows[rows.length-1];
     if(lastRow)lastRow.insertAdjacentElement("afterend",footer);
   });
-  $("#courseStructureList [data-unit-row]").forEach(row=>{
+  $$("#courseStructureList [data-unit-row]").forEach(row=>{
     if(row.querySelector(".structure-indicator-row"))return;
     let codes=[];try{codes=JSON.parse(row.dataset.sourceCodes||"[]")}catch{}
     const wrap=document.createElement("div");wrap.className="structure-indicator-row";
@@ -2051,7 +2051,7 @@ function structureIndicatorUsage(units){
 }
 function openStructureIndicatorPicker(row){
   if(!row||activeCourseIndex===null)return;
-  $("#courseStructureList .structure-indicator-picker").forEach(x=>x.remove());
+  $$("#courseStructureList .structure-indicator-picker").forEach(x=>x.remove());
   const course=courseDrafts()[activeCourseIndex],units=readStructureEditor(),rows=$("#courseStructureList [data-unit-row]");
   const unitIndex=rows.indexOf(row);if(unitIndex<0)return;
   const unit=units[unitIndex],current=new Set(unit.indicator_ids||[]),usage=structureIndicatorUsage(units);
