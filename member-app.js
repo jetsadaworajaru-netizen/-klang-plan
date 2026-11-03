@@ -2665,10 +2665,11 @@ async function ensureUnitCloud(c,u,unitIndex){if(!courseCloudReady||!sb||!user)r
 function unitWorkStatus(c,u){
   const uid=u?.id||null,items=c.lesson_resources?.items||[],assess=c.assessments?.items||[];
   const has=t=>items.some(x=>x.unit_id===uid&&x.type===t);
-  const plan=has("lesson_plan"),worksheet=has("worksheet"),knowledge=has("knowledge"),visual=has("visual_card");
-  const assessment=assess.some(x=>x.unit_id===uid)||false;
-  const flags=[plan,worksheet,knowledge,visual,assessment],done=flags.filter(Boolean).length;
-  return {plan,worksheet,knowledge,visual,assessment,done,total:5,percent:Math.round(done/5*100)}
+  const plan=has("lesson_plan"),media=has("teaching_media"),worksheet=has("worksheet"),knowledge=has("knowledge"),
+        game=has("learning_game"),slides=has("slides"),visual=has("visual_card");
+  const assessment=has("quiz")||assess.some(x=>x.unit_id===uid)||false;
+  const flags=[plan,media,worksheet,knowledge,game,assessment,slides,visual],done=flags.filter(Boolean).length;
+  return {plan,media,worksheet,knowledge,game,assessment,slides,visual,done,total:8,percent:Math.round(done/8*100)}
 }
 function lessonSessionHours(c){return curriculumFrameworkMode(c)==="early_childhood"?.5:1}
 function deriveUnitSublessons(c,u,ui){
@@ -2770,7 +2771,19 @@ function openCourseLessons(i){
           <button type="button" data-sublesson-action="down:${ui}:${si}" title="เลื่อนลง">↓</button>
           <button type="button" data-sublesson-action="delete:${ui}:${si}" class="danger" title="ลบเรื่อง">ลบ</button>
         </div>
-        <button class="sublesson-create-btn" type="button" data-sublesson-plan="${ui}:${si}">สร้างแผน</button>
+        <button class="sublesson-create-btn" type="button" data-sublesson-tools="${ui}:${si}">＋ สร้างงาน</button>
+        <div class="sublesson-tool-drawer" data-sublesson-toolbox="${ui}:${si}" hidden>
+          <div class="resource-tool-grid compact">
+            <button type="button" data-sublesson-plan="${ui}:${si}"><span>📝</span><b>แผนการสอน</b></button>
+            <button type="button" data-sublesson-resource="teaching_media:${ui}:${si}"><span>🎬</span><b>สื่อการสอน</b></button>
+            <button type="button" data-sublesson-resource="worksheet:${ui}:${si}"><span>📄</span><b>ใบงาน</b></button>
+            <button type="button" data-sublesson-resource="knowledge:${ui}:${si}"><span>📚</span><b>ใบความรู้</b></button>
+            <button type="button" data-sublesson-resource="learning_game:${ui}:${si}"><span>🎮</span><b>เกม</b></button>
+            <button type="button" data-sublesson-resource="quiz:${ui}:${si}"><span>✅</span><b>แบบทดสอบ</b></button>
+            <button type="button" data-sublesson-resource="slides:${ui}:${si}"><span>📊</span><b>สไลด์</b></button>
+            <button type="button" data-sublesson-resource="visual_card:${ui}:${si}"><span>🖼️</span><b>บัตรภาพ</b></button>
+          </div>
+        </div>
       </div>`).join('');
     return `<article class="course-lesson-unit simplified">
       <div class="course-lesson-main">
@@ -2792,22 +2805,58 @@ function openCourseLessons(i){
           <button type="button" data-sublesson-resize="plus:${ui}" class="primary">＋ เพิ่มเรื่องย่อย</button>
         </div>
       </div>
-      <div class="course-lesson-actions simplified"><button type="button" data-unit-resource="worksheet:${ui}">📄 ใบงาน</button><button type="button" data-unit-resource="visual_card:${ui}">🖼️ บัตรภาพ</button><button type="button" data-unit-resource="knowledge:${ui}">📚 ใบความรู้</button></div>
+      <section class="unit-resource-section">
+        <div class="unit-resource-head"><div><b>สร้างงานจากหน่วยนี้</b><small>ใช้ข้อมูลหน่วย มาตรฐาน และตัวชี้วัดเดียวกันอัตโนมัติ</small></div></div>
+        <div class="resource-tool-grid">
+          <button type="button" data-unit-plan="${ui}"><span>📝</span><b>แผนทั้งหน่วย</b><small>สร้างแผนจากหน่วย</small></button>
+          <button type="button" data-unit-resource="teaching_media:${ui}"><span>🎬</span><b>สื่อการสอน</b><small>สื่อประกอบกิจกรรม</small></button>
+          <button type="button" data-unit-resource="worksheet:${ui}"><span>📄</span><b>ใบงาน</b><small>พร้อมคำชี้แจงและเฉลย</small></button>
+          <button type="button" data-unit-resource="knowledge:${ui}"><span>📚</span><b>ใบความรู้</b><small>สรุปเนื้อหาสำคัญ</small></button>
+          <button type="button" data-unit-resource="learning_game:${ui}"><span>🎮</span><b>เกมการเรียนรู้</b><small>เล่นได้ตามวัย</small></button>
+          <button type="button" data-unit-resource="quiz:${ui}"><span>✅</span><b>แบบทดสอบ</b><small>พร้อมเฉลย</small></button>
+          <button type="button" data-unit-resource="slides:${ui}"><span>📊</span><b>สไลด์</b><small>ลำดับเนื้อหาเป็นคาบ</small></button>
+          <button type="button" data-unit-resource="visual_card:${ui}"><span>🖼️</span><b>บัตรภาพ</b><small>ภาพ/คำสำคัญประกอบสอน</small></button>
+        </div>
+      </section>
     </article>`
   }).join('');
   $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(':').map(Number);saveSublessonTitle(i,ui,si,inp.value)});
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
   $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
-  $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
-  $$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
-  $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type)});
+  $('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงาน':'− ปิดเครื่องมือ'}});
+  $('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
+  $('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');createUnitResourcePrompt(i,Number(ui),type,Number(si))});
+  $('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
+  $('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type,null)});
   $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ชั่วโมงเป็นจำนวนเต็ม ครูเพิ่มหรือลดเรื่องย่อยได้จากปุ่มท้ายหน่วย และเลือกสร้างแผนรายเรื่องหรือสร้างแผนทั้งหน่วยได้</div>';
   $('courseLessonsModal').hidden=false
 }
 async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui,sub);toast(sub?"นำข้อมูลแผนรายคาบเข้าสู่แบบสร้างแผนแล้ว ✓":"นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
-function resourceIntro(type,u,c){const m={worksheet:`สร้างใบงานสำหรับหน่วย “${u.name}” ของ ${c.grade} มีคำชี้แจง กิจกรรม พื้นที่ตอบ และเฉลย`,visual_card:`สร้างชุดบัตรภาพประกอบการสอนสำหรับหน่วย “${u.name}” ของ ${c.grade} ภาพชัดเจน เหมาะกับวัย พร้อมคำกำกับเฉพาะที่จำเป็น`,knowledge:`สร้างใบความรู้สำหรับหน่วย “${u.name}” ของ ${c.grade} สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย`};return m[type]||`สร้างสื่อการเรียนรู้สำหรับหน่วย “${u.name}”`}
-function createUnitResourcePrompt(ci,ui,type){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui];if(!u)return;const refs=savedCurriculumRows(c).filter(x=>(u.indicator_ids||[]).includes(x.dataset_id));const text=`${resourceIntro(type,u,c)}\n\nข้อมูลอ้างอิงที่ต้องใช้:\nรายวิชา: ${c.name}\nชั้น: ${c.grade}\nภาคเรียน: ${c.semester}/${c.year}\nหน่วย: ${u.name}\nสาระสำคัญ: ${u.concept||""}\nจุดประสงค์: ${u.objectives||""}\nตัวชี้วัด:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด: ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่ และให้เนื้อหาสอดคล้องกับหน่วยเดียวกัน`;c.lesson_resources=c.lesson_resources||{items:[]};c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,type,title:`${type} · ${u.name}`,prompt:text,created_at:new Date().toISOString()});c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt สื่อจากหน่วยแล้ว ✓")}
+function resourceIntro(type,u,c,sub=null){
+  const scope=sub?`เรื่อง “${sub.title}” ในหน่วย “${u.name}”`:`หน่วย “${u.name}”`;
+  const m={
+    teaching_media:`สร้างสื่อการสอนสำหรับ${scope} ของ ${c.grade} เลือกรูปแบบสื่อให้เหมาะกับเนื้อหาและวัย พร้อมวิธีใช้ในชั้นเรียน`,
+    worksheet:`สร้างใบงานสำหรับ${scope} ของ ${c.grade} มีคำชี้แจง กิจกรรม พื้นที่ตอบ และเฉลย`,
+    visual_card:`สร้างชุดบัตรภาพ/แฟลชการ์ดสำหรับ${scope} ของ ${c.grade} ภาพชัดเจน คำสั้น อ่านง่าย เหมาะกับวัย`,
+    knowledge:`สร้างใบความรู้สำหรับ${scope} ของ ${c.grade} สรุปสาระสำคัญ ตัวอย่าง และกล่องจำง่าย`,
+    learning_game:`ออกแบบเกมการเรียนรู้สำหรับ${scope} ของ ${c.grade} ระบุกติกา อุปกรณ์ วิธีเล่น เวลา และการสรุปความรู้หลังเล่น`,
+    quiz:`สร้างแบบทดสอบสำหรับ${scope} ของ ${c.grade} ให้สอดคล้องกับตัวชี้วัดและจุดประสงค์ มีเฉลยและเกณฑ์ตรวจ`,
+    slides:`สร้างโครงสไลด์การสอนสำหรับ${scope} ของ ${c.grade} จัดลำดับจากนำเข้า เนื้อหา ตัวอย่าง กิจกรรม ตรวจความเข้าใจ และสรุป`
+  };
+  return m[type]||`สร้างสื่อการเรียนรู้สำหรับ${scope}`
+}
+function resourceTypeLabel(type){return ({teaching_media:"สื่อการสอน",worksheet:"ใบงาน",visual_card:"บัตรภาพ",knowledge:"ใบความรู้",learning_game:"เกมการเรียนรู้",quiz:"แบบทดสอบ",slides:"สไลด์"})[type]||"สื่อการเรียนรู้"}
+function createUnitResourcePrompt(ci,ui,type,si=null){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
+  const ids=sub?.indicator_ids?.length?sub.indicator_ids:(u.indicator_ids||[]);
+  const refs=savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id));
+  const text=`${resourceIntro(type,u,c,sub)}\n\nข้อมูลอ้างอิงที่ต้องใช้:\nรายวิชา: ${c.name}\nชั้น: ${c.grade}\nภาคเรียน: ${c.semester}/${c.year}\nหน่วย: ${u.name}\n${sub?`เรื่องย่อย: ${sub.title}\nเวลา: ${Number(sub.hours)||0} ชั่วโมง\n`:""}สาระสำคัญ: ${sub?.concept||u.concept||""}\nจุดประสงค์: ${sub?.objective||u.objectives||""}\nตัวชี้วัด:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด: ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่ เนื้อหาต้องเหมาะกับระดับชั้น และเชื่อมกับกิจกรรม/การประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง`;
+  c.lesson_resources=c.lesson_resources||{items:[]};
+  const label=resourceTypeLabel(type);
+  c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,created_at:new Date().toISOString()});
+  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ${label}แล้ว ✓`)
+}
 
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
