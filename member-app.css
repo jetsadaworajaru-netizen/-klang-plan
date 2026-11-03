@@ -2453,3 +2453,121 @@ button,
     grid-column:1/-1;
   }
 }
+
+
+/* resource configurator layout polish v2 */
+#resourceConfigModal{
+  padding:24px;
+  align-items:center;
+  justify-content:center;
+}
+.resource-config-card{
+  width:min(760px,calc(100vw - 40px));
+  max-width:760px;
+  max-height:88vh;
+  padding:0;
+  border-radius:22px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.resource-config-card .workspace-modal-head{
+  padding:22px 24px 14px;
+  gap:16px;
+  align-items:flex-start;
+  border-bottom:1px solid #e6edf4;
+}
+.resource-config-card .workspace-modal-head h2{
+  margin:0;
+  font-size:1.55rem;
+  line-height:1.2;
+}
+.resource-config-card .workspace-modal-head p{
+  margin:6px 0 0;
+  max-width:520px;
+  line-height:1.45;
+}
+.resource-config-card .workspace-status{
+  flex:0 0 auto;
+  margin-top:2px;
+}
+.resource-config-note{
+  margin:14px 24px 4px;
+  padding:12px 14px;
+  border-radius:14px;
+  line-height:1.45;
+}
+.resource-config-grid{
+  padding:14px 24px 18px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px 16px;
+  overflow:auto;
+}
+.resource-config-field{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  min-width:0;
+}
+.resource-config-field span{
+  font-size:.88rem;
+  font-weight:800;
+  color:#35516a;
+}
+.resource-config-field input,
+.resource-config-field select{
+  width:100%;
+  min-height:46px;
+  padding:10px 14px;
+  border-radius:12px;
+  box-sizing:border-box;
+}
+.resource-config-actions{
+  margin-top:auto;
+  padding:14px 24px 20px;
+  border-top:1px solid #e6edf4;
+  display:grid;
+  grid-template-columns:150px minmax(0,1fr);
+  gap:12px;
+  background:#fff;
+}
+.resource-config-actions button{
+  min-height:50px;
+  border-radius:13px;
+}
+#confirmResourceConfigBtn{
+  font-size:1rem;
+  font-weight:900;
+}
+#cancelResourceConfigBtn{
+  font-weight:800;
+}
+#closeResourceConfigBtn{
+  top:14px;
+  right:14px;
+}
+@media(max-width:680px){
+  #resourceConfigModal{padding:12px}
+  .resource-config-card{
+    width:min(96vw,760px);
+    max-height:94vh;
+    border-radius:18px;
+  }
+  .resource-config-card .workspace-modal-head{
+    padding:18px 18px 12px;
+    padding-right:52px;
+  }
+  .resource-config-note{margin:12px 18px 2px}
+  .resource-config-grid{
+    padding:12px 18px 16px;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .resource-config-actions{
+    padding:12px 18px 16px;
+    grid-template-columns:1fr;
+  }
+  #confirmResourceConfigBtn{order:1}
+  #cancelResourceConfigBtn{order:2}
+}
