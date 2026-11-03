@@ -2826,11 +2826,18 @@ function openCourseLessons(i){
   $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
   $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงาน':'− ปิดเครื่องมือ'}});
   $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
-  $$('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');createUnitResourcePrompt(i,Number(ui),type,Number(si))});
+  $('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');openResourceConfigurator(i,Number(ui),type,Number(si))});
   $$('[data-unit-plan]').forEach(b=>b.onclick=()=>startUnitPlan(i,Number(b.dataset.unitPlan),null));
-  $$('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');createUnitResourcePrompt(i,Number(ui),type,null)});
+  $('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');openResourceConfigurator(i,Number(ui),type,null)});
   $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ชั่วโมงเป็นจำนวนเต็ม ครูเพิ่มหรือลดเรื่องย่อยได้จากปุ่มท้ายหน่วย และเลือกสร้างแผนรายเรื่องหรือสร้างแผนทั้งหน่วยได้</div>';
   $('courseLessonsModal').hidden=false
+  if($('closeResourceConfigBtn')&&!$('closeResourceConfigBtn').dataset.bound){
+    $('closeResourceConfigBtn').dataset.bound='1';
+    $('closeResourceConfigBtn').onclick=closeResourceConfigurator;
+    $('resourceConfigBackdrop').onclick=closeResourceConfigurator;
+    $('cancelResourceConfigBtn').onclick=closeResourceConfigurator;
+    $('confirmResourceConfigBtn').onclick=confirmResourceConfigurator
+  }
 }
 async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui,sub);toast(sub?"นำข้อมูลแผนรายคาบเข้าสู่แบบสร้างแผนแล้ว ✓":"นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
 function resourceIntro(type,u,c,sub=null){
@@ -2847,6 +2854,128 @@ function resourceIntro(type,u,c,sub=null){
   return m[type]||`สร้างภาพสื่อการเรียนรู้สำหรับ${scope} เป็นผลงานภาพสำเร็จพร้อมใช้`
 }
 function resourceTypeLabel(type){return ({teaching_media:"สื่อการสอน",worksheet:"ใบงาน",visual_card:"บัตรภาพ",knowledge:"ใบความรู้",learning_game:"เกมการเรียนรู้",quiz:"แบบทดสอบ",slides:"สไลด์"})[type]||"สื่อการเรียนรู้"}
+
+let resourceConfiguratorContext=null;
+function resourceOptionCatalog(type){
+  const commonDifficulty=[
+    ["easy","ง่าย — เหมาะสำหรับเริ่มเรียน"],
+    ["medium","ปานกลาง — ใช้ความเข้าใจและประยุกต์"],
+    ["hard","ท้าทาย — คิดวิเคราะห์มากขึ้น"]
+  ];
+  const map={
+    worksheet:{fields:[
+      {key:"activityType",label:"ประเภทใบงาน",type:"select",options:[
+        ["fill_blank","เติมคำ"],["matching","จับคู่"],["connect","ลากเส้นเชื่อมโยง"],["coloring","ระบายสี"],
+        ["drawing","วาดภาพ"],["cut_paste","ตัด–แปะ"],["sequence","เรียงลำดับ"],["short_answer","ตอบคำถาม"],["mixed","ผสมหลายกิจกรรม"]
+      ],value:"mixed"},
+      {key:"difficulty",label:"ระดับความยาก",type:"select",options:commonDifficulty,value:"medium"},
+      {key:"itemCount",label:"จำนวนกิจกรรม/ข้อ",type:"number",min:3,max:20,step:1,value:6},
+      {key:"visualStyle",label:"รูปแบบงาน",type:"select",options:[
+        ["bw","ขาวดำ เส้นชัด พร้อมถ่ายเอกสาร"],["color","สีสันเหมาะกับวัย"],["pastel","พาสเทลนุ่มนวล"]
+      ],value:"bw"}
+    ]},
+    teaching_media:{fields:[
+      {key:"mediaType",label:"ประเภทสื่อ",type:"select",options:[
+        ["poster","โปสเตอร์ประกอบการสอน"],["infographic","อินโฟกราฟิก"],["concept_map","แผนผังความคิด"],
+        ["diagram","แผนภาพอธิบาย"],["activity_card","การ์ดกิจกรรม"],["visual_aid","สื่อภาพประกอบ"]
+      ],value:"infographic"},
+      {key:"difficulty",label:"ระดับเนื้อหา",type:"select",options:commonDifficulty,value:"medium"},
+      {key:"visualStyle",label:"สไตล์",type:"select",options:[
+        ["clean","เรียบสะอาด"],["formal","ทางการสำหรับโรงเรียน"],["child","สดใสเหมาะกับเด็ก"],["minimal","มินิมอล"]
+      ],value:"clean"}
+    ]},
+    knowledge:{fields:[
+      {key:"knowledgeType",label:"รูปแบบใบความรู้",type:"select",options:[
+        ["summary","สรุปเนื้อหา"],["infographic","อินโฟกราฟิกความรู้"],["concept_map","แผนผังความคิด"],
+        ["step_by_step","อธิบายเป็นขั้นตอน"],["example","เนื้อหาพร้อมตัวอย่าง"]
+      ],value:"summary"},
+      {key:"density",label:"ความหนาแน่นเนื้อหา",type:"select",options:[
+        ["light","โปร่ง อ่านง่าย"],["balanced","สมดุล"],["compact","เนื้อหาแน่นขึ้น"]
+      ],value:"balanced"},
+      {key:"visualStyle",label:"รูปแบบงาน",type:"select",options:[
+        ["color","สีสันเหมาะกับวัย"],["bw","ขาวดำพร้อมพิมพ์"],["formal","ทางการ"]
+      ],value:"color"}
+    ]},
+    learning_game:{fields:[
+      {key:"gameType",label:"ประเภทเกม",type:"select",options:[
+        ["board","บอร์ดเกม"],["matching","เกมจับคู่"],["bingo","บิงโก"],["maze","เขาวงกต"],
+        ["card","การ์ดเกม"],["spin","วงล้อคำถาม"],["sorting","เกมจัดหมวดหมู่"]
+      ],value:"matching"},
+      {key:"playMode",label:"รูปแบบการเล่น",type:"select",options:[
+        ["individual","รายบุคคล"],["pair","คู่"],["group","กลุ่ม"]
+      ],value:"group"},
+      {key:"difficulty",label:"ระดับความยาก",type:"select",options:commonDifficulty,value:"medium"},
+      {key:"duration",label:"เวลาเล่นโดยประมาณ",type:"select",options:[
+        ["10","10 นาที"],["15","15 นาที"],["20","20 นาที"],["30","30 นาที"]
+      ],value:"15"}
+    ]},
+    quiz:{fields:[
+      {key:"questionType",label:"รูปแบบข้อสอบ",type:"select",options:[
+        ["mcq","ปรนัย 4 ตัวเลือก"],["true_false","ถูก–ผิด"],["fill_blank","เติมคำ"],["short_answer","ตอบสั้น"],["mixed","ผสมหลายรูปแบบ"]
+      ],value:"mcq"},
+      {key:"difficulty",label:"ระดับความยาก",type:"select",options:commonDifficulty,value:"medium"},
+      {key:"itemCount",label:"จำนวนข้อ",type:"number",min:5,max:40,step:1,value:10},
+      {key:"studentVersion",label:"รูปแบบผลลัพธ์",type:"select",options:[
+        ["student","ฉบับนักเรียน — ไม่แสดงเฉลย"],["answer","ฉบับเฉลย"],["both","นักเรียน + เฉลยแยก"]
+      ],value:"student"}
+    ]},
+    slides:{fields:[
+      {key:"slideCount",label:"จำนวนสไลด์",type:"number",min:4,max:20,step:1,value:8},
+      {key:"slideStyle",label:"รูปแบบสไลด์",type:"select",options:[
+        ["teach","สอนเป็นลำดับ"],["interactive","มีคำถาม/กิจกรรม"],["story","เล่าเรื่อง"],["summary","สรุปบทเรียน"]
+      ],value:"teach"},
+      {key:"visualStyle",label:"สไตล์",type:"select",options:[
+        ["clean","สะอาด อ่านง่าย"],["formal","ทางการ"],["child","สดใสเหมาะกับเด็ก"],["minimal","มินิมอล"]
+      ],value:"clean"}
+    ]},
+    visual_card:{fields:[
+      {key:"cardType",label:"ประเภทบัตร",type:"select",options:[
+        ["picture_word","ภาพ + คำ"],["flashcard","แฟลชการ์ดคำถาม–คำตอบ"],["matching","การ์ดจับคู่"],["sequence","การ์ดเรียงลำดับ"],["vocabulary","บัตรคำศัพท์"]
+      ],value:"picture_word"},
+      {key:"cardCount",label:"จำนวนบัตร",type:"number",min:4,max:24,step:1,value:8},
+      {key:"visualStyle",label:"รูปแบบภาพ",type:"select",options:[
+        ["color","สีสันเหมาะกับวัย"],["bw","ขาวดำ"],["minimal","เรียบง่าย"]
+      ],value:"color"}
+    ]}
+  };
+  return map[type]||{fields:[]}
+}
+function resourceOptionLabel(field,value){
+  const option=(field.options||[]).find(x=>String(x[0])===String(value));
+  return option?option[1]:String(value??"")
+}
+function renderResourceConfiguratorFields(type){
+  const box=$("resourceConfigFields"),catalog=resourceOptionCatalog(type);if(!box)return;
+  box.innerHTML=catalog.fields.map(field=>{
+    if(field.type==="number")return \`<label class="resource-config-field"><span>\${esc(field.label)}</span><input data-resource-config="\${field.key}" type="number" min="\${field.min||1}" max="\${field.max||99}" step="\${field.step||1}" value="\${field.value}"></label>\`;
+    return \`<label class="resource-config-field"><span>\${esc(field.label)}</span><select data-resource-config="\${field.key}">\${(field.options||[]).map(([v,l])=>\`<option value="\${esc(v)}" \${String(v)===String(field.value)?"selected":""}>\${esc(l)}</option>\`).join("")}</select></label>\`
+  }).join("")
+}
+function openResourceConfigurator(ci,ui,type,si=null){
+  const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
+  resourceConfiguratorContext={ci,ui,type,si};
+  $("resourceConfigTitle").textContent="ตั้งค่า"+resourceTypeLabel(type);
+  $("resourceConfigMeta").textContent=[c.name,c.grade,"หน่วยที่ "+(ui+1),sub?("แผนย่อย "+(si+1)+" · "+sub.title):u.name].filter(Boolean).join(" · ");
+  renderResourceConfiguratorFields(type);
+  $("resourceConfigModal").hidden=false
+}
+function closeResourceConfigurator(){if($("resourceConfigModal"))$("resourceConfigModal").hidden=true;resourceConfiguratorContext=null}
+function collectResourceConfiguratorOptions(type){
+  const catalog=resourceOptionCatalog(type),result={},labels=[];
+  catalog.fields.forEach(field=>{
+    const el=document.querySelector('[data-resource-config="'+field.key+'"]');
+    const value=el?.value??field.value;
+    result[field.key]=field.type==="number"?Number(value):value;
+    labels.push(field.label+": "+resourceOptionLabel(field,value))
+  });
+  result.summary=labels.join("\\n");
+  return result
+}
+function confirmResourceConfigurator(){
+  const ctx=resourceConfiguratorContext;if(!ctx)return;
+  const opts=collectResourceConfiguratorOptions(ctx.type),{ci,ui,type,si}=ctx;
+  closeResourceConfigurator();createUnitResourcePrompt(ci,ui,type,si,opts)
+}
 function visualOutputRules(type){
   const base=[
     "ผลลัพธ์ต้องเป็นภาพที่สร้างเสร็จทันที",
@@ -2858,37 +2987,39 @@ function visualOutputRules(type){
   if(["worksheet","knowledge","quiz"].includes(type))base.push("จัดหน้าเป็น A4 แนวตั้ง 210 × 297 มม. จำนวน 1 หน้า เว้นแต่ข้อมูลจำเป็นต้องแยกหน้า");
   return base.map((x,i)=>`${i+1}) ${x}`).join("\n")
 }
-function createUnitResourcePrompt(ci,ui,type,si=null){
+function createUnitResourcePrompt(ci,ui,type,si=null,options={}){
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
   const ids=sub?.indicator_ids?.length?sub.indicator_ids:(u.indicator_ids||[]);
   const refs=savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id));
-  const text=`${resourceIntro(type,u,c,sub)}
+  const text=\`\${resourceIntro(type,u,c,sub)}
 
 ข้อกำหนดผลลัพธ์ภาพ:
-${visualOutputRules(type)}
+\${visualOutputRules(type)}
+
+การตั้งค่าที่ครูเลือก:
+\${options.summary||"ใช้ค่ามาตรฐานที่เหมาะกับระดับชั้น"}
 
 ข้อมูลอ้างอิงที่ต้องใช้:
-รายวิชา: ${c.name}
-ชั้น: ${c.grade}
-ภาคเรียน: ${c.semester}/${c.year}
-หน่วย: ${u.name}
-${sub?`เรื่องย่อย: ${sub.title}
-เวลา: ${Number(sub.hours)||0} ชั่วโมง
-`:""}สาระสำคัญ: ${sub?.concept||u.concept||""}
-จุดประสงค์: ${sub?.objective||u.objectives||""}
+รายวิชา: \${c.name}
+ชั้น: \${c.grade}
+ภาคเรียน: \${c.semester}/\${c.year}
+หน่วย: \${u.name}
+\${sub?\`เรื่องย่อย: \${sub.title}
+เวลา: \${Number(sub.hours)||0} ชั่วโมง
+\`:""}สาระสำคัญ: \${sub?.concept||u.concept||""}
+จุดประสงค์: \${sub?.objective||u.objectives||""}
 ตัวชี้วัด:
-${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}
+\${refs.map(x=>\`- \${x.indicator||""} \${x.indicator_text||""}\`).join("\\n")}
 
 ข้อกำหนดทางวิชาการ:
 - ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่
 - เนื้อหาต้องเหมาะกับระดับชั้น
-- เชื่อมโยงกับกิจกรรมและการประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
+- เชื่อมโยงกับกิจกรรมและการประเมินของ\${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
 - หากเป็นใบงาน/แบบทดสอบ ให้มีพื้นที่ให้นักเรียนเขียน ตอบ ลากเส้น วาด หรือทำกิจกรรมตามความเหมาะสม
-- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ผู้ใช้ระบุว่าต้องการฉบับเฉลย`;
-  c.lesson_resources=c.lesson_resources||{items:[]};
-  const label=resourceTypeLabel(type);
-  c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,created_at:new Date().toISOString()});
-  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ภาพ${label}แล้ว ✓`)
+- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ครูเลือกฉบับเฉลย\`;
+  c.lesson_resources=c.lesson_resources||{items:[]};const label=resourceTypeLabel(type);
+  c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:\`\${label} · \${sub?.title||u.name}\`,prompt:text,options,created_at:new Date().toISOString()});
+  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(\`สร้าง Prompt ภาพ\${label}แล้ว ✓\`)
 }
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
