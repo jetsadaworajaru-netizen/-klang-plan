@@ -1516,8 +1516,8 @@ $$('[data-course-units]').forEach(b=>b.onclick=()=>openLearningUnits(Number(b.da
 $$('[data-course-lessons]').forEach(b=>b.onclick=()=>openCourseLessons(Number(b.dataset.courseLessons)));
 $$('[data-course-assessments]').forEach(b=>b.onclick=()=>openCourseAssessments(Number(b.dataset.courseAssessments)));
 $$('[data-course-documents]').forEach(b=>b.onclick=()=>openCourseDocuments(Number(b.dataset.courseDocuments)));
-$('[data-course-use]').forEach(b=>b.onclick=()=>{const c=courseDrafts()[Number(b.dataset.courseUse)];if(!c)return;prefillCourseToCreate(c,null);toast("นำข้อมูลรายวิชามาใช้แล้ว ✓")});
-$('[data-course-semester]').forEach(sel=>sel.onchange=()=>{
+$$('[data-course-use]').forEach(b=>b.onclick=()=>{const c=courseDrafts()[Number(b.dataset.courseUse)];if(!c)return;prefillCourseToCreate(c,null);toast("นำข้อมูลรายวิชามาใช้แล้ว ✓")});
+$$('[data-course-semester]').forEach(sel=>sel.onchange=()=>{
   const rows=courseDrafts(),i=Number(sel.dataset.courseSemester),c=rows[i];
   if(!c)return;
   c.semester=sel.value||"";
@@ -1526,6 +1526,7 @@ $('[data-course-semester]').forEach(sel=>sel.onchange=()=>{
   renderCourses();
   toast("เปลี่ยนภาคเรียนแล้ว ✓")
 })
+}
 function prefillCourseToCreate(c,u=null,courseIndex=null,unitIndex=null,sublesson=null){
   switchTab("create");
   stage=String(c.grade||"").startsWith("ม.")?"มัธยมศึกษา":String(c.grade||"").startsWith("ป.")?"ประถมศึกษา":"ปฐมวัย";
