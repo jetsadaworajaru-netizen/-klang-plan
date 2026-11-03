@@ -975,8 +975,22 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script id="memberStartupWatchdog">
+  setTimeout(function(){
+    var gate=document.getElementById("loadingGate");
+    if(gate && !gate.classList.contains("hidden")){
+      var b=gate.querySelector("b");
+      if(b)b.textContent="กำลังเชื่อมต่อระบบสมาชิก…";
+    }
+  },2500);
+  setTimeout(function(){
+    var gate=document.getElementById("loadingGate");
+    if(gate && !gate.classList.contains("hidden")){
+      gate.innerHTML='<div class="error-box"><b>เชื่อมต่อช้ากว่าปกติ</b><br>กรุณากดลองใหม่ หากอินเทอร์เน็ตหรือ CDN ชั่วคราวตอบสนองช้า<br><br><button onclick="location.reload()" class="secondary-btn">ลองใหม่</button></div>';
+    }
+  },7000);
+</script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=1049"></script>
+<script src="/member-app.js?v=1050"></script>
 </body>
 </html>
