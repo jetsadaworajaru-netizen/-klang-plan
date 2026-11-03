@@ -2838,8 +2838,8 @@ function openCourseLessons(i){
   $$('[data-sublesson-title]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonTitle.split(':').map(Number);saveSublessonTitle(i,ui,si,inp.value)});
   $$('[data-sublesson-hours]').forEach(inp=>inp.onchange=()=>{const [ui,si]=inp.dataset.sublessonHours.split(':').map(Number);saveSublessonHours(i,ui,si,inp.value);openCourseLessons(i)});
   $$('[data-sublesson-action]').forEach(b=>b.onclick=()=>{const [action,ui,si]=b.dataset.sublessonAction.split(':');mutateSublesson(i,Number(ui),Number(si),action)});
-  $('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
-  $('[data-sublesson-restore]').forEach(b=>b.onclick=()=>restoreUnitSublessonsFromCurriculum(i,Number(b.dataset.sublessonRestore)));
+  $$('[data-sublesson-resize]').forEach(b=>b.onclick=()=>{const [action,ui]=b.dataset.sublessonResize.split(':');resizeUnitSublessons(i,Number(ui),action==='plus'?1:-1)});
+  $$('[data-sublesson-restore]').forEach(b=>b.onclick=()=>restoreUnitSublessonsFromCurriculum(i,Number(b.dataset.sublessonRestore)));
   $$('[data-sublesson-tools]').forEach(b=>b.onclick=()=>{const key=b.dataset.sublessonTools,box=document.querySelector('[data-sublesson-toolbox="'+key+'"]');if(box){box.hidden=!box.hidden;b.textContent=box.hidden?'＋ สร้างงานแผนนี้':'− ปิดชุดงาน'}});
   $$('[data-sublesson-plan]').forEach(b=>b.onclick=()=>{const [ui,si]=b.dataset.sublessonPlan.split(':').map(Number);startUnitPlan(i,ui,si)});
   $$('[data-sublesson-resource]').forEach(b=>b.onclick=()=>{const [type,ui,si]=b.dataset.sublessonResource.split(':');openResourceConfigurator(i,Number(ui),type,Number(si))});
