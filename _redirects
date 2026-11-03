@@ -3,3 +3,6 @@
 # Direct static routes only:
 # /teacher.html
 # /admin-panel.html
+
+
+/member-app /member-app.html 302
