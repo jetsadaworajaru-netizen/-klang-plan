@@ -2008,16 +2008,101 @@ function renderStructureEditor(units){
     list.dataset.structureActionsBound="1";
     list.addEventListener("click",handleStructureEditorAction);
   }
+  decorateStructureEditor();
   updateStructureTotal()
 }
 
 function structureUnitsFromEditor(){
   return readStructureEditor()
 }
+function decorateStructureEditor(){
+  const list=$("courseStructureList");if(!list)return;
+  const strandCards=$("#courseStructureList .structure-strand-card");
+  strandCards.forEach(card=>{
+    const group=String(card.dataset.strandGroup||"");
+    const addBtn=card.querySelector(".structure-add-unit-btn");
+    if(!addBtn)return;
+    let footer=list.querySelector(`[data-strand-add-footer="${group}"]`);
+    if(!footer){footer=document.createElement("div");footer.className="structure-strand-footer";footer.dataset.strandAddFooter=group}
+    footer.appendChild(addBtn);
+    const rows=$("#courseStructureList [data-unit-row]").filter(r=>String(r.dataset.strandGroup)===group);
+    const lastRow=rows[rows.length-1];
+    if(lastRow)lastRow.insertAdjacentElement("afterend",footer);
+  });
+  $("#courseStructureList [data-unit-row]").forEach(row=>{
+    if(row.querySelector(".structure-indicator-row"))return;
+    let codes=[];try{codes=JSON.parse(row.dataset.sourceCodes||"[]")}catch{}
+    const wrap=document.createElement("div");wrap.className="structure-indicator-row";
+    const summary=document.createElement("div");summary.className="structure-indicator-summary";
+    const b=document.createElement("b");b.textContent="ตัวชี้วัด/ผลลัพธ์";
+    const s=document.createElement("span");s.textContent=codes.length?codes.join(", "):"ยังไม่ได้เลือกตัวชี้วัด";
+    summary.append(b,s);
+    const btn=document.createElement("button");btn.type="button";btn.className="structure-indicator-btn";btn.dataset.structureAction="indicators";btn.textContent="🎯 จัดตัวชี้วัด";
+    wrap.append(summary,btn);row.appendChild(wrap);
+  });
+}
+function structureIndicatorUsage(units){
+  const map=new Map();
+  units.forEach((u,idx)=>(u.indicator_ids||[]).forEach(id=>{
+    if(!map.has(id))map.set(id,[]);
+    map.get(id).push({unitIndex:idx,name:u.name||u.base_name||("หน่วยที่ "+(idx+1))});
+  }));
+  return map
+}
+function openStructureIndicatorPicker(row){
+  if(!row||activeCourseIndex===null)return;
+  $("#courseStructureList .structure-indicator-picker").forEach(x=>x.remove());
+  const course=courseDrafts()[activeCourseIndex],units=readStructureEditor(),rows=$("#courseStructureList [data-unit-row]");
+  const unitIndex=rows.indexOf(row);if(unitIndex<0)return;
+  const unit=units[unitIndex],current=new Set(unit.indicator_ids||[]),usage=structureIndicatorUsage(units);
+  const strandName=unit.strand_name||unit.strand_base||"";
+  const all=savedCurriculumRows(course);
+  let options=all.filter(r=>String(r.domain||"").trim()===String(strandName).trim());if(!options.length)options=all;
+  const picker=document.createElement("div");picker.className="structure-indicator-picker";picker.dataset.pickerUnitIndex=String(unitIndex);
+  const head=document.createElement("div");head.className="structure-indicator-picker-head";
+  const headText=document.createElement("div");headText.innerHTML="<b>เลือกตัวชี้วัด/ผลลัพธ์สำหรับหน่วยนี้</b><small>"+esc(strandName||"สาระการเรียนรู้")+" · เลือกได้มากกว่า 1 รายการ</small>";
+  const close=document.createElement("button");close.type="button";close.dataset.structureAction="close-indicators";close.textContent="×";
+  head.append(headText,close);picker.appendChild(head);
+  const list=document.createElement("div");list.className="structure-indicator-picker-list";
+  options.forEach(r=>{
+    const used=(usage.get(r.dataset_id)||[]).filter(x=>x.unitIndex!==unitIndex);
+    const label=document.createElement("label");label.className="structure-indicator-option"+(used.length?" is-used":"");
+    const ch=document.createElement("input");ch.type="checkbox";ch.dataset.structureIndicatorId=r.dataset_id;ch.checked=current.has(r.dataset_id);
+    const body=document.createElement("span");
+    const title=document.createElement("b");title.textContent=r.indicator||r.standard||"ผลลัพธ์การเรียนรู้";
+    const meta=document.createElement("small");meta.textContent=(r.standard||"")+(r.classification?" · "+r.classification:"");
+    const p=document.createElement("p");p.textContent=r.indicator_text||"";
+    const em=document.createElement("em");em.className=used.length?"used":"free";
+    em.textContent=used.length?("ใช้แล้วใน "+used.map(x=>"หน่วยที่ "+(x.unitIndex+1)+" — "+x.name).join(" · ")):"ยังไม่ใช้ในหน่วยอื่น";
+    body.append(title,meta,p,em);label.append(ch,body);list.appendChild(label);
+  });
+  if(!options.length){const empty=document.createElement("div");empty.className="structure-indicator-empty";empty.textContent="ไม่พบตัวชี้วัดในสาระนี้";list.appendChild(empty)}
+  picker.appendChild(list);
+  const actions=document.createElement("div");actions.className="structure-indicator-picker-actions";
+  const cancel=document.createElement("button");cancel.type="button";cancel.dataset.structureAction="close-indicators";cancel.textContent="ยกเลิก";
+  const save=document.createElement("button");save.type="button";save.className="primary-btn";save.dataset.structureAction="save-indicators";save.textContent="บันทึกตัวชี้วัด";
+  actions.append(cancel,save);picker.appendChild(actions);row.appendChild(picker);
+  picker.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function saveStructureIndicatorPicker(picker){
+  if(!picker||activeCourseIndex===null)return;
+  const units=readStructureEditor(),unitIndex=Number(picker.dataset.pickerUnitIndex),unit=units[unitIndex];if(!unit)return;
+  const ids=[...picker.querySelectorAll("[data-structure-indicator-id]")].filter(x=>x.checked).map(x=>x.dataset.structureIndicatorId);
+  const course=courseDrafts()[activeCourseIndex],sourceRows=savedCurriculumRows(course).filter(r=>ids.includes(r.dataset_id));
+  unit.indicator_ids=ids;unit.source_indicator_codes=sourceRows.map(r=>r.indicator).filter(Boolean);
+  const standards=unique(sourceRows.map(r=>r.standard).filter(Boolean));
+  if(standards.length){unit.standard_name=standards.join(" / ");unit.source_standard=unit.standard_name}
+  const isDefault=!String(unit.name||"").trim()||String(unit.name||"").trim()==="หน่วยการเรียนรู้ใหม่";
+  if(sourceRows.length&&isDefault){const base=suggestedUnitTitle(sourceRows,unitIndex,course);unit.base_name=base;unit.name=contextualUnitName(base,course)}
+  units[unitIndex]=unit;renderStructureEditor(units);recalculateStructureWeights();updateStructureTotal();toast("อัปเดตตัวชี้วัดของหน่วยแล้ว ✓");
+}
 function handleStructureEditorAction(event){
   const btn=event.target.closest("[data-structure-action]");
   if(!btn)return;
   const action=btn.dataset.structureAction;
+  if(action==="close-indicators"){btn.closest(".structure-indicator-picker")?.remove();return}
+  if(action==="save-indicators"){saveStructureIndicatorPicker(btn.closest(".structure-indicator-picker"));return}
+  if(action==="indicators"){openStructureIndicatorPicker(btn.closest("[data-unit-row]"));return}
   const units=structureUnitsFromEditor();
 
   if(action==="add"){
@@ -2045,6 +2130,8 @@ function handleStructureEditorAction(event){
     renderStructureEditor(units);
     recalculateStructureWeights();
     updateStructureTotal();
+    const newRows=$$('#courseStructureList [data-unit-row]');
+    if(newRows[insertAt])openStructureIndicatorPicker(newRows[insertAt]);
     return;
   }
 
