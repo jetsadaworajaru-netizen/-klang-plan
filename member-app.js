@@ -2947,8 +2947,8 @@ function resourceOptionLabel(field,value){
 function renderResourceConfiguratorFields(type){
   const box=$("resourceConfigFields"),catalog=resourceOptionCatalog(type);if(!box)return;
   box.innerHTML=catalog.fields.map(field=>{
-    if(field.type==="number")return \`<label class="resource-config-field"><span>\${esc(field.label)}</span><input data-resource-config="\${field.key}" type="number" min="\${field.min||1}" max="\${field.max||99}" step="\${field.step||1}" value="\${field.value}"></label>\`;
-    return \`<label class="resource-config-field"><span>\${esc(field.label)}</span><select data-resource-config="\${field.key}">\${(field.options||[]).map(([v,l])=>\`<option value="\${esc(v)}" \${String(v)===String(field.value)?"selected":""}>\${esc(l)}</option>\`).join("")}</select></label>\`
+    if(field.type==="number")return `<label class="resource-config-field"><span>${esc(field.label)}</span><input data-resource-config="${field.key}" type="number" min="${field.min||1}" max="${field.max||99}" step="${field.step||1}" value="${field.value}"></label>`;
+    return `<label class="resource-config-field"><span>${esc(field.label)}</span><select data-resource-config="${field.key}">${(field.options||[]).map(([v,l])=>`<option value="${esc(v)}" ${String(v)===String(field.value)?"selected":""}>${esc(l)}</option>`).join("")}</select></label>`
   }).join("")
 }
 function openResourceConfigurator(ci,ui,type,si=null){
@@ -2991,35 +2991,35 @@ function createUnitResourcePrompt(ci,ui,type,si=null,options={}){
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
   const ids=sub?.indicator_ids?.length?sub.indicator_ids:(u.indicator_ids||[]);
   const refs=savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id));
-  const text=\`\${resourceIntro(type,u,c,sub)}
+  const text=`${resourceIntro(type,u,c,sub)}
 
 ข้อกำหนดผลลัพธ์ภาพ:
-\${visualOutputRules(type)}
+${visualOutputRules(type)}
 
 การตั้งค่าที่ครูเลือก:
-\${options.summary||"ใช้ค่ามาตรฐานที่เหมาะกับระดับชั้น"}
+${options.summary||"ใช้ค่ามาตรฐานที่เหมาะกับระดับชั้น"}
 
 ข้อมูลอ้างอิงที่ต้องใช้:
-รายวิชา: \${c.name}
-ชั้น: \${c.grade}
-ภาคเรียน: \${c.semester}/\${c.year}
-หน่วย: \${u.name}
-\${sub?\`เรื่องย่อย: \${sub.title}
-เวลา: \${Number(sub.hours)||0} ชั่วโมง
-\`:""}สาระสำคัญ: \${sub?.concept||u.concept||""}
-จุดประสงค์: \${sub?.objective||u.objectives||""}
+รายวิชา: ${c.name}
+ชั้น: ${c.grade}
+ภาคเรียน: ${c.semester}/${c.year}
+หน่วย: ${u.name}
+${sub?`เรื่องย่อย: ${sub.title}
+เวลา: ${Number(sub.hours)||0} ชั่วโมง
+`:""}สาระสำคัญ: ${sub?.concept||u.concept||""}
+จุดประสงค์: ${sub?.objective||u.objectives||""}
 ตัวชี้วัด:
-\${refs.map(x=>\`- \${x.indicator||""} \${x.indicator_text||""}\`).join("\\n")}
+${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\\n")}
 
 ข้อกำหนดทางวิชาการ:
 - ใช้เฉพาะตัวชี้วัดที่ให้ ห้ามแต่งรหัสใหม่
 - เนื้อหาต้องเหมาะกับระดับชั้น
-- เชื่อมโยงกับกิจกรรมและการประเมินของ\${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
+- เชื่อมโยงกับกิจกรรมและการประเมินของ${sub?"แผนย่อยนี้":"หน่วยนี้"}โดยตรง
 - หากเป็นใบงาน/แบบทดสอบ ให้มีพื้นที่ให้นักเรียนเขียน ตอบ ลากเส้น วาด หรือทำกิจกรรมตามความเหมาะสม
-- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ครูเลือกฉบับเฉลย\`;
+- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน เว้นแต่ครูเลือกฉบับเฉลย`;
   c.lesson_resources=c.lesson_resources||{items:[]};const label=resourceTypeLabel(type);
-  c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:\`\${label} · \${sub?.title||u.name}\`,prompt:text,options,created_at:new Date().toISOString()});
-  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(\`สร้าง Prompt ภาพ\${label}แล้ว ✓\`)
+  c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,options,created_at:new Date().toISOString()});
+  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");$("promptText").textContent=text;$("promptWrap").hidden=false;closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ภาพ${label}แล้ว ✓`)
 }
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
