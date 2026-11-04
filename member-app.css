@@ -3212,3 +3212,20 @@ button,
 @media(max-width:560px){
   .strand-delete-actions{grid-template-columns:1fr}
 }
+
+
+/* assessment custom quiz action v3 */
+.assessment-actions{
+  grid-template-columns:1fr 1fr !important;
+}
+.assessment-custom-quiz-btn{
+  grid-column:1/-1;
+  min-height:46px !important;
+  background:#eef3ff !important;
+  border-color:#c9d6f5 !important;
+  color:#3158a8 !important;
+  font-weight:900 !important;
+}
+.assessment-custom-quiz-btn:hover{
+  background:#e6eeff !important;
+}
