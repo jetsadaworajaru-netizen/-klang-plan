@@ -33,7 +33,7 @@ window.addEventListener("error",e=>{
 window.addEventListener("unhandledrejection",e=>{
   memberRuntimeGuard(e.reason||new Error("promise rejected"),{background:true});
 });
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="none",planTeacherImageData="",planSchoolLogoSource="none",planSchoolLogoData="",planQrSource="none",planQrData="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="profile",planTeacherImageData="",planSchoolLogoSource="profile",planSchoolLogoData="",planQrSource="none",planQrData="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -1155,7 +1155,12 @@ function saveSourceFile(src,name){
   if(!src)return toast("ยังไม่มีไฟล์นี้ในโปรไฟล์");
   fetch(src).then(r=>r.blob()).then(blob=>saveBlob(blob,name+"."+extFromMime(blob.type||"image/jpeg"))).catch(()=>toast("ดาวน์โหลดไฟล์ไม่สำเร็จ"));
 }
+function ensureDefaultPlanAssets(){
+  if(planTeacherImageSource==="profile"&&!profileTeacherRef())planTeacherImageSource="none";
+  if(planSchoolLogoSource==="profile"&&!profileLogoRef())planSchoolLogoSource="none";
+}
 function renderAiAttachmentKit(){
+  ensureDefaultPlanAssets();
   const teacher=currentPlanTeacherImage(),logo=currentPlanLogoImage();
   const tp=$("aiTeacherPreview"),lp=$("aiLogoPreview"),qp=$("aiQrPreview");
   if(tp)tp.innerHTML=teacher?'<img src="'+teacher+'" alt="รูปครู">':"ไม่มีรูปครู";
@@ -4477,9 +4482,9 @@ function restoreCreateState(snap){
   style=snap.style||style;
   palette=snap.palette||palette;
   promptOutputMode=snap.promptOutputMode||promptOutputMode;
-  planTeacherImageSource=snap.planTeacherImageSource||"none";
+  planTeacherImageSource=snap.planTeacherImageSource||"profile";
   planTeacherImageData=snap.planTeacherImageData||"";
-  planSchoolLogoSource=snap.planSchoolLogoSource||"none";
+  planSchoolLogoSource=snap.planSchoolLogoSource||"profile";
   planSchoolLogoData=snap.planSchoolLogoData||"";
   planQrSource=snap.planQrSource||"none";
   planQrData=snap.planQrData||"";
