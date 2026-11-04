@@ -936,10 +936,11 @@ F. แนวทางการออกแบบ
 ตัวเลือกการตกแต่งที่ครูเลือก (ต้องปฏิบัติตามจริง)
 ${visualOptions}
 
-ไฟล์อ้างอิงที่อาจแนบมาพร้อม Prompt นี้
-- 01-Teacher-Reference: ถ้ามี ให้ใช้ภาพครูคนนี้เท่านั้น คงใบหน้าและบุคลิกเดิม ห้ามสร้างบุคคลใหม่
-- 02-School-Logo: ถ้ามี ให้ใช้โลโก้ต้นฉบับนี้เท่านั้น ห้ามดัดแปลง
-- 03-QR-Code: ถ้ามี ให้ใช้ QR ต้นฉบับนี้เท่านั้น ต้องสแกนได้จริง
+ไฟล์ Asset ที่อาจแนบมาพร้อม Prompt นี้ — ต้องใช้ไฟล์จริงตรงตามชื่อ ห้ามสร้างใหม่
+- 01-Teacher-USE-EXACT: เป็น Asset รูปครูจริงของแผนนี้ ต้องใช้บุคคลจากไฟล์นี้เท่านั้น ห้ามวาดใหม่ ห้ามสร้างหน้าใหม่ ห้ามเปลี่ยนใบหน้า ชุด ทรงผม หรือบุคลิก อนุญาตเฉพาะย่อ/ขยาย/ครอปเพื่อจัดวาง
+- 02-School-Logo-USE-EXACT: เป็น Asset โลโก้จริง ต้องวางไฟล์นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี รูปทรง รายละเอียด หรือตัวอักษร
+- 03-QR-Code-USE-EXACT: เป็น Asset QR จริง ต้องวางไฟล์นี้โดยตรง ห้ามสร้าง QR ใหม่ ห้ามตกแต่งทับ และต้องสแกนได้
+- ให้ถือไฟล์ 01/02/03 เป็นองค์ประกอบภาพที่ต้องใช้ตรงไฟล์ ไม่ใช่ reference สำหรับสร้างสิ่งที่คล้ายกัน
 - หากไม่มีไฟล์ชนิดใดแนบมา ห้ามสร้างไฟล์นั้นขึ้นเอง
 
 - ใช้ Typography ภาษาไทยอ่านง่าย
@@ -1138,6 +1139,11 @@ function ensurePromptReferencePreview(){
   if($("copyPromptBtn"))$("copyPromptBtn").textContent="📋 คัดลอก Prompt พร้อมใช้";
 }
 function profileTeacherRef(){const src=profile?.teacher_photo_url||profile?.avatar_url||"";return src&&String(src).startsWith("avatar:")?"":src}
+function currentPlanLogoImage(){
+  if(planSchoolLogoSource==="none")return "";
+  if(planSchoolLogoSource==="upload")return planSchoolLogoData||"";
+  return profile?.school_logo_url||""
+}
 function profileLogoRef(){return profile?.school_logo_url||""}
 async function sourceToBytes(src){
   if(!src)return null;
@@ -1150,14 +1156,14 @@ function saveSourceFile(src,name){
   fetch(src).then(r=>r.blob()).then(blob=>saveBlob(blob,name+"."+extFromMime(blob.type||"image/jpeg"))).catch(()=>toast("ดาวน์โหลดไฟล์ไม่สำเร็จ"));
 }
 function renderAiAttachmentKit(){
-  const teacher=profileTeacherRef(),logo=profileLogoRef();
+  const teacher=currentPlanTeacherImage(),logo=currentPlanLogoImage();
   const tp=$("aiTeacherPreview"),lp=$("aiLogoPreview"),qp=$("aiQrPreview");
   if(tp)tp.innerHTML=teacher?'<img src="'+teacher+'" alt="รูปครู">':"ไม่มีรูปครู";
   if(lp)lp.innerHTML=logo?'<img src="'+logo+'" alt="โลโก้โรงเรียน">':"ไม่มีโลโก้";
   if(qp)qp.innerHTML=planQrData?'<img src="'+planQrData+'" alt="QR Code">':"QR";
-  if($("aiTeacherStatus"))$("aiTeacherStatus").textContent=teacher?"พร้อมแนบ":"ยังไม่มีรูปครูในโปรไฟล์";
-  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"พร้อมแนบ":"ยังไม่มีโลโก้ในโปรไฟล์";
-  if($("aiQrStatus"))$("aiQrStatus").textContent=planQrData?"พร้อมแนบ":"ไม่บังคับ";
+  if($("aiTeacherStatus"))$("aiTeacherStatus").textContent=teacher?"ตรงกับรูปที่เลือกในแผน":"แผนนี้ไม่ได้ใช้รูปครู";
+  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"ตรงกับโลโก้ที่เลือกในแผน":"แผนนี้ไม่ได้ใช้โลโก้";
+  if($("aiQrStatus"))$("aiQrStatus").textContent=planQrData?"ตรงกับ QR ที่เลือก":"ไม่บังคับ";
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").disabled=!teacher;
   if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").disabled=!logo;
 }
@@ -1165,13 +1171,22 @@ async function downloadAiPack(){
   const entries=[];
   const promptText=$("promptText")?.textContent||"";
   entries.push(["00-Prompt-Klang-Plan.txt",promptText]);
-  const teacher=profileTeacherRef(),logo=profileLogoRef();
-  try{if(teacher){const x=await sourceToBytes(teacher);entries.push(["01-Teacher-Reference."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
-  try{if(logo){const x=await sourceToBytes(logo);entries.push(["02-School-Logo."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
-  try{if(planQrData){const x=await sourceToBytes(planQrData);entries.push(["03-QR-Code."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
-  const readme="วิธีใช้\n1) เปิด ChatGPT หรือ Gemini\n2) แนบไฟล์ 01 รูปครู / 02 โลโก้ / 03 QR (ถ้ามี)\n3) คัดลอกข้อความจาก 00-Prompt-Klang-Plan.txt\n4) วาง Prompt แล้วสั่งสร้างภาพ A4 หน้าเดียว\n\nสำคัญ: ใช้รูปครูและโลโก้จากไฟล์แนบจริง ห้ามสร้างใหม่หรือเปลี่ยนใบหน้า";
-  entries.push(["README.txt",readme]);
-  saveBlob(zipStored(entries,"application/zip"),"Klang-Plan-AI-Attachments.zip");toast("ดาวน์โหลดชุดแนบแล้ว ✓");
+  const teacher=currentPlanTeacherImage(),logo=currentPlanLogoImage();
+  try{if(teacher){const x=await sourceToBytes(teacher);entries.push(["01-Teacher-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  try{if(logo){const x=await sourceToBytes(logo);entries.push(["02-School-Logo-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  try{if(planQrData){const x=await sourceToBytes(planQrData);entries.push(["03-QR-Code-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
+  const readme=[
+    "วิธีใช้ชุดไฟล์แนบ Klang Plan",
+    "1) แนบไฟล์ทั้งหมดที่มีอยู่ใน ZIP ไปพร้อม Prompt",
+    "2) 01-Teacher-USE-EXACT = Asset จริง ต้องใช้บุคคลจากไฟล์นี้เท่านั้น ห้ามวาดใหม่ ห้ามสร้างหน้าใหม่ ห้ามเปลี่ยนชุดหรือใบหน้า",
+    "3) 02-School-Logo-USE-EXACT = Asset จริง ต้องใช้ไฟล์โลโก้นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี/รูปทรง/ตัวอักษร",
+    "4) 03-QR-Code-USE-EXACT = Asset จริง ต้องใช้ไฟล์ QR นี้โดยตรง ห้ามสร้าง QR ใหม่ ห้ามตกแต่งทับ และต้องสแกนได้",
+    "5) อนุญาตเฉพาะการย่อ/ขยายและครอปเพื่อจัดวาง โดยต้องรักษาสัดส่วนและรายละเอียดต้นฉบับ",
+    "",
+    "สำคัญมาก: ไฟล์ 01/02/03 เป็น ASSET สำหรับวางในผลงาน ไม่ใช่เพียงภาพอ้างอิงให้ AI สร้างใหม่"
+  ].join("\n");
+  entries.push(["README-FIRST.txt",readme]);
+  saveBlob(zipStored(entries,"application/zip"),"Klang-Plan-AI-Attachments.zip");toast("ดาวน์โหลดชุดแนบที่ตรงกับแผนแล้ว ✓");
 }
 function setCopyPromptButtonState(copied=false){
   const b=$("copyPromptBtn");if(!b)return;
@@ -4575,8 +4590,8 @@ function bind(){
   if($("saveDraftPlanBtn"))$("saveDraftPlanBtn").onclick=saveDraftPlan;$("generateBtn").onclick=generate;$("copyPromptBtn").onclick=copy;
   if($("refreshDirectPreviewBtn"))$("refreshDirectPreviewBtn").onclick=renderDirectPlanPreview;
   if($("downloadDirectPlanPdfBtn"))$("downloadDirectPlanPdfBtn").onclick=downloadDirectPlanPdf;
-  if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(profileTeacherRef(),"Teacher-Reference");
-  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(profileLogoRef(),"School-Logo");
+  if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(currentPlanTeacherImage(),"Teacher-USE-EXACT");
+  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(currentPlanLogoImage(),"School-Logo-USE-EXACT");
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   nodes(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));nodes("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
