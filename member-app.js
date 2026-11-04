@@ -3165,13 +3165,7 @@ function openCourseLessons(i){
   nodes('[data-unit-resource]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.unitResource.split(':');openResourceConfigurator(i,Number(ui),type,null)});
   $('courseLessonsStatus').innerHTML='<div class="indicator-preview">ชั่วโมงเป็นจำนวนเต็ม ครูเพิ่มหรือลดเรื่องย่อยได้จากปุ่มท้ายหน่วย และเลือกสร้างแผนรายเรื่องหรือสร้างแผนทั้งหน่วยได้</div>';
   $('courseLessonsModal').hidden=false
-  if($('closeResourceConfigBtn')&&!$('closeResourceConfigBtn').dataset.bound){
-    $('closeResourceConfigBtn').dataset.bound='1';
-    $('closeResourceConfigBtn').onclick=closeResourceConfigurator;
-    $('resourceConfigBackdrop').onclick=closeResourceConfigurator;
-    $('cancelResourceConfigBtn').onclick=closeResourceConfigurator;
-    $('confirmResourceConfigBtn').onclick=confirmResourceConfigurator
-  }
+  bindResourceConfiguratorActions();
 }
 async function startUnitPlan(ci,ui,si=null){const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;await ensureUnitCloud(c,u,ui);rows[ci]=c;writeCourseDrafts(rows,{sync:false});closeCourseLessons();prefillCourseToCreate(c,u,ci,ui,sub);toast(sub?"นำข้อมูลแผนรายคาบเข้าสู่แบบสร้างแผนแล้ว ✓":"นำข้อมูลหน่วยเข้าสู่แบบสร้างแผนแล้ว ✓")}
 function resourceIntro(type,u,c,sub=null){
@@ -3286,7 +3280,18 @@ function renderResourceConfiguratorFields(type){
     return `<label class="resource-config-field"><span>${esc(field.label)}</span><select data-resource-config="${field.key}">${(field.options||[]).map(([v,l])=>`<option value="${esc(v)}" ${String(v)===String(field.value)?"selected":""}>${esc(l)}</option>`).join("")}</select></label>`
   }).join("")
 }
+function bindResourceConfiguratorActions(){
+  const closeBtn=$("closeResourceConfigBtn");
+  const backdrop=$("resourceConfigBackdrop");
+  const cancelBtn=$("cancelResourceConfigBtn");
+  const confirmBtn=$("confirmResourceConfigBtn");
+  if(closeBtn)closeBtn.onclick=closeResourceConfigurator;
+  if(backdrop)backdrop.onclick=closeResourceConfigurator;
+  if(cancelBtn)cancelBtn.onclick=closeResourceConfigurator;
+  if(confirmBtn)confirmBtn.onclick=confirmResourceConfigurator
+}
 function openResourceConfigurator(ci,ui,type,si=null){
+  bindResourceConfiguratorActions();
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
   resourceConfiguratorContext={ci,ui,type,si};
   $("resourceConfigTitle").textContent=type==="quiz"?"ตั้งค่าแบบทดสอบ":"ตั้งค่า"+resourceTypeLabel(type);
