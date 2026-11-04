@@ -1156,6 +1156,44 @@ function currentPlanLogoImage(){
   return profile?.school_logo_url||""
 }
 function profileLogoRef(){return profile?.school_logo_url||""}
+const transparentLogoCache=new Map();
+async function transparentLogoDataUrl(src){
+  if(!src)return "";
+  if(transparentLogoCache.has(src))return transparentLogoCache.get(src);
+  try{
+    const blob=await fetch(src).then(r=>{if(!r.ok)throw new Error("โหลดโลโก้ไม่สำเร็จ");return r.blob()});
+    const bmp=await createImageBitmap(blob);
+    const maxSide=1200,scale=Math.min(1,maxSide/Math.max(bmp.width,bmp.height)),w=Math.max(1,Math.round(bmp.width*scale)),h=Math.max(1,Math.round(bmp.height*scale));
+    const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+    const ctx=cv.getContext("2d",{willReadFrequently:true});ctx.drawImage(bmp,0,0,w,h);
+    const im=ctx.getImageData(0,0,w,h),d=im.data;
+    const samples=[];
+    const push=(x,y)=>{const i=(y*w+x)*4;if(d[i+3]>8)samples.push([d[i],d[i+1],d[i+2]])};
+    const step=Math.max(1,Math.floor(Math.min(w,h)/40));
+    for(let x=0;x<w;x+=step){push(x,0);push(x,h-1)}
+    for(let y=0;y<h;y+=step){push(0,y);push(w-1,y)}
+    if(!samples.length)return src;
+    const buckets=new Map();
+    for(const rgb of samples){const key=rgb.map(v=>Math.round(v/24)).join(",");const b=buckets.get(key)||{n:0,sum:[0,0,0]};b.n++;b.sum[0]+=rgb[0];b.sum[1]+=rgb[1];b.sum[2]+=rgb[2];buckets.set(key,b)}
+    const bg=[...buckets.values()].sort((a,b)=>b.n-a.n)[0];
+    const br=bg.sum[0]/bg.n,bgG=bg.sum[1]/bg.n,bb=bg.sum[2]/bg.n;
+    const dist=i=>Math.hypot(d[i]-br,d[i+1]-bgG,d[i+2]-bb);
+    const tol=72,seen=new Uint8Array(w*h),q=[];
+    const add=(x,y)=>{const p=y*w+x;if(seen[p])return;const i=p*4;if(d[i+3]===0||dist(i)<=tol){seen[p]=1;q.push(p)}};
+    for(let x=0;x<w;x++){add(x,0);add(x,h-1)}
+    for(let y=0;y<h;y++){add(0,y);add(w-1,y)}
+    for(let qi=0;qi<q.length;qi++){
+      const p=q[qi],x=p%w,y=Math.floor(p/w),i=p*4;
+      if(d[i+3]&&dist(i)<=tol)d[i+3]=0;
+      if(x>0)add(x-1,y);if(x<w-1)add(x+1,y);if(y>0)add(x,y-1);if(y<h-1)add(x,y+1)
+    }
+    ctx.putImageData(im,0,0);
+    const out=cv.toDataURL("image/png");
+    transparentLogoCache.set(src,out);
+    return out
+  }catch(e){console.warn("transparent logo",e);return src}
+}
+async function currentPlanLogoAsset(){return transparentLogoDataUrl(currentPlanLogoImage())}
 async function sourceToBytes(src){
   if(!src)return null;
   const r=await fetch(src);if(!r.ok)throw new Error("โหลดไฟล์แนบไม่สำเร็จ");
@@ -1170,15 +1208,15 @@ function ensureDefaultPlanAssets(){
   if(planTeacherImageSource==="profile"&&!profileTeacherRef())planTeacherImageSource="none";
   if(planSchoolLogoSource==="profile"&&!profileLogoRef())planSchoolLogoSource="none";
 }
-function renderAiAttachmentKit(){
+async function renderAiAttachmentKit(){
   ensureDefaultPlanAssets();
-  const teacher=currentPlanTeacherImage(),logo=currentPlanLogoImage();
+  const teacher=currentPlanTeacherImage(),rawLogo=currentPlanLogoImage(),logo=rawLogo?await currentPlanLogoAsset():"";
   const tp=$("aiTeacherPreview"),lp=$("aiLogoPreview"),qp=$("aiQrPreview");
   if(tp)tp.innerHTML=teacher?'<img src="'+teacher+'" alt="รูปครู">':"ไม่มีรูปครู";
-  if(lp)lp.innerHTML=logo?'<img src="'+logo+'" alt="โลโก้โรงเรียน">':"ไม่มีโลโก้";
+  if(lp)lp.innerHTML=logo?'<img src="'+logo+'" alt="โลโก้โรงเรียน" style="background:transparent">':"ไม่มีโลโก้";
   if(qp)qp.innerHTML=planQrData?'<img src="'+planQrData+'" alt="QR Code">':"QR";
   if($("aiTeacherStatus"))$("aiTeacherStatus").textContent=teacher?"ตรงกับรูปที่เลือกในแผน":"แผนนี้ไม่ได้ใช้รูปครู";
-  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"ตรงกับโลโก้ที่เลือกในแผน":"แผนนี้ไม่ได้ใช้โลโก้";
+  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"PNG พื้นโปร่ง · ตรงกับโลโก้ที่เลือก":"แผนนี้ไม่ได้ใช้โลโก้";
   if($("aiQrStatus"))$("aiQrStatus").textContent=planQrData?"ตรงกับ QR ที่เลือก":"ไม่บังคับ";
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").disabled=!teacher;
   if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").disabled=!logo;
@@ -1187,7 +1225,7 @@ async function downloadAiPack(){
   const entries=[];
   const promptText=$("promptText")?.textContent||"";
   entries.push(["00-Prompt-Klang-Plan.txt",promptText]);
-  const teacher=currentPlanTeacherImage(),logo=currentPlanLogoImage();
+  const teacher=currentPlanTeacherImage(),logo=await currentPlanLogoAsset();
   try{if(teacher){const x=await sourceToBytes(teacher);entries.push(["01-Teacher-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
   try{if(logo){const x=await sourceToBytes(logo);entries.push(["02-School-Logo-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
   try{if(planQrData){const x=await sourceToBytes(planQrData);entries.push(["03-QR-Code-USE-EXACT."+extFromMime(x.type),x.bytes])}}catch(e){console.warn(e)}
@@ -4598,7 +4636,7 @@ function bind(){
   document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";syncTeacherSourceControls();updateSummary()});
   if($("planTeacherStyleUpload"))$("planTeacherStyleUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);planTeacherImageSource="upload";syncTeacherSourceControls();updateSummary()};
   document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.onchange=()=>{planSchoolLogoSource=r.value;if($("planSchoolLogoUploadWrap"))$("planSchoolLogoUploadWrap").hidden=planSchoolLogoSource!=="upload";updateSummary()});
-  if($("planSchoolLogoUpload"))$("planSchoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planSchoolLogoData=await fileToDataUrl(f);planSchoolLogoSource="upload";document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
+  if($("planSchoolLogoUpload"))$("planSchoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planSchoolLogoData=await transparentLogoDataUrl(await fileToDataUrl(f));planSchoolLogoSource="upload";document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary();renderAiAttachmentKit()};
   document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.onchange=()=>{planQrSource=r.value;if($("planQrUploadWrap"))$("planQrUploadWrap").hidden=planQrSource!=="upload";updateSummary()});
   if($("planQrUpload"))$("planQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);planQrSource="upload";document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
   syncTeacherSourceControls();
@@ -4607,7 +4645,7 @@ function bind(){
   if($("refreshDirectPreviewBtn"))$("refreshDirectPreviewBtn").onclick=renderDirectPlanPreview;
   if($("downloadDirectPlanPdfBtn"))$("downloadDirectPlanPdfBtn").onclick=downloadDirectPlanPdf;
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").onclick=()=>saveSourceFile(currentPlanTeacherImage(),"Teacher-USE-EXACT");
-  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=()=>saveSourceFile(currentPlanLogoImage(),"School-Logo-USE-EXACT");
+  if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").onclick=async()=>saveSourceFile(await currentPlanLogoAsset(),"School-Logo-USE-EXACT");
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   nodes(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));nodes("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
@@ -4625,7 +4663,7 @@ function bind(){
   nodes("[data-avatar]").forEach(b=>b.onclick=()=>{profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profilePhotoSource=await fileToDataUrl(f);resetProfilePhotoEditor();$("profileStatus").innerHTML='<div class="indicator-preview">เลือกรูปแล้ว ลาก/ซูม/เลื่อนได้ จากนั้นกด “บันทึกโปรไฟล์”</div>'}};
   if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
-  if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await compress(f);renderProfile()}};
+  if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await transparentLogoDataUrl(await fileToDataUrl(f));renderProfile()}};
   if($("profilePhotoZoom"))$("profilePhotoZoom").oninput=e=>{profilePhotoZoom=Number(e.target.value||100)/100;renderProfilePhotoEditor()};
   if($("profilePhotoX"))$("profilePhotoX").oninput=e=>{profilePhotoX=Number(e.target.value||0);renderProfilePhotoEditor()};
   if($("profilePhotoY"))$("profilePhotoY").oninput=e=>{profilePhotoY=Number(e.target.value||0);renderProfilePhotoEditor()};
