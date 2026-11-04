@@ -1104,7 +1104,6 @@ function refreshPromptPreview(){
   if(kit)kit.hidden=promptOutputMode!=="image";
   if(promptOutputMode==="image"){
     renderAiAttachmentKit();
-    ensurePromptReferencePreview();
   }else{
     const ref=$("promptReferenceMedia");
     if(ref)ref.hidden=true;
@@ -1135,19 +1134,8 @@ async function imageSourceToPngBlob(src){
   return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("แปลงรูปไม่สำเร็จ")),"image/png"));
 }
 function ensurePromptReferencePreview(){
-  const wrap=$("promptWrap");if(!wrap)return;
-  let box=$("promptReferenceMedia");
-  if(!box){
-    box=document.createElement("div");box.id="promptReferenceMedia";
-    box.style.cssText="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 14px;padding:10px 12px;border:1px solid #dbe7f0;border-radius:12px;background:#f8fbfe";
-    const pre=$("promptText");pre?.parentNode?.insertBefore(box,pre);
-  }
-  const img=currentPlanTeacherImage();
-  if(planTeacherImageSource!=="none"&&img){
-    box.hidden=false;
-    box.innerHTML='<img src="'+img+'" alt="รูปครูอ้างอิง" style="width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid #dbe7f0"><div><b>รูปครูอ้างอิงสำหรับ Prompt นี้</b><br><small>เมื่อนำ Prompt ไปใช้ ต้องแนบรูปนี้ไปพร้อมกัน เพื่อให้ AI ใช้ใบหน้าครูจริง</small></div>';
-  }else{box.hidden=true;box.innerHTML=""}
-  if($("copyPromptBtn"))$("copyPromptBtn").textContent="📋 คัดลอก Prompt พร้อมใช้";
+  const box=$("promptReferenceMedia");
+  if(box){box.hidden=true;box.innerHTML=""}
 }
 function profileTeacherRef(){const src=profile?.teacher_photo_url||profile?.avatar_url||"";return src&&String(src).startsWith("avatar:")?"":src}
 function currentPlanLogoImage(){
