@@ -3040,8 +3040,51 @@ ${type==="quiz"&&options.studentVersion==="answer"?"- แสดงเฉลย�
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
 function assessmentPrompt(c,type,u=null){const refs=assessmentRefs(c,u), typeLabel={pretest:"ข้อสอบก่อนเรียน",posttest:"ข้อสอบหลังเรียน",final:"ข้อสอบปลายภาค"}[type]||"แบบประเมิน";const scope=u?`หน่วย: ${u.name}\nสาระสำคัญ: ${u.concept||""}\nจุดประสงค์: ${u.objectives||""}`:`ขอบเขตทั้งรายวิชา: ${c.learning_units?.units?.map((x,i)=>`${i+1}. ${x.name} (${x.hours} ชม.)`).join("\n")||"-"}`;const count=type==="final"?30:10;return `สร้าง${typeLabel}สำหรับรายวิชา “${c.name}” ชั้น ${c.grade}\nภาคเรียน ${c.semester}/${c.year}\n${scope}\n\nตัวชี้วัดที่อนุญาตให้ใช้เท่านั้น:\n${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}\n\nข้อกำหนด:\n1) จำนวน ${count} ข้อ แบบปรนัย 4 ตัวเลือก เว้นแต่เนื้อหาเหมาะกับรูปแบบอื่นอย่างชัดเจน\n2) ระดับความยากง่ายสมดุล เหมาะกับวัย\n3) ทุกข้อระบุตัวชี้วัด/จุดประสงค์ที่วัด\n4) มีเฉลยพร้อมคำอธิบายสั้น ๆ\n5) ห้ามสร้างรหัสตัวชี้วัดใหม่\n${type==="final"?"6) สร้างตาราง Blueprint ก่อนข้อสอบ แสดงหน่วย ตัวชี้วัด จำนวนข้อ และสัดส่วนคะแนน รวม 100%\n7) กระจายข้อสอบตามชั่วโมงและน้ำหนักของหน่วย ไม่กระจุกอยู่หน่วยเดียว":"6) ให้ครอบคลุมจุดประสงค์สำคัญของหน่วย"}`}
-function renderAssessmentItems(c){const box=$("courseAssessmentsList"),items=c.assessments?.items||[];box.innerHTML=(c.learning_units?.units||[]).map((u,ui)=>{const pre=items.filter(x=>x.unit_id===u.id&&x.type==="pretest").length,post=items.filter(x=>x.unit_id===u.id&&x.type==="posttest").length;return `<article class="assessment-unit"><div><b>หน่วยที่ ${ui+1} · ${esc(u.name||"")}</b><small>${(u.indicator_ids||[]).length} ตัวชี้วัด · ก่อนเรียน ${pre} · หลังเรียน ${post}</small></div><div class="assessment-actions"><button type="button" data-assessment-unit="pretest:${ui}">ก่อนเรียน</button><button type="button" data-assessment-unit="posttest:${ui}">หลังเรียน</button></div></article>`}).join("")+`<article class="assessment-final"><div><b>📘 ข้อสอบปลายภาค + Blueprint</b><small>ครอบคลุมทุกหน่วยในรายวิชาและมีเฉลย</small></div><button type="button" data-assessment-final>สร้างข้อสอบปลายภาค</button></article>`;$$('[data-assessment-unit]').forEach(b=>b.onclick=()=>{const [type,ui]=b.dataset.assessmentUnit.split(":");createAssessmentPrompt(activeCourseIndex,type,Number(ui))});const fb=box.querySelector('[data-assessment-final]');if(fb)fb.onclick=()=>createAssessmentPrompt(activeCourseIndex,"final",null)}
-function openCourseAssessments(i){const c=courseDrafts()[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}activeCourseIndex=i;$("courseAssessmentsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย`;$("courseAssessmentsSource").innerHTML=`สร้างการประเมินจากตัวชี้วัดที่เลือกจริง โดยข้อสอบปลายภาคจะกระจายตามหน่วย ชั่วโมง และน้ำหนักของรายวิชา`;renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=c.assessments?.saved_at?`<div class="indicator-preview">สร้างงานประเมินแล้ว ${c.assessments.items?.length||0} รายการ ✓</div>`:"";$("courseAssessmentsModal").hidden=false}
+function renderAssessmentItems(c){
+  const box=$("courseAssessmentsList"),items=c.assessments?.items||[];
+  const unitCards=(c.learning_units?.units||[]).map((u,ui)=>{
+    const pre=items.filter(x=>x.unit_id===u.id&&x.type==="pretest").length;
+    const post=items.filter(x=>x.unit_id===u.id&&x.type==="posttest").length;
+    return `<article class="assessment-unit">
+      <div class="assessment-unit-main">
+        <div class="assessment-unit-no">หน่วย ${ui+1}</div>
+        <div class="assessment-unit-copy">
+          <b>${esc(u.name||"")}</b>
+          <small>${(u.indicator_ids||[]).length} ตัวชี้วัด</small>
+          <div class="assessment-state-row">
+            <span class="${pre?"done":""}">ก่อนเรียน ${pre?"✓":"ยังไม่สร้าง"}</span>
+            <span class="${post?"done":""}">หลังเรียน ${post?"✓":"ยังไม่สร้าง"}</span>
+          </div>
+        </div>
+      </div>
+      <div class="assessment-actions">
+        <button type="button" data-assessment-unit="pretest:${ui}">📝 สร้างก่อนเรียน</button>
+        <button type="button" data-assessment-unit="posttest:${ui}">✅ สร้างหลังเรียน</button>
+      </div>
+    </article>`
+  }).join("");
+
+  box.innerHTML=`<div class="assessment-guide">
+    <b>เลือกหน่วยที่ต้องการประเมิน</b>
+    <span>สร้างแบบประเมินก่อนเรียนเพื่อดูพื้นฐาน และหลังเรียนเพื่อวัดผลหลังจบหน่วย</span>
+  </div>
+  <div class="assessment-unit-grid">${unitCards}</div>
+  <article class="assessment-final">
+    <div>
+      <b>📘 ข้อสอบปลายภาค + Blueprint</b>
+      <small>ครอบคลุมทุกหน่วย กระจายจำนวนข้อตามชั่วโมงและน้ำหนักของรายวิชา พร้อมเฉลย</small>
+    </div>
+    <button type="button" data-assessment-final>✨ สร้างข้อสอบปลายภาค</button>
+  </article>`;
+
+  $$('[data-assessment-unit]').forEach(b=>b.onclick=()=>{
+    const [type,ui]=b.dataset.assessmentUnit.split(":");
+    createAssessmentPrompt(activeCourseIndex,type,Number(ui))
+  });
+  const fb=box.querySelector('[data-assessment-final]');
+  if(fb)fb.onclick=()=>createAssessmentPrompt(activeCourseIndex,"final",null)
+}
+function openCourseAssessments(i){const c=courseDrafts()[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}activeCourseIndex=i;$("courseAssessmentsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย`;$("courseAssessmentsSource").innerHTML=`ระบบใช้ตัวชี้วัดจริงของแต่ละหน่วยอัตโนมัติ เลือกสร้าง “ก่อนเรียน” หรือ “หลังเรียน” ได้ทีละหน่วย และสร้างข้อสอบปลายภาคจากทั้งรายวิชาได้ด้านล่าง`;renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=c.assessments?.saved_at?`<div class="indicator-preview">สร้างงานประเมินแล้ว ${c.assessments.items?.length||0} รายการ ✓</div>`:"";$("courseAssessmentsModal").hidden=false}
 async function saveAssessmentCloud(c,u,item){if(!courseCloudReady||!sb||!user)return;try{const courseId=await resolveCourseCloudId(c);if(!courseId)return;let unitId=null;if(u)unitId=await ensureUnitCloud(c,u,(c.learning_units?.units||[]).indexOf(u));const payload={user_id:user.id,course_id:courseId,unit_id:unitId,assessment_type:item.type,title:item.title,blueprint:item.blueprint||{},content:{prompt:item.prompt,client_id:item.id},answer_key:{mode:"generated_with_prompt"},status:"prompt_ready",updated_at:new Date().toISOString()};const {error}=await sb.from("assessments").insert(payload);if(error)console.warn("assessment cloud unavailable",error)}catch(error){console.warn("assessment sync failed",error)}}
 function createAssessmentPrompt(ci,type,ui=null){const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];if(!c||(!u&&type!=="final"))return;const prompt=assessmentPrompt(c,type,u),id=crypto.randomUUID?crypto.randomUUID():String(Date.now()),title=type==="final"?`ข้อสอบปลายภาค · ${c.name}`:`${type==="pretest"?"ก่อนเรียน":"หลังเรียน"} · ${u.name}`;const blueprint=type==="final"?{units:(c.learning_units?.units||[]).map(x=>({unit_id:x.id,name:x.name,hours:Number(x.hours)||0,weight:Number(x.weight)||0,indicator_ids:x.indicator_ids||[]})),total_weight:(c.learning_units?.units||[]).reduce((s,x)=>s+(Number(x.weight)||0),0)}:{unit_id:u.id,indicator_ids:u.indicator_ids||[]};c.assessments=c.assessments||{items:[]};const item={id,type,unit_id:u?.id||null,title,prompt,blueprint,created_at:new Date().toISOString()};c.assessments.items.push(item);c.assessments.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=`<div class="indicator-preview">สร้าง ${esc(title)} แล้ว ✓ ระบบบันทึก Prompt และ Blueprint ไว้กับรายวิชา</div>`;saveAssessmentCloud(c,u,item);switchTab("create");$("promptText").textContent=prompt;$("promptWrap").hidden=false;closeCourseAssessments();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt การประเมินแล้ว ✓")}
 
