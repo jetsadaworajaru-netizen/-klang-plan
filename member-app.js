@@ -963,38 +963,98 @@ function promptOutputMeta(mode=promptOutputMode){
     table:{label:"ตาราง/แบบฟอร์ม",icon:"🧾"}
   }[mode]||{label:"ภาพ",icon:"🖼️"}
 }
+function extractAcademicPromptContext(base){
+  const a=base.indexOf("A. ข้อมูลหลักสูตร");
+  const f=base.indexOf("F. แนวทางการออกแบบ");
+  if(a>=0&&f>a)return base.slice(a,f).trim();
+  return base
+}
+function promptQualityCore(){
+  return `มาตรฐานคุณภาพที่ต้องปฏิบัติตามทุกกรณี:
+- ใช้ข้อมูลหลักสูตร มาตรฐาน และตัวชี้วัดที่ให้เท่านั้น ห้ามแต่งรหัสหรือข้อความหลักสูตรใหม่
+- เนื้อหาต้องเหมาะกับระดับชั้น รายวิชา เวลาเรียน และบริบทของแผน
+- จุดประสงค์ กิจกรรม สื่อ ชิ้นงาน และการประเมินต้องสอดคล้องกัน
+- ภาษาไทยต้องถูกต้อง อ่านง่าย เป็นธรรมชาติ และพร้อมใช้งานจริง
+- ห้ามมีข้อความสุ่ม ข้อความเพี้ยน ข้อมูลสมมติ หรือคำอธิบายที่ไม่เกี่ยวข้อง
+- หากข้อมูลไม่พอ ให้ใช้ถ้อยคำกลางที่ปลอดภัยแทนการเดาข้อมูล
+- ผลลัพธ์ต้องพร้อมนำไปใช้ต่อได้ทันที โดยไม่ต้องให้ครูมาแก้โครงสร้างใหม่`
+}
 function adaptPromptForOutput(base,mode=promptOutputMode){
   if(mode==="image")return base;
-  const override={
-    document:`ข้อกำหนดผลลัพธ์สูงสุด:
-- ให้สร้าง “เอกสารแผนการจัดการเรียนรู้” ที่จัดหัวข้อครบและพร้อมนำไปใช้ใน Microsoft Word / Google Docs
-- ไม่ต้องสร้างเป็นภาพ และไม่ต้องจำกัดเป็นอินโฟกราฟิกหน้าเดียว
-- ใช้หัวข้อ ตาราง และ bullet อย่างเป็นระเบียบ พร้อมคัดลอกลงเอกสารได้ทันที
-- หากคำสั่งด้านล่างกล่าวถึง “ภาพ A4 หน้าเดียว” หรือ “เรนเดอร์ภาพ” ให้ถือว่าข้อกำหนดนี้มีลำดับความสำคัญสูงกว่าและให้ข้ามคำสั่งด้านภาพเหล่านั้น
-- ห้ามสร้างข้อมูลหลักสูตร ตัวชี้วัด ชื่อบุคคล หรือผลการเรียนรู้เพิ่มเติมเอง`,
-    text:`ข้อกำหนดผลลัพธ์สูงสุด:
-- ตอบเป็น “ข้อความแผนการจัดการเรียนรู้พร้อมใช้” เท่านั้น
-- จัดโครงสร้างด้วยหัวข้อและ bullet อ่านง่าย ไม่ต้องออกแบบภาพ ไม่ต้องทำไฟล์ และไม่ต้องเรนเดอร์ A4
-- หากคำสั่งด้านล่างกล่าวถึงภาพ กราฟิก A4 หน้าเดียว หรือไฟล์แนบ ให้ใช้เฉพาะข้อมูลทางวิชาการและละเว้นข้อกำหนดด้านภาพ
-- ห้ามสร้างข้อมูลหลักสูตร ตัวชี้วัด ชื่อบุคคล หรือผลการเรียนรู้เพิ่มเติมเอง`,
-    slides:`ข้อกำหนดผลลัพธ์สูงสุด:
-- สร้าง “โครงสไลด์การสอน” แบบพร้อมนำไปทำ PowerPoint / Canva
-- แบ่งเป็น 8–12 สไลด์ตามความเหมาะสม โดยแต่ละสไลด์มี ชื่อสไลด์ + เนื้อหาสั้น + แนวทางภาพ/กิจกรรม
-- ต้องมีช่วงนำเข้า เนื้อหา ตัวอย่าง กิจกรรม ตรวจความเข้าใจ และสรุป
-- ไม่ต้องจำกัด A4 หน้าเดียว และไม่ต้องสร้างภาพเดียว
-- หากคำสั่งด้านล่างกล่าวถึงภาพ A4 หน้าเดียว ให้ละเว้นเฉพาะข้อกำหนดรูปแบบนั้น แต่คงข้อมูลหลักสูตรและเนื้อหาวิชาการไว้ครบ`,
-    table:`ข้อกำหนดผลลัพธ์สูงสุด:
-- สร้าง “ตาราง/แบบฟอร์มแผนการจัดการเรียนรู้” ที่ครูสามารถคัดลอกไปใช้หรือกรอกต่อได้ทันที
-- ใช้ตารางเฉพาะส่วนที่เหมาะสม เช่น ข้อมูลแผน กิจกรรม การประเมิน สื่อ และบันทึกหลังสอน
-- เนื้อหาต้องกระชับ อ่านง่าย และคงข้อมูลหลักสูตร/ตัวชี้วัดตามที่ให้เท่านั้น
-- ไม่ต้องสร้างเป็นภาพ ไม่ต้องเรนเดอร์ A4 หน้าเดียว
-- หากคำสั่งด้านล่างกล่าวถึงงานภาพ ให้ละเว้นข้อกำหนดด้านภาพและยึดรูปแบบตาราง/แบบฟอร์มนี้เป็นหลัก`
-  }[mode];
-  return `${override}
+  const academic=extractAcademicPromptContext(base);
+  const core=promptQualityCore();
+  const templates={
+    document:`สร้าง “เอกสารแผนการจัดการเรียนรู้พร้อมใช้” จากข้อมูลด้านล่าง
 
-ข้อมูลและข้อกำหนดทางวิชาการจากแผนเดิม:
----
-${base}`;
+ข้อกำหนดผลลัพธ์:
+- ส่งออกเป็นเนื้อหาเอกสารที่จัดหัวข้อครบ พร้อมคัดลอกลง Microsoft Word / Google Docs ได้ทันที
+- ใช้หัวข้อ ลำดับเลข ตาราง และ bullet เท่าที่จำเป็น
+- จัดลำดับเอกสารแบบมืออาชีพ: ข้อมูลแผน → มาตรฐาน/ตัวชี้วัด → สาระสำคัญ → จุดประสงค์ → กิจกรรม → สื่อ → การวัดผล → บันทึกหลังสอน/ลงชื่อ
+- ไม่ต้องสร้างเป็นภาพ และไม่ต้องอธิบายขั้นตอนการทำงาน
+- ตารางการประเมินต้องอ่านง่ายและเชื่อมกับจุดประสงค์
+
+${core}
+
+ข้อมูลอ้างอิง:
+${academic}`,
+    text:`เขียน “ข้อความแผนการจัดการเรียนรู้พร้อมใช้” จากข้อมูลด้านล่าง
+
+ข้อกำหนดผลลัพธ์:
+- ตอบเป็นข้อความล้วนที่เป็นระเบียบ อ่านง่าย และแก้ไขต่อได้ทันที
+- ใช้หัวข้อสั้นและ bullet กระชับ ไม่ต้องทำภาพ ไม่ต้องทำไฟล์ และไม่ต้องอธิบายขั้นตอน
+- เน้นสาระสำคัญ จุดประสงค์ กิจกรรมตามลำดับ สื่อ และการประเมิน
+- หลีกเลี่ยงข้อความซ้ำและย่อหน้าที่ยาวเกินจำเป็น
+
+${core}
+
+ข้อมูลอ้างอิง:
+${academic}`,
+    slides:`สร้าง “โครงสไลด์การสอนพร้อมใช้” จากข้อมูลด้านล่าง
+
+ข้อกำหนดผลลัพธ์:
+- แบ่งเป็น 8–12 สไลด์ตามความเหมาะสม
+- ทุกสไลด์ระบุ: เลขสไลด์ | ชื่อสไลด์ | เนื้อหาหลัก | แนวทางภาพ/กิจกรรม
+- ลำดับต้องครอบคลุม: เปิดบทเรียน → เชื่อมความรู้เดิม → เนื้อหาหลัก → ตัวอย่าง → ฝึกปฏิบัติ → ตรวจความเข้าใจ → สรุป → ภาระงาน/ประเมิน
+- เนื้อหาต่อสไลด์ต้องสั้น อ่านบนจอได้จริง และเหมาะกับระดับชั้น
+- พร้อมนำไปสร้างต่อใน PowerPoint / Canva โดยไม่ต้องจัดโครงใหม่
+
+${core}
+
+ข้อมูลอ้างอิง:
+${academic}`,
+    table:`สร้าง “ตาราง/แบบฟอร์มแผนการจัดการเรียนรู้พร้อมใช้” จากข้อมูลด้านล่าง
+
+ข้อกำหนดผลลัพธ์:
+- จัดเป็นตารางหรือแบบฟอร์มที่ครูสามารถคัดลอกไปใช้/กรอกต่อได้ทันที
+- ต้องมีส่วน: ข้อมูลรายวิชา, หน่วย/เรื่อง/เวลา, มาตรฐานและตัวชี้วัด, จุดประสงค์, กิจกรรม, สื่อ, การวัดและประเมินผล, บันทึกหลังสอน
+- ตารางการประเมินใช้ 4 คอลัมน์: จุดประสงค์ | วิธีวัด | เครื่องมือ | เกณฑ์ผ่าน
+- จัดช่องและหัวตารางให้สั้น ชัด และไม่ซ้ำข้อมูล
+- ไม่ต้องสร้างภาพ และไม่ต้องอธิบายขั้นตอน
+
+${core}
+
+ข้อมูลอ้างอิง:
+${academic}`
+  };
+  return templates[mode]||base
+}
+function refreshPromptPreview(){
+  if(!selected)return false;
+  const text=adaptPromptForOutput(prompt(),promptOutputMode);
+  const wrap=$("promptWrap"),pre=$("promptText");
+  if(pre)pre.textContent=text;
+  if(wrap)wrap.hidden=false;
+  const kit=$("aiAttachmentKit");
+  if(kit)kit.hidden=promptOutputMode!=="image";
+  if(promptOutputMode==="image"){
+    renderAiAttachmentKit();
+    ensurePromptReferencePreview();
+  }else{
+    const ref=$("promptReferenceMedia");
+    if(ref)ref.hidden=true;
+  }
+  renderContinue();
+  return true
 }
 function setPromptOutputMode(mode){
   promptOutputMode=mode||"image";
@@ -1004,10 +1064,10 @@ function setPromptOutputMode(mode){
   if(btn)btn.textContent=`✨ สร้าง Prompt ${meta.label}แผนการจัดการเรียนรู้`;
   const kit=$("aiAttachmentKit");
   if(kit)kit.hidden=promptOutputMode!=="image";
-  const wrap=$("promptWrap");
-  if(wrap&&!wrap.hidden&&$("promptText")?.textContent){
-    $("promptText").textContent=adaptPromptForOutput(prompt(),promptOutputMode);
-    if(promptOutputMode==="image")renderAiAttachmentKit();
+  if(selected){
+    refreshPromptPreview();
+    setTimeout(()=>$("promptWrap")?.scrollIntoView({behavior:"smooth",block:"start"}),40);
+    toast(`อัปเดต Prompt ${meta.label}แล้ว ✓`)
   }
 }
 async function imageSourceToPngBlob(src){
@@ -1233,7 +1293,7 @@ async function saveWork(t){
   }
   renderWork();return data
 }
-async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=adaptPromptForOutput(prompt(),promptOutputMode);$("promptText").textContent=t;$("promptWrap").hidden=false;if(promptOutputMode==="image")renderAiAttachmentKit();else if($("aiAttachmentKit"))$("aiAttachmentKit").hidden=true;ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
+async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=adaptPromptForOutput(prompt(),promptOutputMode);refreshPromptPreview();await saveWork(t);setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
   const items=[
     ["worksheet","📝","สร้าง Prompt ใบงาน","ใบงานพร้อมคำชี้แจง/พื้นที่ตอบ"],
