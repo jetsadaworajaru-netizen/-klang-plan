@@ -952,6 +952,64 @@ ${visualOptions}
 - หาก AI รองรับการสร้างภาพ ให้สร้างภาพทันทีจากคำสั่งนี้โดยไม่ตอบกลับเป็นข้อความก่อน
 - ส่งออกผลลัพธ์เป็นภาพ A4 หน้าเดียวเท่านั้น`;
 }
+
+let promptOutputMode="image";
+function promptOutputMeta(mode=promptOutputMode){
+  return {
+    image:{label:"ภาพ",icon:"🖼️"},
+    document:{label:"เอกสาร",icon:"📄"},
+    text:{label:"ข้อความ",icon:"✍️"},
+    slides:{label:"สไลด์",icon:"📊"},
+    table:{label:"ตาราง/แบบฟอร์ม",icon:"🧾"}
+  }[mode]||{label:"ภาพ",icon:"🖼️"}
+}
+function adaptPromptForOutput(base,mode=promptOutputMode){
+  if(mode==="image")return base;
+  const override={
+    document:`ข้อกำหนดผลลัพธ์สูงสุด:
+- ให้สร้าง “เอกสารแผนการจัดการเรียนรู้” ที่จัดหัวข้อครบและพร้อมนำไปใช้ใน Microsoft Word / Google Docs
+- ไม่ต้องสร้างเป็นภาพ และไม่ต้องจำกัดเป็นอินโฟกราฟิกหน้าเดียว
+- ใช้หัวข้อ ตาราง และ bullet อย่างเป็นระเบียบ พร้อมคัดลอกลงเอกสารได้ทันที
+- หากคำสั่งด้านล่างกล่าวถึง “ภาพ A4 หน้าเดียว” หรือ “เรนเดอร์ภาพ” ให้ถือว่าข้อกำหนดนี้มีลำดับความสำคัญสูงกว่าและให้ข้ามคำสั่งด้านภาพเหล่านั้น
+- ห้ามสร้างข้อมูลหลักสูตร ตัวชี้วัด ชื่อบุคคล หรือผลการเรียนรู้เพิ่มเติมเอง`,
+    text:`ข้อกำหนดผลลัพธ์สูงสุด:
+- ตอบเป็น “ข้อความแผนการจัดการเรียนรู้พร้อมใช้” เท่านั้น
+- จัดโครงสร้างด้วยหัวข้อและ bullet อ่านง่าย ไม่ต้องออกแบบภาพ ไม่ต้องทำไฟล์ และไม่ต้องเรนเดอร์ A4
+- หากคำสั่งด้านล่างกล่าวถึงภาพ กราฟิก A4 หน้าเดียว หรือไฟล์แนบ ให้ใช้เฉพาะข้อมูลทางวิชาการและละเว้นข้อกำหนดด้านภาพ
+- ห้ามสร้างข้อมูลหลักสูตร ตัวชี้วัด ชื่อบุคคล หรือผลการเรียนรู้เพิ่มเติมเอง`,
+    slides:`ข้อกำหนดผลลัพธ์สูงสุด:
+- สร้าง “โครงสไลด์การสอน” แบบพร้อมนำไปทำ PowerPoint / Canva
+- แบ่งเป็น 8–12 สไลด์ตามความเหมาะสม โดยแต่ละสไลด์มี ชื่อสไลด์ + เนื้อหาสั้น + แนวทางภาพ/กิจกรรม
+- ต้องมีช่วงนำเข้า เนื้อหา ตัวอย่าง กิจกรรม ตรวจความเข้าใจ และสรุป
+- ไม่ต้องจำกัด A4 หน้าเดียว และไม่ต้องสร้างภาพเดียว
+- หากคำสั่งด้านล่างกล่าวถึงภาพ A4 หน้าเดียว ให้ละเว้นเฉพาะข้อกำหนดรูปแบบนั้น แต่คงข้อมูลหลักสูตรและเนื้อหาวิชาการไว้ครบ`,
+    table:`ข้อกำหนดผลลัพธ์สูงสุด:
+- สร้าง “ตาราง/แบบฟอร์มแผนการจัดการเรียนรู้” ที่ครูสามารถคัดลอกไปใช้หรือกรอกต่อได้ทันที
+- ใช้ตารางเฉพาะส่วนที่เหมาะสม เช่น ข้อมูลแผน กิจกรรม การประเมิน สื่อ และบันทึกหลังสอน
+- เนื้อหาต้องกระชับ อ่านง่าย และคงข้อมูลหลักสูตร/ตัวชี้วัดตามที่ให้เท่านั้น
+- ไม่ต้องสร้างเป็นภาพ ไม่ต้องเรนเดอร์ A4 หน้าเดียว
+- หากคำสั่งด้านล่างกล่าวถึงงานภาพ ให้ละเว้นข้อกำหนดด้านภาพและยึดรูปแบบตาราง/แบบฟอร์มนี้เป็นหลัก`
+  }[mode];
+  return `${override}
+
+ข้อมูลและข้อกำหนดทางวิชาการจากแผนเดิม:
+---
+${base}`;
+}
+function setPromptOutputMode(mode){
+  promptOutputMode=mode||"image";
+  $$(".prompt-output-option").forEach(b=>b.classList.toggle("active",b.dataset.promptOutput===promptOutputMode));
+  const meta=promptOutputMeta();
+  const btn=$("generateBtn");
+  if(btn)btn.textContent=`✨ สร้าง Prompt ${meta.label}แผนการจัดการเรียนรู้`;
+  const kit=$("aiAttachmentKit");
+  if(kit)kit.hidden=promptOutputMode!=="image";
+  const wrap=$("promptWrap");
+  if(wrap&&!wrap.hidden&&$("promptText")?.textContent){
+    $("promptText").textContent=adaptPromptForOutput(prompt(),promptOutputMode);
+    if(promptOutputMode==="image")renderAiAttachmentKit();
+  }
+}
 async function imageSourceToPngBlob(src){
   if(!src)return null;
   const blob=await fetch(src).then(r=>{if(!r.ok)throw new Error("โหลดรูปไม่สำเร็จ");return r.blob()});
@@ -1175,7 +1233,7 @@ async function saveWork(t){
   }
   renderWork();return data
 }
-async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=prompt();$("promptText").textContent=t;$("promptWrap").hidden=false;renderAiAttachmentKit();ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
+async function generate(){if(!$("grade").value)return toast("กรุณาเลือกระดับชั้น");if(!$("subject").value)return toast("กรุณาเลือกกลุ่มสาระ");if(!selected)return toast("กรุณาเลือกตัวชี้วัด");const t=adaptPromptForOutput(prompt(),promptOutputMode);$("promptText").textContent=t;$("promptWrap").hidden=false;if(promptOutputMode==="image")renderAiAttachmentKit();else if($("aiAttachmentKit"))$("aiAttachmentKit").hidden=true;ensurePromptReferencePreview();await saveWork(t);renderContinue();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),50);toast("สร้าง Prompt แล้ว ✓")}
 function renderContinue(){
   const items=[
     ["worksheet","📝","สร้าง Prompt ใบงาน","ใบงานพร้อมคำชี้แจง/พื้นที่ตอบ"],
@@ -1189,7 +1247,7 @@ function renderContinue(){
   $$("[data-continue]").forEach(b=>b.onclick=()=>continuation(b.dataset.continue))
 }
 function continuation(type){
-  const base=prompt();
+  const base=adaptPromptForOutput(prompt(),promptOutputMode);
   const intro={
     worksheet:"สร้างใบงานสำหรับนักเรียนจากแผนนี้ ให้เหมาะกับระดับชั้น มีชื่อใบงาน คำชี้แจง กิจกรรม/โจทย์ พื้นที่ตอบ และเฉลยแยกท้ายงาน พร้อมแนวทางออกแบบให้สวยอ่านง่าย",
     quiz:"สร้างแบบทดสอบจากแผนนี้ ให้มีตัวเลือกกำหนดจำนวนข้อ โดยค่าเริ่มต้น 10 ข้อ ผสมคำถามตามความเหมาะสม พร้อมเฉลยและเหตุผลย่อ",
@@ -4033,6 +4091,7 @@ function bind(){
   if($("downloadAiPackBtn"))$("downloadAiPackBtn").onclick=downloadAiPack;
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   $$(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$$("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
+  $(".prompt-output-option").forEach(b=>b.onclick=()=>setPromptOutputMode(b.dataset.promptOutput));setPromptOutputMode(promptOutputMode);
   if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{$$('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").onchange=()=>{$("realTeachingCalendarFields").hidden=!$("useRealTeachingCalendar").checked};if($("applyRealTeachingCalendarBtn"))$("applyRealTeachingCalendarBtn").onclick=applyRealTeachingCalendar;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   $$("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
   $("libraryStage").onchange=updateLibraryFilters;$("libraryGrade").onchange=updateLibrarySubjects;$("librarySubject").onchange=applyLibraryFilters;$("librarySearch").oninput=applyLibraryFilters;$("useLibraryIndicatorBtn").onclick=useLibraryIndicator;
