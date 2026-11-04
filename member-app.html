@@ -263,6 +263,18 @@
       <section id="step5" class="card final-card">
         <div class="section-head"><span>6</span><div><h2>ตรวจสอบและสร้าง Prompt</h2><p>เมื่อพร้อมแล้วกดสร้าง Prompt ได้ทันที</p></div></div>
         <div id="summary" class="summary-box"></div>
+        <section class="prompt-output-picker" aria-label="รูปแบบผลลัพธ์">
+          <div class="prompt-output-picker-head">
+            <div><b>ต้องการให้ AI สร้างอะไร</b><small>เลือกผลลัพธ์ก่อน ระบบจะปรับ Prompt ให้เหมาะกับงานอัตโนมัติ</small></div>
+          </div>
+          <div class="prompt-output-options">
+            <button type="button" class="prompt-output-option active" data-prompt-output="image"><span>🖼️</span><b>ภาพ</b><small>A4 พร้อมพิมพ์</small></button>
+            <button type="button" class="prompt-output-option" data-prompt-output="document"><span>📄</span><b>เอกสาร</b><small>พร้อมใช้ใน Word/PDF</small></button>
+            <button type="button" class="prompt-output-option" data-prompt-output="text"><span>✍️</span><b>ข้อความ</b><small>เนื้อหาพร้อมแก้ไข</small></button>
+            <button type="button" class="prompt-output-option" data-prompt-output="slides"><span>📊</span><b>สไลด์</b><small>แบ่งเป็นหน้าสอน</small></button>
+            <button type="button" class="prompt-output-option" data-prompt-output="table"><span>🧾</span><b>ตาราง/แบบฟอร์ม</b><small>โครงสร้างกรอกใช้งาน</small></button>
+          </div>
+        </section>
         <button id="generateBtn" class="primary-btn" type="button">✨ สร้าง Prompt แผนการจัดการเรียนรู้</button>
 
         <div id="promptWrap" class="prompt-wrap" hidden>
