@@ -3289,7 +3289,7 @@ function renderResourceConfiguratorFields(type){
 function openResourceConfigurator(ci,ui,type,si=null){
   const rows=courseDrafts(),c=rows[ci],u=c?.learning_units?.units?.[ui],sub=si===null?null:u?.sublessons?.[si];if(!u)return;
   resourceConfiguratorContext={ci,ui,type,si};
-  $("resourceConfigTitle").textContent="ตั้งค่า"+resourceTypeLabel(type);
+  $("resourceConfigTitle").textContent=type==="quiz"?"ตั้งค่าแบบทดสอบ":"ตั้งค่า"+resourceTypeLabel(type);
   $("resourceConfigMeta").textContent=[c.name,c.grade,"หน่วยที่ "+(ui+1),sub?("แผนย่อย "+(si+1)+" · "+sub.title):u.name].filter(Boolean).join(" · ");
   renderResourceConfiguratorFields(type);
   if(type==="quiz"){
@@ -3437,12 +3437,13 @@ function renderAssessmentItems(c){
       <div class="assessment-actions">
         <button type="button" data-assessment-unit="pretest:${ui}">📝 สร้างก่อนเรียน</button>
         <button type="button" data-assessment-unit="posttest:${ui}">✅ สร้างหลังเรียน</button>
+        <button type="button" data-assessment-custom-quiz="${ui}" class="assessment-custom-quiz-btn">🎯 สร้างแบบทดสอบ</button>
       </div>
     </article>`
   }).join("");
 
   box.innerHTML=`<div class="assessment-guide">
-    <div><b>เลือกหน่วยที่ต้องการประเมิน</b><span>สร้างแบบประเมินก่อนเรียนเพื่อดูพื้นฐาน และหลังเรียนเพื่อวัดผลหลังจบหน่วย</span></div>
+    <div><b>เลือกหน่วยที่ต้องการประเมิน</b><span>เลือกสร้างก่อนเรียน/หลังเรียน หรือสร้างแบบทดสอบกำหนดเองที่เลือกรูปแบบ จำนวนข้อ และระดับความยากได้</span></div>
     <label class="assessment-difficulty-select"><span>ระดับความยาก</span><select id="courseAssessmentDifficulty">
       <option value="mixed" selected>ผสมระดับ 30/50/20</option>
       <option value="easy">ง่าย — จำ/เข้าใจพื้นฐาน</option>
@@ -3462,6 +3463,10 @@ function renderAssessmentItems(c){
   nodes('[data-assessment-unit]').forEach(b=>b.onclick=()=>{
     const [type,ui]=b.dataset.assessmentUnit.split(":");
     createAssessmentPrompt(activeCourseIndex,type,Number(ui))
+  });
+  nodes('[data-assessment-custom-quiz]').forEach(b=>b.onclick=()=>{
+    const ui=Number(b.dataset.assessmentCustomQuiz);
+    openResourceConfigurator(activeCourseIndex,ui,"quiz",null)
   });
   const fb=box.querySelector('[data-assessment-final]');
   if(fb)fb.onclick=()=>createAssessmentPrompt(activeCourseIndex,"final",null)
