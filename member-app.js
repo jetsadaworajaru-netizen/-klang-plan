@@ -2764,14 +2764,22 @@ function renderLearningUnits(units){
       strandNo++;
       lastStrand=strandName;
       html+=`<section class="learning-unit-strand-group">
-        <div class="learning-unit-strand-heading"><span>สาระ ${strandNo}</span><b>${esc(strandName)}</b></div>
+        <div class="learning-unit-strand-heading">
+          <div class="learning-unit-strand-title"><span>สาระ ${strandNo}</span><b>${esc(strandName)}</b></div>
+          <div class="learning-unit-strand-actions">
+            <button type="button" data-strand-add="${encodeURIComponent(strandName)}">＋ เพิ่มหน่วย</button>
+            <button type="button" data-strand-remove="${encodeURIComponent(strandName)}">− ลดหน่วย</button>
+          </div>
+        </div>
       </section>`;
     }
-    html+=`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(strandName)}">
+    html+=`<article class="learning-unit-card" data-learning-unit="${i}" data-unit-id="${esc(u.id||"")}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(strandName)}">
       <div class="learning-unit-head">
         <span>${i+1}</span>
         <div class="learning-unit-head-copy"><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small><strong>สาระ: ${esc(strandName)}</strong> · ${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div>
         <div class="learning-unit-head-actions">
+          <button type="button" data-learning-unit-move="up:${i}" class="learning-unit-move-btn" title="เลื่อนหน่วยขึ้น">↑</button>
+          <button type="button" data-learning-unit-move="down:${i}" class="learning-unit-move-btn" title="เลื่อนหน่วยลง">↓</button>
           <button type="button" data-learning-unit-quiz="${i}" class="learning-unit-quiz-btn">✅ สร้างแบบทดสอบ</button>
           <button type="button" data-learning-unit-delete="${i}" class="learning-unit-delete-btn">ลบหน่วย</button>
         </div>
@@ -2785,9 +2793,12 @@ function renderLearningUnits(units){
   });
   $("learningUnitsList").innerHTML=html;
   nodes("[data-learning-unit-delete]").forEach(b=>b.onclick=()=>removeLearningUnit(Number(b.dataset.learningUnitDelete)));
-  nodes("[data-learning-unit-quiz]").forEach(b=>b.onclick=()=>openLearningUnitQuiz(Number(b.dataset.learningUnitQuiz)))
+  nodes("[data-learning-unit-quiz]").forEach(b=>b.onclick=()=>openLearningUnitQuiz(Number(b.dataset.learningUnitQuiz)));
+  nodes("[data-learning-unit-move]").forEach(b=>b.onclick=()=>{const [dir,idx]=b.dataset.learningUnitMove.split(":");moveLearningUnitWithinStrand(Number(idx),dir)});
+  nodes("[data-strand-add]").forEach(b=>b.onclick=()=>addLearningUnitToStrand(decodeURIComponent(b.dataset.strandAdd||"")));
+  nodes("[data-strand-remove]").forEach(b=>b.onclick=()=>removeLearningUnitFromStrand(decodeURIComponent(b.dataset.strandRemove||"")))
 }
-function readLearningUnits(){return nodes('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}const structureUnit=courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]||{};return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:String(structureUnit.strand_name||structureUnit.strand_base||row.dataset.strandName||"").trim(),standard_name:String(structureUnit.standard_name||structureUnit.source_standard||"").trim(),structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
+function readLearningUnits(){return nodes('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}const current=courseDrafts()[activeCourseIndex]?.learning_units?.units?.find(x=>String(x.id||"")===String(row.dataset.unitId||""))||courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]||{};const structureUnit=courseDrafts()[activeCourseIndex]?.course_structure?.units?.find(x=>String(x.id||"")===String(current.id||""))||courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]||{};return {id:current.id||structureUnit.id||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:String(row.dataset.strandName||current.strand_name||structureUnit.strand_name||structureUnit.strand_base||"").trim(),standard_name:String(current.standard_name||structureUnit.standard_name||structureUnit.source_standard||"").trim(),structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
 function normalizeLearningUnitWeights(units,totalHours){
   const total=Math.max(1,Number(totalHours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||1);
   let used=0;
@@ -2829,20 +2840,25 @@ function syncLearningUnitsToStructure(units){
   c.documents=null;
   rows[activeCourseIndex]=c;writeCourseDrafts(rows);renderCourses()
 }
-function addLearningUnit(){
+function strandUnitIndexes(units,strandName){
+  return units.map((u,i)=>String(u.strand_name||"").trim()===String(strandName||"").trim()?i:-1).filter(i=>i>=0)
+}
+function addLearningUnitToStrand(strandName){
   if(activeCourseIndex===null)return;
   const units=readLearningUnits(),rows=courseDrafts(),c=rows[activeCourseIndex];if(!c)return;
-  const totalHours=Math.max(1,Number(c.hours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||1);
-  let donor=-1,donorHours=0;
-  units.forEach((u,i)=>{const h=Number(u.hours)||0;if(h>donorHours&&h>1){donor=i;donorHours=h}});
-  if(donor<0){toast("ไม่สามารถเพิ่มหน่วยได้ เพราะไม่มีชั่วโมงว่างให้แบ่ง กรุณาปรับชั่วโมงในโครงสร้างรายวิชาก่อน");return}
+  const idxs=strandUnitIndexes(units,strandName);
+  if(!idxs.length){toast("ไม่พบสาระที่เลือก");return}
+  let donor=idxs[0],donorHours=0;
+  idxs.forEach(i=>{const h=Number(units[i].hours)||0;if(h>donorHours&&h>1){donor=i;donorHours=h}});
+  if(donorHours<=1){toast("เพิ่มหน่วยไม่ได้ เพราะชั่วโมงในสาระนี้ไม่พอแบ่ง กรุณาปรับชั่วโมงในโครงสร้างรายวิชาก่อน");return}
   units[donor].hours=donorHours-1;
-  const base=units[Math.max(0,donor)]||{};
-  units.push({
+  const base=units[donor];
+  const insertAt=idxs[idxs.length-1]+1;
+  const created={
     id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),
-    unit_no:units.length+1,
-    name:`หน่วยการเรียนรู้ใหม่ ${units.length+1}`,
-    strand_name:base.strand_name||"สาระการเรียนรู้",
+    unit_no:insertAt+1,
+    name:`หน่วยการเรียนรู้ใหม่ ${insertAt+1}`,
+    strand_name:base.strand_name||strandName,
     standard_name:base.standard_name||"",
     hours:1,
     weight:0,
@@ -2850,23 +2866,56 @@ function addLearningUnit(){
     concept:"",
     objectives:"",
     assessment:"ประเมินจากชิ้นงาน/ภาระงาน การสังเกตพฤติกรรม และการตอบคำถามตามตัวชี้วัด"
-  });
-  normalizeLearningUnitWeights(units,totalHours);
+  };
+  units.splice(insertAt,0,created);
+  normalizeLearningUnitWeights(units,Number(c.hours)||0);
   renderLearningUnits(units);
-  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">เพิ่มหน่วยแล้ว ✓ ระบบแบ่งเวลา 1 ชั่วโมงจากหน่วยที่มีเวลามากที่สุด กรุณาตรวจชื่อหน่วย/ตัวชี้วัดก่อนบันทึก</div>'
+  $("learningUnitsStatus").innerHTML=`<div class="indicator-preview">เพิ่มหน่วยในสาระ “${esc(strandName)}” แล้ว ✓ แบ่งเวลา 1 ชั่วโมงจากหน่วยในสาระเดียวกัน</div>`
 }
-function removeLearningUnit(index){
-  const units=readLearningUnits();if(units.length<=1){toast("ต้องมีอย่างน้อย 1 หน่วยการเรียนรู้");return}
-  const removed=units[index];if(!removed)return;
-  if(!confirm(`ลบ “${removed.name||"หน่วยนี้"}” หรือไม่?\nชั่วโมงของหน่วยนี้จะถูกย้ายไปรวมกับหน่วยที่อยู่ใกล้ที่สุด`))return;
+function removeLearningUnitFromStrand(strandName){
+  const units=readLearningUnits(),idxs=strandUnitIndexes(units,strandName);
+  if(idxs.length<=1){toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");return}
+  const index=idxs[idxs.length-1],removed=units[index],target=idxs[idxs.length-2];
+  if(!confirm(`ลดหน่วยในสาระ “${strandName}” โดยลบ “${removed.name||"หน่วยล่าสุด"}” หรือไม่?`))return;
   const h=Number(removed.hours)||0;
   units.splice(index,1);
-  const target=Math.min(index,units.length-1);
-  if(units[target])units[target].hours=(Number(units[target].hours)||0)+h;
+  const adjustedTarget=target<index?target:target-1;
+  if(units[adjustedTarget])units[adjustedTarget].hours=(Number(units[adjustedTarget].hours)||0)+h;
   const c=courseDrafts()[activeCourseIndex]||{};
   normalizeLearningUnitWeights(units,Number(c.hours)||0);
   renderLearningUnits(units);
-  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">ลบหน่วยแล้ว ✓ ชั่วโมงถูกย้ายไปรวมกับหน่วยใกล้เคียง กดบันทึกเพื่อยืนยัน</div>'
+  $("learningUnitsStatus").innerHTML=`<div class="indicator-preview">ลดหน่วยในสาระ “${esc(strandName)}” แล้ว ✓ ชั่วโมงถูกคืนให้หน่วยก่อนหน้าในสาระเดียวกัน</div>`
+}
+function moveLearningUnitWithinStrand(index,direction){
+  const units=readLearningUnits(),u=units[index];if(!u)return;
+  const idxs=strandUnitIndexes(units,u.strand_name),pos=idxs.indexOf(index);
+  const targetPos=direction==="up"?pos-1:pos+1;
+  if(pos<0||targetPos<0||targetPos>=idxs.length){toast("เลื่อนได้เฉพาะภายในสาระเดียวกัน");return}
+  const target=idxs[targetPos];
+  [units[index],units[target]]=[units[target],units[index]];
+  units.forEach((x,i)=>x.unit_no=i+1);
+  renderLearningUnits(units);
+  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">จัดลำดับหน่วยแล้ว ✓ กดบันทึกหน่วยการเรียนรู้เพื่อยืนยัน</div>'
+}
+function addLearningUnit(){
+  const units=readLearningUnits();
+  const strand=units[units.length-1]?.strand_name||"";
+  if(strand)addLearningUnitToStrand(strand)
+}
+function removeLearningUnit(index){
+  const units=readLearningUnits(),u=units[index];if(!u)return;
+  const idxs=strandUnitIndexes(units,u.strand_name);
+  if(idxs.length<=1){toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");return}
+  if(!confirm(`ลบ “${u.name||"หน่วยนี้"}” หรือไม่? ชั่วโมงจะคืนให้หน่วยใกล้เคียงในสาระเดียวกัน`))return;
+  const h=Number(u.hours)||0,pos=idxs.indexOf(index);
+  const neighborOriginal=pos>0?idxs[pos-1]:idxs[pos+1];
+  units.splice(index,1);
+  const neighbor=neighborOriginal>index?neighborOriginal-1:neighborOriginal;
+  if(units[neighbor])units[neighbor].hours=(Number(units[neighbor].hours)||0)+h;
+  const c=courseDrafts()[activeCourseIndex]||{};
+  normalizeLearningUnitWeights(units,Number(c.hours)||0);
+  renderLearningUnits(units);
+  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">ลบหน่วยแล้ว ✓ ชั่วโมงถูกย้ายภายในสาระเดียวกัน</div>'
 }
 function restoreLearningUnitsFromStructure(){
   if(activeCourseIndex===null)return;
