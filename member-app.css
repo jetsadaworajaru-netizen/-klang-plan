@@ -2862,3 +2862,70 @@ button,
 @media(max-width:900px){
   .assessment-difficulty-select{width:100%;min-width:0}
 }
+
+
+/* learning unit management v2 */
+.learning-unit-head{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:start;
+}
+.learning-unit-head-copy{min-width:0}
+.learning-unit-head-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.learning-unit-head-actions button{
+  min-height:38px;
+  padding:8px 11px;
+  border-radius:10px;
+  font:inherit;
+  font-size:.72rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.learning-unit-quiz-btn{
+  border:1px solid #bdd8c7;
+  background:#eef9f2;
+  color:#2f6842;
+}
+.learning-unit-delete-btn{
+  border:1px solid #f0c8c3;
+  background:#fff5f4;
+  color:#a64238;
+}
+.learning-unit-card>label>input[data-unit-name]{
+  width:100%;
+  min-height:44px;
+  margin-top:6px;
+  padding:9px 12px;
+  border:1px solid #d6e3ed;
+  border-radius:10px;
+  box-sizing:border-box;
+  font:inherit;
+}
+.learning-unit-action-bar{
+  position:sticky;
+  bottom:0;
+  z-index:3;
+  display:grid;
+  grid-template-columns:auto auto auto minmax(260px,1fr);
+  gap:10px;
+  padding:14px 0 2px;
+  background:linear-gradient(180deg,rgba(255,255,255,0),#fff 24%);
+}
+.learning-unit-action-bar button{min-height:48px}
+@media(max-width:900px){
+  .learning-unit-head{grid-template-columns:42px minmax(0,1fr)}
+  .learning-unit-head-actions{grid-column:1/-1;justify-content:flex-start}
+  .learning-unit-action-bar{grid-template-columns:1fr 1fr}
+  .learning-unit-action-bar .primary-btn{grid-column:1/-1}
+}
+@media(max-width:560px){
+  .learning-unit-action-bar{grid-template-columns:1fr}
+  .learning-unit-action-bar .primary-btn{grid-column:auto}
+}
