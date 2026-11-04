@@ -2825,3 +2825,40 @@ button,
 @media(max-width:560px){
   .prompt-output-options{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* quiz difficulty blueprint UI */
+.resource-quiz-difficulty-hint{
+  grid-column:1/-1;
+  display:grid;
+  gap:4px;
+  padding:12px 14px;
+  border:1px solid #d8e5f0;
+  border-radius:13px;
+  background:#f7fbff;
+}
+.resource-quiz-difficulty-hint b{color:#1f4f7a}
+.resource-quiz-difficulty-hint span{font-weight:800;color:#315f88}
+.resource-quiz-difficulty-hint small{color:#728597;line-height:1.45}
+.assessment-difficulty-select{
+  display:grid;
+  gap:5px;
+  min-width:260px;
+}
+.assessment-difficulty-select span{
+  font-size:.67rem;
+  font-weight:900;
+  color:#526d84;
+}
+.assessment-difficulty-select select{
+  min-height:42px;
+  border:1px solid #d2e0eb;
+  border-radius:10px;
+  padding:0 10px;
+  background:#fff;
+  font:inherit;
+  color:#2d5677;
+}
+@media(max-width:900px){
+  .assessment-difficulty-select{width:100%;min-width:0}
+}
