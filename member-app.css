@@ -2749,3 +2749,26 @@ button,
   }
   .assessment-final button{width:100%;min-width:0}
 }
+
+
+/* prompt copy button bottom placement */
+.prompt-copy-bottom{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:10px;
+}
+.prompt-copy-bottom .copy-prompt-primary{
+  min-width:260px;
+  min-height:48px;
+  padding:11px 18px;
+  border-radius:13px;
+}
+@media(max-width:680px){
+  .prompt-copy-bottom{
+    display:block;
+  }
+  .prompt-copy-bottom .copy-prompt-primary{
+    width:100%;
+    min-width:0;
+  }
+}
