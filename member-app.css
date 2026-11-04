@@ -3003,3 +3003,63 @@ button,
     padding:0 16px 10px;
   }
 }
+
+
+/* strand-scoped unit controls v4 */
+.learning-unit-strand-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.learning-unit-strand-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.learning-unit-strand-actions{
+  display:flex;
+  gap:8px;
+  flex:0 0 auto;
+}
+.learning-unit-strand-actions button{
+  min-height:36px;
+  padding:7px 11px;
+  border:1px solid #bfd4e7;
+  border-radius:10px;
+  background:#fff;
+  color:#315c7c;
+  font:inherit;
+  font-size:.7rem;
+  font-weight:900;
+  cursor:pointer;
+}
+.learning-unit-strand-actions button:last-child{
+  border-color:#edcfca;
+  color:#a34b43;
+  background:#fff8f7;
+}
+.learning-unit-move-btn{
+  width:38px;
+  min-width:38px;
+  padding:7px !important;
+  border:1px solid #cfdeea !important;
+  background:#f8fbfe !important;
+  color:#35617f !important;
+}
+#learningUnitsModal .learning-unit-action-bar{
+  grid-template-columns:auto auto minmax(260px,1fr);
+}
+@media(max-width:760px){
+  .learning-unit-strand-heading{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .learning-unit-strand-actions{
+    width:100%;
+  }
+  .learning-unit-strand-actions button{
+    flex:1;
+  }
+}
