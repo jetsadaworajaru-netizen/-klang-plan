@@ -3263,7 +3263,7 @@ button,
   background:linear-gradient(135deg,#168ff4,#5c49e7);
   color:#fff;
 }
-.create-nav-btn.undo{color:#5c4c8a}
+.create-nav-btn.undo{color:#5c4c8a;width:42px;min-width:42px;padding:0;font-size:1.2rem;display:grid;place-items:center}
 .create-nav-btn:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.15)}
 .create-nav-step{text-align:center;color:#71869a;font-size:.72rem;font-weight:800}
 @media(max-width:620px){
