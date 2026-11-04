@@ -3063,3 +3063,77 @@ button,
     flex:1;
   }
 }
+
+
+/* compact learning unit header actions v5 */
+#learningUnitsModal .learning-unit-card{
+  padding:16px 18px;
+}
+#learningUnitsModal .learning-unit-head{
+  grid-template-columns:44px minmax(0,1fr) auto !important;
+  gap:12px !important;
+  align-items:start !important;
+  margin-bottom:12px;
+}
+#learningUnitsModal .learning-unit-head-actions{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  flex-wrap:nowrap !important;
+  gap:7px !important;
+  align-self:start;
+}
+#learningUnitsModal .learning-unit-head-actions button{
+  width:auto !important;
+  min-width:0 !important;
+  min-height:40px !important;
+  height:40px;
+  padding:8px 12px !important;
+  white-space:nowrap;
+}
+#learningUnitsModal .learning-unit-move-btn{
+  width:40px !important;
+  min-width:40px !important;
+  padding:0 !important;
+  display:grid;
+  place-items:center;
+  font-size:1rem !important;
+}
+#learningUnitsModal .learning-unit-quiz-btn{
+  min-width:148px !important;
+}
+#learningUnitsModal .learning-unit-delete-btn{
+  min-width:92px !important;
+}
+#learningUnitsModal .learning-unit-head-copy b{
+  display:block;
+  line-height:1.35;
+}
+#learningUnitsModal .learning-unit-head-copy small{
+  display:block;
+  margin-top:3px;
+  line-height:1.35;
+}
+@media(max-width:1080px){
+  #learningUnitsModal .learning-unit-head{
+    grid-template-columns:44px minmax(0,1fr) !important;
+  }
+  #learningUnitsModal .learning-unit-head-actions{
+    grid-column:2;
+    justify-content:flex-start !important;
+    flex-wrap:wrap !important;
+    margin-top:4px;
+  }
+}
+@media(max-width:680px){
+  #learningUnitsModal .learning-unit-head-actions{
+    grid-column:1/-1;
+  }
+  #learningUnitsModal .learning-unit-quiz-btn{
+    flex:1 1 150px;
+  }
+  #learningUnitsModal .learning-unit-delete-btn{
+    flex:1 1 92px;
+  }
+}
