@@ -998,7 +998,7 @@ ${base}`;
 }
 function setPromptOutputMode(mode){
   promptOutputMode=mode||"image";
-  $nodes(".prompt-output-option").forEach(b=>b.classList.toggle("active",b.dataset.promptOutput===promptOutputMode));
+  nodes(".prompt-output-option").forEach(b=>b.classList.toggle("active",b.dataset.promptOutput===promptOutputMode));
   const meta=promptOutputMeta();
   const btn=$("generateBtn");
   if(btn)btn.textContent=`✨ สร้าง Prompt ${meta.label}แผนการจัดการเรียนรู้`;
