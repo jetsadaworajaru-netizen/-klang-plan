@@ -3357,3 +3357,41 @@ button,
 #createUndoBtn.create-nav-btn.undo{
   padding-top:1px !important;
 }
+
+
+/* redesigned undo icon: curved arrow with downward-facing head */
+#createUndoBtn.create-nav-btn.undo{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  min-height:42px;
+  padding:0 !important;
+  margin:0;
+  border:1px solid #e4e7eb;
+  border-radius:14px;
+  background:#f7f8fa;
+  color:#20242a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 1px 2px rgba(16,24,40,.04);
+}
+#createUndoBtn.create-nav-btn.undo .undo-arrow{
+  display:block;
+  font-family:"Segoe UI Symbol",Arial,sans-serif;
+  font-size:22px;
+  line-height:1;
+  transform:rotate(-32deg) translateY(1px);
+  transform-origin:center;
+}
+#createUndoBtn.create-nav-btn.undo:hover:not(:disabled){
+  background:#f0f2f5;
+  border-color:#d9dde3;
+}
+#createUndoBtn.create-nav-btn.undo:active:not(:disabled){
+  transform:translateY(1px);
+}
+#createUndoBtn.create-nav-btn.undo:disabled{
+  opacity:.38;
+  background:#f5f6f8;
+}
