@@ -3229,3 +3229,48 @@ button,
 .assessment-custom-quiz-btn:hover{
   background:#e6eeff !important;
 }
+
+
+/* create step navigation + undo */
+.create-nav-bar{
+  position:sticky;
+  top:116px;
+  z-index:68;
+  display:grid;
+  grid-template-columns:auto minmax(110px,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+  margin:0 0 12px;
+  padding:9px;
+  border:1px solid #d8e5ee;
+  border-radius:16px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 8px 24px rgba(36,68,102,.08);
+  backdrop-filter:blur(10px);
+}
+.create-nav-btn{
+  min-height:40px;
+  border:1px solid #d4e0ea;
+  border-radius:11px;
+  background:#fff;
+  color:#315776;
+  font-weight:850;
+  padding:8px 13px;
+  cursor:pointer;
+}
+.create-nav-btn.next{
+  border-color:transparent;
+  background:linear-gradient(135deg,#168ff4,#5c49e7);
+  color:#fff;
+}
+.create-nav-btn.undo{color:#5c4c8a}
+.create-nav-btn:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.15)}
+.create-nav-step{text-align:center;color:#71869a;font-size:.72rem;font-weight:800}
+@media(max-width:620px){
+  .create-nav-bar{
+    top:108px;
+    grid-template-columns:1fr 1fr 1fr;
+  }
+  .create-nav-step{grid-column:1/-1;grid-row:1}
+  .create-nav-btn{padding:8px 7px;font-size:.76rem}
+}
