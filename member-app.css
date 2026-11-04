@@ -3137,3 +3137,13 @@ button,
     flex:1 1 92px;
   }
 }
+
+
+/* learning unit actions simplification v6 */
+#learningUnitsModal .learning-unit-head-actions{
+  gap:6px !important;
+}
+#learningUnitsModal .learning-unit-head-actions .learning-unit-quiz-btn,
+#learningUnitsModal .learning-unit-head-actions .learning-unit-delete-btn{
+  display:none !important;
+}
