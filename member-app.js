@@ -4401,6 +4401,135 @@ function openCourseRoadmapStep(step){
   if(step==="documents"&&!c.assessments?.saved_at)return toast("กรุณาทำ “การประเมิน” ก่อน");
   (routes[step]||(()=>{}))()
 }
+
+const createStepIds=["step1","step2","step3","step4","step5"];
+let createStepIndex=0,createUndoStack=[],createUndoRestoring=false,createUndoPrimed=false;
+
+function createStateSnapshot(){
+  const root=$("tab-create");if(!root)return null;
+  const fields={};
+  root.querySelectorAll("input,select,textarea").forEach((el,i)=>{
+    if(el.type==="file")return;
+    const key=el.id||el.name||("field-"+i);
+    fields[key]={value:el.value,checked:!!el.checked,type:el.type||el.tagName};
+  });
+  return {
+    fields,
+    stage,
+    style,
+    palette,
+    promptOutputMode,
+    selectedIndex:selected?DATA.indexOf(selected):-1,
+    planTeacherImageSource,planTeacherImageData,
+    planSchoolLogoSource,planSchoolLogoData,
+    planQrSource,planQrData
+  }
+}
+function sameCreateSnapshot(a,b){
+  try{return JSON.stringify(a)===JSON.stringify(b)}catch{return false}
+}
+function pushCreateUndoSnapshot(){
+  if(createUndoRestoring)return;
+  const snap=createStateSnapshot();if(!snap)return;
+  const last=createUndoStack[createUndoStack.length-1];
+  if(last&&sameCreateSnapshot(last,snap))return;
+  createUndoStack.push(snap);
+  if(createUndoStack.length>30)createUndoStack.shift();
+  updateCreateNavButtons()
+}
+function primeCreateUndo(){
+  if(createUndoPrimed)return;
+  createUndoPrimed=true;
+  pushCreateUndoSnapshot()
+}
+function restoreCreateState(snap){
+  if(!snap)return;
+  createUndoRestoring=true;
+  stage=snap.stage||stage;
+  style=snap.style||style;
+  palette=snap.palette||palette;
+  promptOutputMode=snap.promptOutputMode||promptOutputMode;
+  planTeacherImageSource=snap.planTeacherImageSource||"none";
+  planTeacherImageData=snap.planTeacherImageData||"";
+  planSchoolLogoSource=snap.planSchoolLogoSource||"none";
+  planSchoolLogoData=snap.planSchoolLogoData||"";
+  planQrSource=snap.planQrSource||"none";
+  planQrData=snap.planQrData||"";
+
+  nodes(".stage-btn").forEach(x=>x.classList.toggle("active",x.dataset.stage===stage));
+  buildGrades();
+  const root=$("tab-create");
+  const setField=(key,data)=>{
+    let el=document.getElementById(key);
+    if(!el&&root)el=root.querySelector('[name="'+CSS.escape(key)+'"]');
+    if(!el||el.type==="file")return;
+    if(el.type==="checkbox"||el.type==="radio")el.checked=!!data.checked;
+    else el.value=data.value??"";
+  };
+  Object.entries(snap.fields||{}).forEach(([k,v])=>setField(k,v));
+  if($("grade"))buildSubjects();
+  Object.entries(snap.fields||{}).forEach(([k,v])=>setField(k,v));
+  if($("subject"))buildIndicators();
+  Object.entries(snap.fields||{}).forEach(([k,v])=>setField(k,v));
+  const si=Number(snap.selectedIndex);
+  selected=si>=0?DATA[si]:selected;
+  if(selected&&$("indicatorPreview"))$("indicatorPreview").innerHTML=`<b>${esc(selected.indicator||selected.standard||"ตัวชี้วัด")}</b><br>${esc(selected.indicator_text||"")}`;
+  renderStyles();renderAffiliation();syncTeacherSourceControls();
+  setPromptOutputMode(promptOutputMode);
+  updateSummary();
+  if($("teachingDateFields")&&$("includeTeachingDate"))$("teachingDateFields").hidden=!$("includeTeachingDate").checked;
+  if($("signatureFields")&&$("includeSignatures"))$("signatureFields").hidden=!$("includeSignatures").checked;
+  createUndoRestoring=false;
+}
+function undoCreateChange(){
+  if(createUndoStack.length<2)return toast("ยังไม่มีรายการให้ Undo");
+  createUndoStack.pop();
+  const snap=createUndoStack[createUndoStack.length-1];
+  restoreCreateState(snap);
+  updateCreateNavButtons();
+  toast("ย้อนการแก้ไขล่าสุดแล้ว ↶")
+}
+function setCreateStep(index,{scroll=true}={}){
+  createStepIndex=Math.max(0,Math.min(createStepIds.length-1,Number(index)||0));
+  const id=createStepIds[createStepIndex],target=$(id);
+  nodes(".progress-pill").forEach((b,i)=>b.classList.toggle("active",i===createStepIndex));
+  if(scroll&&target)target.scrollIntoView({behavior:"smooth",block:"start"});
+  updateCreateNavButtons()
+}
+function updateCreateNavButtons(){
+  const prev=$("createPrevBtn"),next=$("createNextBtn"),undo=$("createUndoBtn"),label=$("createStepLabel");
+  if(prev)prev.disabled=createStepIndex<=0;
+  if(next){next.disabled=createStepIndex>=createStepIds.length-1;next.textContent=createStepIndex>=createStepIds.length-1?"ถึงขั้นสุดท้ายแล้ว":"ถัดไป →"}
+  if(undo)undo.disabled=createUndoStack.length<2;
+  if(label)label.textContent=`ขั้นที่ ${createStepIndex+1} จาก ${createStepIds.length}`
+}
+function detectCreateStep(){
+  let best=0,bestDist=Infinity;
+  createStepIds.forEach((id,i)=>{const el=$(id);if(!el)return;const d=Math.abs(el.getBoundingClientRect().top-170);if(d<bestDist){best=i;bestDist=d}});
+  if(best!==createStepIndex)setCreateStep(best,{scroll:false})
+}
+function bindCreateStepNavigation(){
+  const root=$("tab-create");if(!root)return;
+  $("createPrevBtn")&&($("createPrevBtn").onclick=()=>setCreateStep(createStepIndex-1));
+  $("createNextBtn")&&($("createNextBtn").onclick=()=>setCreateStep(createStepIndex+1));
+  $("createUndoBtn")&&($("createUndoBtn").onclick=undoCreateChange);
+  root.addEventListener("focusin",e=>{
+    if(e.target.matches("input:not([type=file]),select,textarea")){primeCreateUndo();pushCreateUndoSnapshot()}
+  },true);
+  root.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".stage-btn,.choice-btn,.style-card,.palette-btn,.prompt-output-option,[data-style],[data-palette]")){primeCreateUndo();pushCreateUndoSnapshot()}
+  },true);
+  root.addEventListener("change",e=>{
+    if(e.target.matches("input:not([type=file]),select,textarea"))setTimeout(()=>pushCreateUndoSnapshot(),0)
+  },true);
+  root.addEventListener("input",e=>{
+    if(!e.target.matches("input:not([type=file]),textarea"))return;
+    clearTimeout(root._undoTimer);root._undoTimer=setTimeout(()=>pushCreateUndoSnapshot(),450)
+  },true);
+  window.addEventListener("scroll",()=>{clearTimeout(window._createStepTimer);window._createStepTimer=setTimeout(detectCreateStep,80)},{passive:true});
+  primeCreateUndo();setCreateStep(0,{scroll:false})
+}
+
 function bind(){
   if($("courseSemester"))$("courseSemester").addEventListener("change",()=>{const h=$("courseHours");if(h&&(!h.value||Number(h.value)<=0))syncCourseQuickFields()});
   nodes("[data-course-roadmap-step]").forEach(b=>b.onclick=()=>openCourseRoadmapStep(b.dataset.courseRoadmapStep));
@@ -4441,6 +4570,7 @@ function bind(){
   nodes(".prompt-output-option").forEach(b=>b.onclick=()=>setPromptOutputMode(b.dataset.promptOutput));setPromptOutputMode(promptOutputMode);
   if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{nodes('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").onchange=()=>{$("realTeachingCalendarFields").hidden=!$("useRealTeachingCalendar").checked};if($("applyRealTeachingCalendarBtn"))$("applyRealTeachingCalendarBtn").onclick=applyRealTeachingCalendar;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("addLearningUnitBtn"))$("addLearningUnitBtn").onclick=addLearningUnit;if($("restoreLearningUnitsBtn"))$("restoreLearningUnitsBtn").onclick=restoreLearningUnitsFromStructure;if($("closeStrandDeleteBtn"))$("closeStrandDeleteBtn").onclick=closeStrandDeleteModal;if($("strandDeleteBackdrop"))$("strandDeleteBackdrop").onclick=closeStrandDeleteModal;if($("cancelStrandDeleteBtn"))$("cancelStrandDeleteBtn").onclick=closeStrandDeleteModal;if($("confirmStrandDeleteBtn"))$("confirmStrandDeleteBtn").onclick=confirmStrandDelete;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   nodes("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
+  bindCreateStepNavigation();
   $("libraryStage").onchange=updateLibraryFilters;$("libraryGrade").onchange=updateLibrarySubjects;$("librarySubject").onchange=applyLibraryFilters;$("librarySearch").oninput=applyLibraryFilters;$("useLibraryIndicatorBtn").onclick=useLibraryIndicator;
   $("includeTeachingDate").onchange=()=>{$("teachingDateFields").hidden=!$("includeTeachingDate").checked;updateSummary()};
   $("includeSignatures").onchange=()=>{$("signatureFields").hidden=!$("includeSignatures").checked;updateSummary()};
