@@ -2868,19 +2868,44 @@ function addLearningUnitToStrand(strandName){
   renderLearningUnits(units);
   $("learningUnitsStatus").innerHTML=`<div class="indicator-preview">เพิ่มหน่วยในสาระ “${esc(strandName)}” แล้ว ✓ แบ่งเวลา 1 ชั่วโมงจากหน่วยในสาระเดียวกัน</div>`
 }
+let pendingStrandDeleteName="";
 function removeLearningUnitFromStrand(strandName){
   const units=readLearningUnits(),idxs=strandUnitIndexes(units,strandName);
   if(idxs.length<=1){toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");return}
-  const index=idxs[idxs.length-1],removed=units[index],target=idxs[idxs.length-2];
-  if(!confirm(`ลดหน่วยในสาระ “${strandName}” โดยลบ “${removed.name||"หน่วยล่าสุด"}” หรือไม่?`))return;
-  const h=Number(removed.hours)||0;
+  pendingStrandDeleteName=strandName;
+  const list=$("strandDeleteUnitList");if(!list)return;
+  list.innerHTML=idxs.map(i=>{
+    const u=units[i]||{};
+    return `<label class="strand-delete-option">
+      <input type="radio" name="strandDeleteUnit" value="${i}">
+      <span><b>หน่วยที่ ${i+1} · ${esc(u.name||"หน่วยการเรียนรู้")}</b><small>${Number(u.hours)||0} ชั่วโมง · ${(u.indicator_ids||[]).length} ตัวชี้วัด</small></span>
+    </label>`
+  }).join("");
+  $("strandDeleteTitle").textContent=`ลบหน่วยในสาระ “${strandName}”`;
+  $("strandDeleteMeta").textContent="เลือกหน่วยที่ต้องการลบ 1 หน่วย ชั่วโมงของหน่วยนั้นจะถูกย้ายไปยังหน่วยใกล้เคียงภายในสาระเดียวกัน";
+  $("strandDeleteModal").hidden=false
+}
+function closeStrandDeleteModal(){
+  if($("strandDeleteModal"))$("strandDeleteModal").hidden=true;
+  pendingStrandDeleteName=""
+}
+function confirmStrandDelete(){
+  const checked=document.querySelector('input[name="strandDeleteUnit"]:checked');
+  if(!checked){toast("กรุณาเลือกหน่วยที่ต้องการลบ");return}
+  const index=Number(checked.value),units=readLearningUnits(),u=units[index];if(!u)return;
+  const idxs=strandUnitIndexes(units,pendingStrandDeleteName||u.strand_name);
+  if(idxs.length<=1){toast("แต่ละสาระต้องมีอย่างน้อย 1 หน่วย");return}
+  const pos=idxs.indexOf(index),h=Number(u.hours)||0;
+  const neighborOriginal=pos>0?idxs[pos-1]:idxs[pos+1];
   units.splice(index,1);
-  const adjustedTarget=target<index?target:target-1;
-  if(units[adjustedTarget])units[adjustedTarget].hours=(Number(units[adjustedTarget].hours)||0)+h;
+  const neighbor=neighborOriginal>index?neighborOriginal-1:neighborOriginal;
+  if(units[neighbor])units[neighbor].hours=(Number(units[neighbor].hours)||0)+h;
   const c=courseDrafts()[activeCourseIndex]||{};
   normalizeLearningUnitWeights(units,Number(c.hours)||0);
   renderLearningUnits(units);
-  $("learningUnitsStatus").innerHTML=`<div class="indicator-preview">ลดหน่วยในสาระ “${esc(strandName)}” แล้ว ✓ ชั่วโมงถูกคืนให้หน่วยก่อนหน้าในสาระเดียวกัน</div>`
+  closeStrandDeleteModal();
+  $("learningUnitsStatus").innerHTML=`<div class="indicator-preview">ลบ “${esc(u.name||"หน่วยการเรียนรู้")}” แล้ว ✓ ชั่วโมง ${h} ชม. ถูกย้ายภายในสาระเดียวกัน กดบันทึกเพื่อยืนยัน</div>`;
+  toast("ลบหน่วยที่เลือกแล้ว ✓")
 }
 function moveLearningUnitWithinStrand(index,direction){
   const units=readLearningUnits(),u=units[index];if(!u)return;
@@ -4391,7 +4416,7 @@ function bind(){
   if($("aiQrUpload"))$("aiQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);renderAiAttachmentKit();toast("เพิ่ม QR สำหรับชุดแนบแล้ว ✓")};
   nodes(".top-tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));nodes("[data-bottom-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.bottomTab));
   nodes(".prompt-output-option").forEach(b=>b.onclick=()=>setPromptOutputMode(b.dataset.promptOutput));setPromptOutputMode(promptOutputMode);
-  if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{nodes('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").onchange=()=>{$("realTeachingCalendarFields").hidden=!$("useRealTeachingCalendar").checked};if($("applyRealTeachingCalendarBtn"))$("applyRealTeachingCalendarBtn").onclick=applyRealTeachingCalendar;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("addLearningUnitBtn"))$("addLearningUnitBtn").onclick=addLearningUnit;if($("restoreLearningUnitsBtn"))$("restoreLearningUnitsBtn").onclick=restoreLearningUnitsFromStructure;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
+  if($("newCourseBtn"))$("newCourseBtn").onclick=openCourseModal;if($("closeCourseBtn"))$("closeCourseBtn").onclick=closeCourseModal;if($("courseBackdrop"))$("courseBackdrop").onclick=closeCourseModal;if($("saveCourseDraftBtn"))$("saveCourseDraftBtn").onclick=saveCourseDraft;if($("closeCurriculumAnalysisBtn"))$("closeCurriculumAnalysisBtn").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisBackdrop"))$("curriculumAnalysisBackdrop").onclick=closeCurriculumAnalysis;if($("curriculumAnalysisSearch"))$("curriculumAnalysisSearch").oninput=renderCurriculumIndicators;if($("selectAllCurriculumBtn"))$("selectAllCurriculumBtn").onclick=()=>{nodes('#curriculumIndicatorList input[type="checkbox"]').forEach(x=>x.checked=true);updateCurriculumSelectedSummary()};if($("saveCurriculumAnalysisBtn"))$("saveCurriculumAnalysisBtn").onclick=saveCurriculumAnalysis;if($("closeCourseDescriptionBtn"))$("closeCourseDescriptionBtn").onclick=closeCourseDescription;if($("courseDescriptionBackdrop"))$("courseDescriptionBackdrop").onclick=closeCourseDescription;if($("generateCourseDescriptionBtn"))$("generateCourseDescriptionBtn").onclick=generateCourseDescription;if($("saveCourseDescriptionBtn"))$("saveCourseDescriptionBtn").onclick=saveCourseDescription;if($("closeCourseStructureBtn"))$("closeCourseStructureBtn").onclick=closeCourseStructure;if($("courseStructureBackdrop"))$("courseStructureBackdrop").onclick=closeCourseStructure;if($("generateCourseStructureBtn"))$("generateCourseStructureBtn").onclick=generateCourseStructure;if($("saveCourseStructureBtn"))$("saveCourseStructureBtn").onclick=saveCourseStructure;if($("closeTeachingScheduleBtn"))$("closeTeachingScheduleBtn").onclick=closeTeachingSchedule;if($("teachingScheduleBackdrop"))$("teachingScheduleBackdrop").onclick=closeTeachingSchedule;if($("generateTeachingScheduleBtn"))$("generateTeachingScheduleBtn").onclick=generateTeachingSchedule;if($("saveTeachingScheduleBtn"))$("saveTeachingScheduleBtn").onclick=saveTeachingSchedule;if($("useRealTeachingCalendar"))$("useRealTeachingCalendar").onchange=()=>{$("realTeachingCalendarFields").hidden=!$("useRealTeachingCalendar").checked};if($("applyRealTeachingCalendarBtn"))$("applyRealTeachingCalendarBtn").onclick=applyRealTeachingCalendar;if($("closeLearningUnitsBtn"))$("closeLearningUnitsBtn").onclick=closeLearningUnits;if($("learningUnitsBackdrop"))$("learningUnitsBackdrop").onclick=closeLearningUnits;if($("addLearningUnitBtn"))$("addLearningUnitBtn").onclick=addLearningUnit;if($("restoreLearningUnitsBtn"))$("restoreLearningUnitsBtn").onclick=restoreLearningUnitsFromStructure;if($("closeStrandDeleteBtn"))$("closeStrandDeleteBtn").onclick=closeStrandDeleteModal;if($("strandDeleteBackdrop"))$("strandDeleteBackdrop").onclick=closeStrandDeleteModal;if($("cancelStrandDeleteBtn"))$("cancelStrandDeleteBtn").onclick=closeStrandDeleteModal;if($("confirmStrandDeleteBtn"))$("confirmStrandDeleteBtn").onclick=confirmStrandDelete;if($("generateLearningUnitsBtn"))$("generateLearningUnitsBtn").onclick=generateLearningUnits;if($("saveLearningUnitsBtn"))$("saveLearningUnitsBtn").onclick=saveLearningUnits;if($("closeCourseLessonsBtn"))$("closeCourseLessonsBtn").onclick=closeCourseLessons;if($("courseLessonsBackdrop"))$("courseLessonsBackdrop").onclick=closeCourseLessons;if($("closeCourseAssessmentsBtn"))$("closeCourseAssessmentsBtn").onclick=closeCourseAssessments;if($("courseAssessmentsBackdrop"))$("courseAssessmentsBackdrop").onclick=closeCourseAssessments;if($("closeCourseDocumentsBtn"))$("closeCourseDocumentsBtn").onclick=closeCourseDocuments;if($("closeCourseReadinessBtn"))$("closeCourseReadinessBtn").onclick=closeCourseReadiness;if($("courseReadinessBackdrop"))$("courseReadinessBackdrop").onclick=closeCourseReadiness;if($("courseDocumentsBackdrop"))$("courseDocumentsBackdrop").onclick=closeCourseDocuments;if($("downloadCourseDocxBtn"))$("downloadCourseDocxBtn").onclick=downloadCourseDocx;if($("downloadCoursePdfBtn"))$("downloadCoursePdfBtn").onclick=downloadCoursePdf;
   nodes("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
   $("libraryStage").onchange=updateLibraryFilters;$("libraryGrade").onchange=updateLibrarySubjects;$("librarySubject").onchange=applyLibraryFilters;$("librarySearch").oninput=applyLibraryFilters;$("useLibraryIndicatorBtn").onclick=useLibraryIndicator;
   $("includeTeachingDate").onchange=()=>{$("teachingDateFields").hidden=!$("includeTeachingDate").checked;updateSummary()};
