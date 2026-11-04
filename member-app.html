@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
   <link rel="apple-touch-icon" href="/favicon.png?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/member-app.css?v=1047">
+<link rel="stylesheet" href="/member-app.css?v=1048">
 <style>
 #planDesignOptions{margin-top:18px}
 </style><style>
@@ -48,7 +48,7 @@
 .analysis-context-grid textarea{width:100%;margin-top:5px;line-height:1.5;resize:vertical}
 @media(max-width:680px){.analysis-context-grid{grid-template-columns:1fr}}
 </style></head>
-<body data-build="1091">
+<body data-build="1092">
 <div id="appShell" class="app-shell is-loading">
   <header class="topbar">
     <div class="brand">
@@ -636,7 +636,12 @@
     <div class="workspace-modal-head"><div><h2>🧩 หน่วยการเรียนรู้</h2><p id="learningUnitsMeta"></p></div><span class="workspace-status">เชื่อมโยงข้อมูลอัตโนมัติ</span></div>
     <div id="learningUnitsSource" class="doc-source-note"></div>
     <div id="learningUnitsList" class="learning-units-list"></div>
-    <div class="doc-action-row"><button id="generateLearningUnitsBtn" class="secondary-btn" type="button">✨ สร้างหน่วยใหม่</button><button id="saveLearningUnitsBtn" class="primary-btn" type="button">บันทึกหน่วยการเรียนรู้</button></div>
+    <div class="learning-unit-action-bar">
+      <button id="addLearningUnitBtn" class="secondary-btn" type="button">＋ เพิ่มหน่วย</button>
+      <button id="restoreLearningUnitsBtn" class="secondary-btn" type="button">↺ คืนค่าจากโครงสร้างรายวิชา</button>
+      <button id="generateLearningUnitsBtn" class="secondary-btn" type="button">✨ สร้างหน่วยอัตโนมัติ</button>
+      <button id="saveLearningUnitsBtn" class="primary-btn" type="button">บันทึกหน่วยการเรียนรู้</button>
+    </div>
     <div id="learningUnitsStatus"></div>
   </section>
 </div>
@@ -1025,6 +1030,6 @@
   },7000);
 </script>
 <script src="/config.js?v=951"></script>
-<script src="/member-app.js?v=1091"></script>
+<script src="/member-app.js?v=1092"></script>
 </body>
 </html>
