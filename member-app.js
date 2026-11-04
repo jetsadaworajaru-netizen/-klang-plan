@@ -2780,8 +2780,6 @@ function renderLearningUnits(units){
         <div class="learning-unit-head-actions">
           <button type="button" data-learning-unit-move="up:${i}" class="learning-unit-move-btn" title="เลื่อนหน่วยขึ้น">↑</button>
           <button type="button" data-learning-unit-move="down:${i}" class="learning-unit-move-btn" title="เลื่อนหน่วยลง">↓</button>
-          <button type="button" data-learning-unit-quiz="${i}" class="learning-unit-quiz-btn">✅ สร้างแบบทดสอบ</button>
-          <button type="button" data-learning-unit-delete="${i}" class="learning-unit-delete-btn">ลบหน่วย</button>
         </div>
       </div>
       <label>ชื่อหน่วย<input data-unit-name value="${esc(u.name||"")}" placeholder="ชื่อหน่วยการเรียนรู้"></label>
@@ -2792,8 +2790,6 @@ function renderLearningUnits(units){
     </article>`;
   });
   $("learningUnitsList").innerHTML=html;
-  nodes("[data-learning-unit-delete]").forEach(b=>b.onclick=()=>removeLearningUnit(Number(b.dataset.learningUnitDelete)));
-  nodes("[data-learning-unit-quiz]").forEach(b=>b.onclick=()=>openLearningUnitQuiz(Number(b.dataset.learningUnitQuiz)));
   nodes("[data-learning-unit-move]").forEach(b=>b.onclick=()=>{const [dir,idx]=b.dataset.learningUnitMove.split(":");moveLearningUnitWithinStrand(Number(idx),dir)});
   nodes("[data-strand-add]").forEach(b=>b.onclick=()=>addLearningUnitToStrand(decodeURIComponent(b.dataset.strandAdd||"")));
   nodes("[data-strand-remove]").forEach(b=>b.onclick=()=>removeLearningUnitFromStrand(decodeURIComponent(b.dataset.strandRemove||"")))
