@@ -3321,7 +3321,15 @@ function collectResourceConfiguratorOptions(type){
 function confirmResourceConfigurator(){
   const ctx=resourceConfiguratorContext;if(!ctx)return;
   const opts=collectResourceConfiguratorOptions(ctx.type),{ci,ui,type,si}=ctx;
-  closeResourceConfigurator();createUnitResourcePrompt(ci,ui,type,si,opts)
+  closeResourceConfigurator();
+  closeCourseAssessments();
+  closeCourseLessons();
+  createUnitResourcePrompt(ci,ui,type,si,opts);
+  switchTab("create");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=$("promptWrap");
+    if(target)target.scrollIntoView({behavior:"smooth",block:"start"})
+  }))
 }
 function quizDifficultyBlueprint(level,itemCount){
   const n=Math.max(1,Math.round(Number(itemCount)||10));
