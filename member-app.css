@@ -3274,3 +3274,30 @@ button,
   .create-nav-step{grid-column:1/-1;grid-row:1}
   .create-nav-btn{padding:8px 7px;font-size:.76rem}
 }
+
+
+/* compact circular undo button */
+#createUndoBtn{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  min-height:42px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#f1f1f1;
+  color:#222;
+  display:grid;
+  place-items:center;
+  font-size:1.15rem;
+  font-weight:700;
+  line-height:1;
+  box-shadow:none;
+}
+#createUndoBtn:hover:not(:disabled){
+  background:#e8e8e8;
+}
+#createUndoBtn:disabled{
+  opacity:.45;
+  background:#f3f3f3;
+}
