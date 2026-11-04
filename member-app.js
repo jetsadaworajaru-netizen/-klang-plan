@@ -2768,16 +2768,121 @@ function renderLearningUnits(units){
       </section>`;
     }
     html+=`<article class="learning-unit-card" data-learning-unit="${i}" data-indicator-ids='${esc(JSON.stringify(u.indicator_ids||[]))}' data-strand-name="${esc(strandName)}">
-      <div class="learning-unit-head"><span>${i+1}</span><div><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small><strong>สาระ: ${esc(strandName)}</strong> · ${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div></div>
+      <div class="learning-unit-head">
+        <span>${i+1}</span>
+        <div class="learning-unit-head-copy"><b>หน่วยที่ ${i+1} · ${esc(u.name||`หน่วยการเรียนรู้ ${i+1}`)}</b><small><strong>สาระ: ${esc(strandName)}</strong> · ${standardName?`มาตรฐาน: ${esc(standardName)} · `:""}${Number(u.hours)||0} ชั่วโมง · น้ำหนัก ${Number(u.weight)||0}% · ${u.indicator_ids?.length||0} ตัวชี้วัด</small></div>
+        <div class="learning-unit-head-actions">
+          <button type="button" data-learning-unit-quiz="${i}" class="learning-unit-quiz-btn">✅ สร้างแบบทดสอบ</button>
+          <button type="button" data-learning-unit-delete="${i}" class="learning-unit-delete-btn">ลบหน่วย</button>
+        </div>
+      </div>
+      <label>ชื่อหน่วย<input data-unit-name value="${esc(u.name||"")}" placeholder="ชื่อหน่วยการเรียนรู้"></label>
       <label>สาระสำคัญ<textarea data-unit-concept rows="3">${esc(u.concept||"")}</textarea></label>
       <label>จุดประสงค์/ผลลัพธ์การเรียนรู้<textarea data-unit-objectives rows="4">${esc(u.objectives||"")}</textarea></label>
       <label>แนวทางการวัดและประเมินผล<textarea data-unit-assessment rows="3">${esc(u.assessment||"")}</textarea></label>
-      <input type="hidden" data-unit-name value="${esc(u.name||"")}"><input type="hidden" data-unit-hours value="${Number(u.hours)||0}"><input type="hidden" data-unit-weight value="${Number(u.weight)||0}">
+      <input type="hidden" data-unit-hours value="${Number(u.hours)||0}"><input type="hidden" data-unit-weight value="${Number(u.weight)||0}">
     </article>`;
   });
-  $("learningUnitsList").innerHTML=html
+  $("learningUnitsList").innerHTML=html;
+  nodes("[data-learning-unit-delete]").forEach(b=>b.onclick=()=>removeLearningUnit(Number(b.dataset.learningUnitDelete)));
+  nodes("[data-learning-unit-quiz]").forEach(b=>b.onclick=()=>openLearningUnitQuiz(Number(b.dataset.learningUnitQuiz)))
 }
 function readLearningUnits(){return nodes('#learningUnitsList [data-learning-unit]').map((row,i)=>{let ids=[];try{ids=JSON.parse(row.dataset.indicatorIds||"[]")}catch{}const structureUnit=courseDrafts()[activeCourseIndex]?.course_structure?.units?.[i]||{};return {id:(courseDrafts()[activeCourseIndex]?.learning_units?.units?.[i]?.id)||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),unit_no:i+1,name:row.querySelector('[data-unit-name]').value,strand_name:String(structureUnit.strand_name||structureUnit.strand_base||row.dataset.strandName||"").trim(),standard_name:String(structureUnit.standard_name||structureUnit.source_standard||"").trim(),structure_version:Number(courseDrafts()[activeCourseIndex]?.course_structure?.version||0),hours:Number(row.querySelector('[data-unit-hours]').value)||0,weight:Number(row.querySelector('[data-unit-weight]').value)||0,indicator_ids:ids,concept:row.querySelector('[data-unit-concept]').value.trim(),objectives:row.querySelector('[data-unit-objectives]').value.trim(),assessment:row.querySelector('[data-unit-assessment]').value.trim()}})}
+function normalizeLearningUnitWeights(units,totalHours){
+  const total=Math.max(1,Number(totalHours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||1);
+  let used=0;
+  units.forEach((u,i)=>{
+    u.unit_no=i+1;
+    if(i===units.length-1)u.weight=Math.max(0,100-used);
+    else{u.weight=Math.round(((Number(u.hours)||0)/total)*100);used+=u.weight}
+  });
+  return units
+}
+function syncLearningUnitsToStructure(units){
+  if(activeCourseIndex===null)return;
+  const rows=courseDrafts(),c=rows[activeCourseIndex];if(!c)return;
+  const existing=c.course_structure?.units||[];
+  const totalHours=Number(c.hours)||existing.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0);
+  normalizeLearningUnitWeights(units,totalHours);
+  c.course_structure=c.course_structure||{version:6,units:[]};
+  c.course_structure.version=Math.max(6,Number(c.course_structure.version)||0)+1;
+  c.course_structure.units=units.map((u,i)=>{
+    const old=existing[i]||{};
+    return {
+      ...old,
+      id:u.id||old.id||(crypto.randomUUID?crypto.randomUUID():String(Date.now()+i)),
+      unit_no:i+1,
+      name:u.name||`หน่วยการเรียนรู้ ${i+1}`,
+      strand_name:u.strand_name||old.strand_name||old.strand_base||"",
+      strand_base:u.strand_name||old.strand_base||"",
+      standard_name:u.standard_name||old.standard_name||old.source_standard||"",
+      source_standard:u.standard_name||old.source_standard||"",
+      hours:Number(u.hours)||0,
+      weight:Number(u.weight)||0,
+      indicator_ids:u.indicator_ids||old.indicator_ids||[]
+    }
+  });
+  c.learning_units={version:c.course_structure.version,units:units.map((u,i)=>({...u,unit_no:i+1,structure_version:c.course_structure.version})),saved_at:new Date().toISOString()};
+  c.teaching_schedule=null;
+  c.lesson_resources=null;
+  c.assessments=null;
+  c.documents=null;
+  rows[activeCourseIndex]=c;writeCourseDrafts(rows);renderCourses()
+}
+function addLearningUnit(){
+  if(activeCourseIndex===null)return;
+  const units=readLearningUnits(),rows=courseDrafts(),c=rows[activeCourseIndex];if(!c)return;
+  const totalHours=Math.max(1,Number(c.hours)||units.reduce((sum,u)=>sum+(Number(u.hours)||0),0)||1);
+  let donor=-1,donorHours=0;
+  units.forEach((u,i)=>{const h=Number(u.hours)||0;if(h>donorHours&&h>1){donor=i;donorHours=h}});
+  if(donor<0){toast("ไม่สามารถเพิ่มหน่วยได้ เพราะไม่มีชั่วโมงว่างให้แบ่ง กรุณาปรับชั่วโมงในโครงสร้างรายวิชาก่อน");return}
+  units[donor].hours=donorHours-1;
+  const base=units[Math.max(0,donor)]||{};
+  units.push({
+    id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),
+    unit_no:units.length+1,
+    name:`หน่วยการเรียนรู้ใหม่ ${units.length+1}`,
+    strand_name:base.strand_name||"สาระการเรียนรู้",
+    standard_name:base.standard_name||"",
+    hours:1,
+    weight:0,
+    indicator_ids:[...(base.indicator_ids||[])],
+    concept:"",
+    objectives:"",
+    assessment:"ประเมินจากชิ้นงาน/ภาระงาน การสังเกตพฤติกรรม และการตอบคำถามตามตัวชี้วัด"
+  });
+  normalizeLearningUnitWeights(units,totalHours);
+  renderLearningUnits(units);
+  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">เพิ่มหน่วยแล้ว ✓ ระบบแบ่งเวลา 1 ชั่วโมงจากหน่วยที่มีเวลามากที่สุด กรุณาตรวจชื่อหน่วย/ตัวชี้วัดก่อนบันทึก</div>'
+}
+function removeLearningUnit(index){
+  const units=readLearningUnits();if(units.length<=1){toast("ต้องมีอย่างน้อย 1 หน่วยการเรียนรู้");return}
+  const removed=units[index];if(!removed)return;
+  if(!confirm(`ลบ “${removed.name||"หน่วยนี้"}” หรือไม่?\nชั่วโมงของหน่วยนี้จะถูกย้ายไปรวมกับหน่วยที่อยู่ใกล้ที่สุด`))return;
+  const h=Number(removed.hours)||0;
+  units.splice(index,1);
+  const target=Math.min(index,units.length-1);
+  if(units[target])units[target].hours=(Number(units[target].hours)||0)+h;
+  const c=courseDrafts()[activeCourseIndex]||{};
+  normalizeLearningUnitWeights(units,Number(c.hours)||0);
+  renderLearningUnits(units);
+  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">ลบหน่วยแล้ว ✓ ชั่วโมงถูกย้ายไปรวมกับหน่วยใกล้เคียง กดบันทึกเพื่อยืนยัน</div>'
+}
+function restoreLearningUnitsFromStructure(){
+  if(activeCourseIndex===null)return;
+  const c=courseDrafts()[activeCourseIndex];if(!c?.course_structure?.units?.length)return;
+  const units=c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j));
+  renderLearningUnits(units);
+  $("learningUnitsStatus").innerHTML='<div class="indicator-preview">คืนค่าหน่วยจากโครงสร้างรายวิชาแล้ว ✓ ตรวจสอบแล้วกดบันทึกหน่วยการเรียนรู้</div>';
+  toast("คืนค่าจากโครงสร้างรายวิชาแล้ว ✓")
+}
+function openLearningUnitQuiz(index){
+  if(activeCourseIndex===null)return;
+  const units=readLearningUnits(),rows=courseDrafts(),c=rows[activeCourseIndex];if(!c||!units[index])return;
+  c.learning_units={version:Number(c.course_structure?.version||6),units,saved_at:new Date().toISOString()};
+  rows[activeCourseIndex]=c;writeCourseDrafts(rows);
+  openResourceConfigurator(activeCourseIndex,index,"quiz",null)
+}
 function openLearningUnits(i){
   const rows=courseDrafts();
   let c=rows[i];
@@ -2800,7 +2905,7 @@ function openLearningUnits(i){
   $("learningUnitsModal").hidden=false
 }
 function generateLearningUnits(){if(activeCourseIndex===null)return;const c=courseDrafts()[activeCourseIndex];renderLearningUnits(c.course_structure.units.map((u,j)=>deriveLearningUnit(c,u,j)));toast("สร้างหน่วยการเรียนรู้แล้ว ✓")}
-function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.strand_name||!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจสาระ สาระสำคัญ และจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}const a=courseDrafts(),c=a[activeCourseIndex];c.learning_units={version:Number(c.course_structure?.version||6),units,saved_at:new Date().toISOString()};a[activeCourseIndex]=c;writeCourseDrafts(a);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ พร้อมต่อยอดเป็นแผนการสอน ใบงาน และการประเมิน</div>';renderCourses();toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
+function saveLearningUnits(){if(activeCourseIndex===null)return;const units=readLearningUnits();if(units.some(u=>!u.name||!u.strand_name||!u.concept||!u.objectives)){ $("learningUnitsStatus").innerHTML='<div class="error-box">กรุณาตรวจชื่อหน่วย สาระ สาระสำคัญ และจุดประสงค์ของทุกหน่วยก่อนบันทึก</div>';return}syncLearningUnitsToStructure(units);$("learningUnitsStatus").innerHTML='<div class="indicator-preview">บันทึกหน่วยการเรียนรู้แล้ว ✓ โครงสร้างรายวิชาถูกซิงก์ตามหน่วยล่าสุด กรุณาสร้างกำหนดการสอนใหม่ก่อนขั้นถัดไป</div>';toast("บันทึกหน่วยการเรียนรู้แล้ว ✓")}
 
 
 async function resolveCourseCloudId(c){if(c?._cloud_id)return c._cloud_id;if(!courseCloudReady||!sb||!user)return null;const {data,error}=await sb.from("courses").select("id").eq("user_id",user.id).eq("client_id",c.id).maybeSingle();if(error||!data)return null;c._cloud_id=data.id;const rows=courseDrafts(),idx=rows.findIndex(x=>x.id===c.id);if(idx>=0){rows[idx]=c;writeCourseDrafts(rows,{sync:false})}return data.id}
