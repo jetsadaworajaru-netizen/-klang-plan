@@ -3301,3 +3301,33 @@ button,
   opacity:.45;
   background:#f3f3f3;
 }
+
+
+/* compact circular undo control */
+#createUndoBtn.create-nav-btn.undo{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  min-height:42px;
+  padding:0;
+  border:0;
+  border-radius:999px;
+  background:#f1f3f5;
+  color:#1f2933;
+  display:grid;
+  place-items:center;
+  font-size:1.18rem;
+  font-weight:700;
+  line-height:1;
+  box-shadow:none;
+}
+#createUndoBtn.create-nav-btn.undo:hover:not(:disabled){
+  background:#e7eaee;
+}
+#createUndoBtn.create-nav-btn.undo:active:not(:disabled){
+  transform:scale(.96);
+}
+#createUndoBtn.create-nav-btn.undo:disabled{
+  opacity:.42;
+  background:#f1f3f5;
+}
