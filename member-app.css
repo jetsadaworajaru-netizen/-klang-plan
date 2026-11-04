@@ -3331,3 +3331,29 @@ button,
   opacity:.42;
   background:#f1f3f5;
 }
+
+
+/* final alignment for circular undo button */
+#createUndoBtn.create-nav-btn.undo{
+  width:40px;
+  min-width:40px;
+  height:40px;
+  min-height:40px;
+  padding:0 !important;
+  margin:0;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  align-self:center;
+  justify-self:start;
+  font-size:20px;
+  font-family:Arial,"Segoe UI Symbol",sans-serif;
+  line-height:1;
+  text-align:center;
+  letter-spacing:0;
+  overflow:hidden;
+}
+#createUndoBtn.create-nav-btn.undo{
+  padding-top:1px !important;
+}
