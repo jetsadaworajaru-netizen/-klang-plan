@@ -1341,11 +1341,11 @@ function continuation(type){
     game:"สร้าง Prompt สำหรับเกมการเรียนรู้จากแผนนี้ พร้อมกติกา วิธีเล่น คำถาม/ภารกิจ เฉลย และเสนอแพลตฟอร์มที่เหมาะ เช่น Kahoot, Quizizz, Wordwall, Genially, Canva หรือ HTML/Web",
     pack:"สร้าง Teaching Pack จากแผนนี้ให้เป็นชุดเดียว ประกอบด้วย ใบความรู้ ใบงาน แบบทดสอบพร้อมเฉลย Rubric และเกมการเรียนรู้ โดยทุกชิ้นใช้ตัวชี้วัดและเรื่องเดียวกับแผน"
   };
-  $("promptText").textContent=`${intro[type]}
+  setLivePromptBase(`${intro[type]}
 
 ข้อมูลอ้างอิงจากแผนเดิม:
 ---
-${base}`;
+${base}`);
   $("promptWrap").scrollIntoView({behavior:"smooth"});
   toast("สร้าง Prompt ต่อยอดแล้ว ✓")
 }
@@ -1420,11 +1420,11 @@ async function deleteCloudPlanById(id){
 }
 function openWorkspacePlan(id){activeWorkspacePlan=cloudPlans.find(x=>x.id===id);if(!activeWorkspacePlan)return;$("workspacePlanTitle").textContent=activeWorkspacePlan.title||"แผนการจัดการเรียนรู้";$("workspacePlanMeta").textContent=[activeWorkspacePlan.grade,activeWorkspacePlan.subject,activeWorkspacePlan.indicator].filter(Boolean).join(" · ");$("workspacePromptText").textContent=activeWorkspacePlan.prompt_text||"";$("workspaceReflection").value=activeWorkspacePlan.reflection_text||"";$("workspacePlanStatus").textContent=activeWorkspacePlan.reflection_text?"สอนแล้ว / มี Reflection":"พร้อมใช้";$("planWorkspaceModal").hidden=false}
 function closeWorkspacePlan(){$("planWorkspaceModal").hidden=true}
-function workspaceContinuation(type){if(!activeWorkspacePlan)return;const intro={worksheet:"สร้างใบงานจากแผนนี้ พร้อมคำชี้แจง พื้นที่ตอบ และเฉลย",quiz:"สร้างแบบทดสอบจากแผนนี้ พร้อมเฉลย",game:"สร้างเกมการเรียนรู้จากแผนนี้ พร้อมกติกา คำถาม เฉลย และแพลตฟอร์มที่เหมาะ",pack:"สร้าง Teaching Pack จากแผนนี้ ประกอบด้วย ใบความรู้ ใบงาน แบบทดสอบ Rubric และเกม"};switchTab("create");$("promptText").textContent=`${intro[type]||"สร้างสื่อการสอนต่อจากแผนนี้"}
+function workspaceContinuation(type){if(!activeWorkspacePlan)return;const intro={worksheet:"สร้างใบงานจากแผนนี้ พร้อมคำชี้แจง พื้นที่ตอบ และเฉลย",quiz:"สร้างแบบทดสอบจากแผนนี้ พร้อมเฉลย",game:"สร้างเกมการเรียนรู้จากแผนนี้ พร้อมกติกา คำถาม เฉลย และแพลตฟอร์มที่เหมาะ",pack:"สร้าง Teaching Pack จากแผนนี้ ประกอบด้วย ใบความรู้ ใบงาน แบบทดสอบ Rubric และเกม"};switchTab("create");setLivePromptBase(`${intro[type]||"สร้างสื่อการสอนต่อจากแผนนี้"}
 
 ข้อมูลแผนเดิม:
 ---
-${activeWorkspacePlan.prompt_text||""}`;$("promptWrap").hidden=false;closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)}
+${activeWorkspacePlan.prompt_text||""}`);closeWorkspacePlan();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),80)}
 async function duplicateActivePlan(){
   const p=activeWorkspacePlan;if(!p||!sb||!user)return;
   const payload={...p};delete payload.id;delete payload.created_at;delete payload.updated_at;delete payload.reflection_text;
