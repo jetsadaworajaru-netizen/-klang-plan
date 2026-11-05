@@ -444,17 +444,21 @@ function timedMethodPhases(method,topic,duration){
   if(mins.length)mins[Math.min(1,mins.length-1)]+=diff;
   return base.map((p,i)=>[p[0],p[1],p[2],Math.max(1,mins[i]||1)])
 }
-function formatTeachingTime(mins){
+function formatTeachingTime(mins,{unitLevel=false}={}){
   const m=Math.max(1,Math.round(Number(mins)||1));
+  if(unitLevel){
+    const h=Math.max(1,Math.round(m/60));
+    return h+" ชม."
+  }
   if(m<60)return m+" นาที";
   const h=Math.floor(m/60),r=m%60;
   return r?h+" ชม. "+r+" นาที":h+" ชม."
 }
 function methodPromptGuide(method,topic,duration){
-  const model=methodModel(method,topic),timed=timedMethodPhases(method,topic,duration),n=model.phases.length;
+  const model=methodModel(method,topic),timed=timedMethodPhases(method,topic,duration),n=model.phases.length,total=durationToMinutes(duration),unitLevel=total>=120;
   return "รูปแบบที่เลือก: "+model.title+"\nต้องใช้ขั้นตอนของรูปแบบนี้ให้ครบ "+n+" ขั้นตามลำดับ ห้ามยุบเป็น 3 ขั้นทั่วไป:\n"+
-    timed.map((p,i)=>(i+1)+". "+p[0]+" — "+p[1]+" ("+formatTeachingTime(p[3])+"): "+p[2]).join("\n")+
-    "\nกติกาเวลา: หากเวลารวมตั้งแต่ 2 ชั่วโมงขึ้นไป ให้แสดงเวลาเป็น ชั่วโมง/นาที ไม่ใช้ตัวเลขนาทีจำนวนมาก เช่น 624 นาที และหากเป็นหน่วยหลายชั่วโมงให้ตีความเป็นกิจกรรมต่อเนื่องหลายคาบ ไม่ใช่คาบเดียวที่ยาวผิดธรรมชาติ"+
+    timed.map((p,i)=>(i+1)+". "+p[0]+" — "+p[1]+" ("+formatTeachingTime(p[3],{unitLevel})+"): "+p[2]).join("\n")+
+    "\nกติกาเวลา: ถ้าเป็นแผนหน่วยใหญ่ตั้งแต่ 2 ชั่วโมงขึ้นไป ให้แบ่งเวลาของแต่ละขั้นเป็นจำนวนชั่วโมงเต็ม อ่านง่าย เช่น 1 ชม. / 5 ชม. / 1 ชม. ไม่แสดงเศษนาที เช่น 1 ชม. 3 นาที หรือ 4 ชม. 33 นาที ส่วนแผนรายคาบหรือเรื่องย่อยจึงค่อยใช้หน่วยนาทีได้เมื่อเหมาะสม"+
     "\nเมื่อผู้ใช้เปลี่ยนเวลา ให้ปรับกิจกรรม ความลึกของเนื้อหา ชิ้นงาน/ภาระงาน และการประเมินให้เหมาะกับเวลารวมใหม่ โดยคงมาตรฐาน ตัวชี้วัด และจุดประสงค์หลักเดิม เว้นแต่จำเป็นต่อความสอดคล้องทางการสอน";
 }
 
@@ -539,7 +543,7 @@ function adaptiveScaleFromLoad(load,phaseCount){
 async function buildDirectPlanCanvas(){
   const c=$("directPlanCanvas");if(!c||!selected)return;
   const ctx=c.getContext("2d"),W=c.width,H=c.height,d=directPreviewData(),th=directTheme();
-  const model=methodModel(d.method,d.topic),phases=timedMethodPhases(d.method,d.topic,d.duration).map(p=>[p[0],p[1],p[2]+" (ประมาณ "+p[3]+" นาที)"]);
+  const model=methodModel(d.method,d.topic),unitLevel=durationToMinutes(d.duration)>=120,phases=timedMethodPhases(d.method,d.topic,d.duration).map(p=>[p[0],p[1],p[2]+" (ประมาณ "+formatTeachingTime(p[3],{unitLevel})+")"]);
   const contentLoad=directContentLoad(d,phases),textScale=adaptiveScaleFromLoad(contentLoad,phases.length);
   const needApproval=!!$("includeSignatures")?.checked;
   let pageTextBoost=1;
