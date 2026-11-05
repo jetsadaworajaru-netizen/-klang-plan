@@ -3395,3 +3395,34 @@ button,
   opacity:.38;
   background:#f5f6f8;
 }
+
+
+/* assessment selection flow */
+.assessment-guide-simple{grid-template-columns:1fr !important}
+.assessment-actions{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important}
+.assessment-actions .assessment-choice,.assessment-final .assessment-choice{
+  min-height:48px;
+  transition:.16s ease;
+  cursor:pointer;
+}
+.assessment-actions .assessment-choice:hover,.assessment-final .assessment-choice:hover{
+  border-color:#7daaf5;
+  background:#f2f7ff;
+}
+.assessment-actions .assessment-choice.selected,
+.assessment-final .assessment-choice.selected{
+  color:#fff !important;
+  border-color:transparent !important;
+  background:linear-gradient(135deg,#208cf4,#654fe9) !important;
+  box-shadow:0 8px 18px rgba(54,102,220,.18);
+}
+.assessment-unit.selected{
+  border-color:#8ab2f3;
+  background:linear-gradient(180deg,#fff,#f5f8ff);
+  box-shadow:0 0 0 3px rgba(63,123,232,.08);
+}
+.assessment-final.selected{
+  border-color:#8ab2f3;
+  background:linear-gradient(180deg,#f8fbff,#eef4ff);
+  box-shadow:0 0 0 3px rgba(63,123,232,.08);
+}
