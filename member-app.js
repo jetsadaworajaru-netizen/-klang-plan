@@ -948,7 +948,7 @@ ${visualOptions}
 
 ไฟล์ Asset ที่อาจแนบมาพร้อม Prompt นี้ — ต้องใช้ไฟล์จริงตรงตามชื่อ ห้ามสร้างใหม่
 - 01-Teacher-USE-EXACT: เป็น Asset รูปครูจริงของแผนนี้ ต้องใช้บุคคลจากไฟล์นี้เท่านั้น ห้ามวาดใหม่ ห้ามสร้างหน้าใหม่ ห้ามเปลี่ยนใบหน้า ชุด ทรงผม หรือบุคลิก อนุญาตเฉพาะย่อ/ขยาย/ครอปเพื่อจัดวาง
-- 02-School-Logo-USE-EXACT: เป็น Asset โลโก้จริง ต้องวางไฟล์นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี รูปทรง รายละเอียด หรือตัวอักษร และต้องแสดงบนพื้นโปร่ง (transparent background) หากไฟล์มีพื้นหลังดำ/ขาว/สีทึบ ให้ลบเฉพาะพื้นหลังออกโดยคงตัวโลโก้เดิม 100% ห้ามใส่กรอบหรือแผ่นสีทึบหลังโลโก้
+- 02-School-Logo-USE-EXACT: เป็น Asset โลโก้ต้นฉบับจริง ต้องใช้ไฟล์นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี รูปทรง รายละเอียด ตัวอักษร หรือสัดส่วน และห้ามสร้างโลโก้ที่คล้ายกันแทน หากต้นฉบับเป็น PNG พื้นโปร่งให้คงความโปร่งเดิม
 - 03-QR-Code-USE-EXACT: เป็น Asset QR จริง ต้องวางไฟล์นี้โดยตรง ห้ามสร้าง QR ใหม่ ห้ามตกแต่งทับ และต้องสแกนได้
 - ให้ถือไฟล์ 01/02/03 เป็นองค์ประกอบภาพที่ต้องใช้ตรงไฟล์ ไม่ใช่ reference สำหรับสร้างสิ่งที่คล้ายกัน
 - หากไม่มีไฟล์ชนิดใดแนบมา ห้ามสร้างไฟล์นั้นขึ้นเอง
@@ -1181,7 +1181,7 @@ async function transparentLogoDataUrl(src){
     return out
   }catch(e){console.warn("transparent logo",e);return src}
 }
-async function currentPlanLogoAsset(){return transparentLogoDataUrl(currentPlanLogoImage())}
+async function currentPlanLogoAsset(){return currentPlanLogoImage()}
 async function sourceToBytes(src){
   if(!src)return null;
   const r=await fetch(src);if(!r.ok)throw new Error("โหลดไฟล์แนบไม่สำเร็จ");
@@ -1204,7 +1204,7 @@ async function renderAiAttachmentKit(){
   if(lp)lp.innerHTML=logo?'<img src="'+logo+'" alt="โลโก้โรงเรียน" style="background:transparent">':"ไม่มีโลโก้";
   if(qp)qp.innerHTML=planQrData?'<img src="'+planQrData+'" alt="QR Code">':"QR";
   if($("aiTeacherStatus"))$("aiTeacherStatus").textContent=teacher?"ตรงกับรูปที่เลือกในแผน":"แผนนี้ไม่ได้ใช้รูปครู";
-  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"PNG พื้นโปร่ง · ตรงกับโลโก้ที่เลือก":"แผนนี้ไม่ได้ใช้โลโก้";
+  if($("aiLogoStatus"))$("aiLogoStatus").textContent=logo?"ไฟล์ต้นฉบับ · ตรงกับโลโก้ที่เลือก":"แผนนี้ไม่ได้ใช้โลโก้";
   if($("aiQrStatus"))$("aiQrStatus").textContent=planQrData?"ตรงกับ QR ที่เลือก":"ไม่บังคับ";
   if($("downloadTeacherRefBtn"))$("downloadTeacherRefBtn").disabled=!teacher;
   if($("downloadLogoRefBtn"))$("downloadLogoRefBtn").disabled=!logo;
@@ -1221,7 +1221,7 @@ async function downloadAiPack(){
     "วิธีใช้ชุดไฟล์แนบ Klang Plan",
     "1) แนบไฟล์ทั้งหมดที่มีอยู่ใน ZIP ไปพร้อม Prompt",
     "2) 01-Teacher-USE-EXACT = Asset จริง ต้องใช้บุคคลจากไฟล์นี้เท่านั้น ห้ามวาดใหม่ ห้ามสร้างหน้าใหม่ ห้ามเปลี่ยนชุดหรือใบหน้า",
-    "3) 02-School-Logo-USE-EXACT = Asset จริง ต้องใช้ไฟล์โลโก้นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี/รูปทรง/ตัวอักษร และต้องแสดงแบบพื้นโปร่ง หากมีพื้นหลังทึบให้ลบเฉพาะพื้นหลังออก",
+    "3) 02-School-Logo-USE-EXACT = Asset ต้นฉบับจริงจากระบบ ต้องใช้ไฟล์นี้โดยตรง ห้ามวาดใหม่ ห้ามเปลี่ยนสี/รูปทรง/ตัวอักษร และห้ามแปลงไฟล์ก่อนใช้ หากต้องการพื้นโปร่งควรอัปโหลด PNG พื้นโปร่งตั้งแต่ต้น",
     "4) 03-QR-Code-USE-EXACT = Asset จริง ต้องใช้ไฟล์ QR นี้โดยตรง ห้ามสร้าง QR ใหม่ ห้ามตกแต่งทับ และต้องสแกนได้",
     "5) อนุญาตเฉพาะการย่อ/ขยายและครอปเพื่อจัดวาง โดยต้องรักษาสัดส่วนและรายละเอียดต้นฉบับ",
     "",
@@ -4659,7 +4659,7 @@ function bind(){
   document.querySelectorAll('input[name="planTeacherImageStyleSource"]').forEach(r=>r.onchange=()=>{planTeacherImageSource=r.value;if($("planTeacherStyleUploadWrap"))$("planTeacherStyleUploadWrap").hidden=planTeacherImageSource!=="upload";syncTeacherSourceControls();updateSummary()});
   if($("planTeacherStyleUpload"))$("planTeacherStyleUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planTeacherImageData=await fileToDataUrl(f);planTeacherImageSource="upload";syncTeacherSourceControls();updateSummary()};
   document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.onchange=()=>{planSchoolLogoSource=r.value;if($("planSchoolLogoUploadWrap"))$("planSchoolLogoUploadWrap").hidden=planSchoolLogoSource!=="upload";updateSummary()});
-  if($("planSchoolLogoUpload"))$("planSchoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planSchoolLogoData=await transparentLogoDataUrl(await fileToDataUrl(f));planSchoolLogoSource="upload";document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary();renderAiAttachmentKit()};
+  if($("planSchoolLogoUpload"))$("planSchoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planSchoolLogoData=await fileToDataUrl(f);planSchoolLogoSource="upload";document.querySelectorAll('input[name="planSchoolLogoSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary();renderAiAttachmentKit()};
   document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.onchange=()=>{planQrSource=r.value;if($("planQrUploadWrap"))$("planQrUploadWrap").hidden=planQrSource!=="upload";updateSummary()});
   if($("planQrUpload"))$("planQrUpload").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;planQrData=await fileToDataUrl(f);planQrSource="upload";document.querySelectorAll('input[name="planQrSource"]').forEach(r=>r.checked=r.value==="upload");updateSummary()};
   syncTeacherSourceControls();
@@ -4685,8 +4685,8 @@ function bind(){
   $("profileBtn").onclick=openProfile;$("closeProfileBtn").onclick=closeProfile;$("profileBackdrop").onclick=closeProfile;
   nodes("[data-avatar]").forEach(b=>b.onclick=()=>{profilePhotoSource="";profilePhotoZoom=1;profilePhotoX=0;profilePhotoY=0;profile.avatar_url=b.dataset.avatar;renderProfile()});
   $("profilePhoto").onchange=async e=>{const f=e.target.files?.[0];if(f){profilePhotoSource=await fileToDataUrl(f);resetProfilePhotoEditor();$("profileStatus").innerHTML='<div class="indicator-preview">เลือกรูปแล้ว ลาก/ซูม/เลื่อนได้ จากนั้นกด “บันทึกโปรไฟล์”</div>'}};
-  if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await compress(f);renderProfile()}};
-  if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await transparentLogoDataUrl(await fileToDataUrl(f));renderProfile()}};
+  if($("teacherPhotoUpload"))$("teacherPhotoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.teacher_photo_url=await fileToDataUrl(f);renderProfile()}};
+  if($("schoolLogoUpload"))$("schoolLogoUpload").onchange=async e=>{const f=e.target.files?.[0];if(f){profile.school_logo_url=await fileToDataUrl(f);renderProfile()}};
   if($("profilePhotoZoom"))$("profilePhotoZoom").oninput=e=>{profilePhotoZoom=Number(e.target.value||100)/100;renderProfilePhotoEditor()};
   if($("profilePhotoX"))$("profilePhotoX").oninput=e=>{profilePhotoX=Number(e.target.value||0);renderProfilePhotoEditor()};
   if($("profilePhotoY"))$("profilePhotoY").oninput=e=>{profilePhotoY=Number(e.target.value||0);renderProfilePhotoEditor()};
