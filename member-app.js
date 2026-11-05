@@ -3401,10 +3401,13 @@ function collectResourceConfiguratorOptions(type){
 function confirmResourceConfigurator(){
   const ctx=resourceConfiguratorContext;if(!ctx)return;
   const opts=collectResourceConfiguratorOptions(ctx.type),{ci,ui,type,si}=ctx;
+  const isAssessment=ctx.kind==="assessment";
+  const assessmentType=ctx.assessmentType;
   closeResourceConfigurator();
   closeCourseAssessments();
   closeCourseLessons();
-  createUnitResourcePrompt(ci,ui,type,si,opts);
+  if(isAssessment)createAssessmentPrompt(ci,assessmentType,ui,opts);
+  else createUnitResourcePrompt(ci,ui,type,si,opts);
   switchTab("create");
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const target=$("promptWrap");
@@ -3482,29 +3485,72 @@ ${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}
 ${type==="quiz"&&options.studentVersion==="answer"?"- แสดงเฉลยอย่างชัดเจน เพราะครูเลือกฉบับเฉลย":type==="quiz"&&options.studentVersion==="both"?"- สร้างส่วนสำหรับนักเรียนโดยไม่แสดงเฉลย และแยกส่วนเฉลยออกจากกันอย่างชัดเจน":"- อย่าใส่เฉลยลงในหน้าที่แจกนักเรียน"}`;
   c.lesson_resources=c.lesson_resources||{items:[]};const label=resourceTypeLabel(type);
   c.lesson_resources.items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),unit_id:u.id||null,sublesson_id:sub?.id||null,type,title:`${label} · ${sub?.title||u.name}`,prompt:text,options,created_at:new Date().toISOString()});
-  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");setLivePromptBase(text);closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ภาพ${label}แล้ว ✓`)
+  c.lesson_resources.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();switchTab("create");setLivePromptBase(text);closeCourseLessons();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast(`สร้าง Prompt ${label}แล้ว ✓`)
 }
 function closeCourseAssessments(){$("courseAssessmentsModal").hidden=true}
 function assessmentRefs(c,u=null){const ids=u?.indicator_ids||c.curriculum_analysis?.selected_ids||[];return savedCurriculumRows(c).filter(x=>ids.includes(x.dataset_id))}
-function assessmentPrompt(c,type,u=null,difficulty="mixed"){
+function assessmentPrompt(c,type,u=null,options={}){
   const refs=assessmentRefs(c,u),typeLabel={pretest:"ข้อสอบก่อนเรียน",posttest:"ข้อสอบหลังเรียน",final:"ข้อสอบปลายภาค"}[type]||"แบบประเมิน";
   const scope=u?`หน่วย: ${u.name}\nสาระสำคัญ: ${u.concept||""}\nจุดประสงค์: ${u.objectives||""}`:`ขอบเขตทั้งรายวิชา: ${c.learning_units?.units?.map((x,i)=>`${i+1}. ${x.name} (${x.hours} ชม.)`).join("\n")||"-"}`;
-  const count=type==="final"?30:10;
+  const count=Math.max(5,Math.min(40,Number(options.itemCount||(type==="final"?30:10))));
+  const questionTypeLabel={mcq:"ปรนัย 4 ตัวเลือก",true_false:"ถูก–ผิด",fill_blank:"เติมคำ",short_answer:"ตอบสั้น",mixed:"ผสมหลายรูปแบบ"}[options.questionType||"mcq"]||"ปรนัย 4 ตัวเลือก";
+  const resultLabel={student:"ฉบับนักเรียน — ไม่แสดงเฉลย",answer:"ฉบับเฉลย",both:"นักเรียน + เฉลยแยก"}[options.studentVersion||"student"]||"ฉบับนักเรียน — ไม่แสดงเฉลย";
   return `สร้าง${typeLabel}สำหรับรายวิชา “${c.name}” ชั้น ${c.grade}
 ภาคเรียน ${c.semester}/${c.year}
 ${scope}
+
+การตั้งค่าที่ครูเลือก:
+- รูปแบบข้อสอบ: ${questionTypeLabel}
+- จำนวนข้อ: ${count}
+- รูปแบบผลลัพธ์: ${resultLabel}
+${quizDifficultyPrompt(options.difficulty||"mixed",count)}
 
 ตัวชี้วัดที่อนุญาตให้ใช้เท่านั้น:
 ${refs.map(x=>`- ${x.indicator||""} ${x.indicator_text||""}`).join("\n")}
 
 ข้อกำหนด:
-1) จำนวน ${count} ข้อ แบบปรนัย 4 ตัวเลือก เว้นแต่เนื้อหาเหมาะกับรูปแบบอื่นอย่างชัดเจน
-2) ${quizDifficultyPrompt(difficulty,count)}
-3) ทุกข้อระบุตัวชี้วัด/จุดประสงค์ที่วัด
-4) มีเฉลยพร้อมคำอธิบายสั้น ๆ
-5) ห้ามสร้างรหัสตัวชี้วัดใหม่
+1) สร้างข้อสอบจำนวน ${count} ข้อ ตามรูปแบบที่ครูเลือก
+2) ทุกข้อระบุตัวชี้วัด/จุดประสงค์ที่วัด
+3) ห้ามสร้างรหัสตัวชี้วัดใหม่
+4) ตัวเลือก/คำถามต้องเหมาะกับระดับชั้นและไม่กำกวม
+5) ${options.studentVersion==="answer"?"แสดงเฉลยพร้อมคำอธิบายสั้น ๆ":options.studentVersion==="both"?"สร้างฉบับนักเรียนก่อน แล้วแยกเฉลยสำหรับครูอย่างชัดเจน":"ฉบับนักเรียนห้ามแสดงเฉลย"}
 ${type==="final"?"6) สร้างตาราง Blueprint ก่อนข้อสอบ แสดงหน่วย ตัวชี้วัด จำนวนข้อ สัดส่วนคะแนน และระดับความยาก รวม 100%\n7) กระจายข้อสอบตามชั่วโมงและน้ำหนักของหน่วย ไม่กระจุกอยู่หน่วยเดียว":"6) ให้ครอบคลุมจุดประสงค์สำคัญของหน่วย"}`
 }
+function clearAssessmentSelection(){
+  nodes("[data-assessment-choice]").forEach(x=>x.classList.remove("selected"));
+  nodes(".assessment-unit,.assessment-final").forEach(x=>x.classList.remove("selected"))
+}
+function openAssessmentConfigurator(ci,type,ui=null,sourceBtn=null){
+  const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];
+  if(!c||(!u&&type!=="final"))return;
+  clearAssessmentSelection();
+  sourceBtn?.classList.add("selected");
+  sourceBtn?.closest(".assessment-unit,.assessment-final")?.classList.add("selected");
+  bindResourceConfiguratorActions();
+  resourceConfiguratorContext={kind:"assessment",ci,ui,type:"quiz",assessmentType:type,si:null};
+  $("resourceConfigTitle").textContent={pretest:"ตั้งค่าข้อสอบก่อนเรียน",posttest:"ตั้งค่าข้อสอบหลังเรียน",final:"ตั้งค่าข้อสอบปลายภาค"}[type]||"ตั้งค่าแบบทดสอบ";
+  $("resourceConfigMeta").textContent=type==="final"
+    ?[c.name,c.grade,"ทั้งรายวิชา"].filter(Boolean).join(" · ")
+    :[c.name,c.grade,"หน่วยที่ "+(ui+1),u.name].filter(Boolean).join(" · ");
+  renderResourceConfiguratorFields("quiz");
+  const countEl=document.querySelector('[data-resource-config="itemCount"]');
+  if(countEl&&type==="final")countEl.value="30";
+  const resultEl=document.querySelector('[data-resource-config="studentVersion"]');
+  if(resultEl&&type==="final")resultEl.value="both";
+  const fields=nodes('[data-resource-config]');
+  const updateQuizHint=()=>{
+    let hint=$("resourceQuizDifficultyHint");
+    if(!hint){hint=document.createElement("div");hint.id="resourceQuizDifficultyHint";hint.className="resource-quiz-difficulty-hint";$("resourceConfigFields")?.appendChild(hint)}
+    const d=document.querySelector('[data-resource-config="difficulty"]')?.value||"mixed";
+    const n=Number(document.querySelector('[data-resource-config="itemCount"]')?.value||10);
+    const bp=quizDifficultyBlueprint(d,n),r=bp.ratio;
+    if(hint)hint.innerHTML=`<b>Blueprint ความยาก</b><span>ง่าย ${r.easy} ข้อ · ปานกลาง ${r.medium} ข้อ · ยาก ${r.hard} ข้อ</span><small>${bp.cognitive}</small>`
+  };
+  fields.forEach(el=>{el.onchange=updateQuizHint;el.oninput=updateQuizHint});updateQuizHint();
+  if($("confirmResourceConfigBtn"))$("confirmResourceConfigBtn").textContent="✨ สร้าง Prompt";
+  $("resourceConfigModal").hidden=false
+}
+
 function renderAssessmentItems(c){
   const box=$("courseAssessmentsList"),items=c.assessments?.items||[];
   const unitCards=(c.learning_units?.units||[]).map((u,ui)=>{
@@ -3523,45 +3569,34 @@ function renderAssessmentItems(c){
         </div>
       </div>
       <div class="assessment-actions">
-        <button type="button" data-assessment-unit="pretest:${ui}">📝 สร้างก่อนเรียน</button>
-        <button type="button" data-assessment-unit="posttest:${ui}">✅ สร้างหลังเรียน</button>
-        <button type="button" data-assessment-custom-quiz="${ui}" class="assessment-custom-quiz-btn">🎯 สร้างแบบทดสอบ</button>
+        <button type="button" data-assessment-choice="pretest:${ui}" class="assessment-choice pretest">📝 ก่อนเรียน</button>
+        <button type="button" data-assessment-choice="posttest:${ui}" class="assessment-choice posttest">✅ หลังเรียน</button>
       </div>
     </article>`
   }).join("");
 
-  box.innerHTML=`<div class="assessment-guide">
-    <div><b>เลือกหน่วยที่ต้องการประเมิน</b><span>เลือกสร้างก่อนเรียน/หลังเรียน หรือสร้างแบบทดสอบกำหนดเองที่เลือกรูปแบบ จำนวนข้อ และระดับความยากได้</span></div>
-    <label class="assessment-difficulty-select"><span>ระดับความยาก</span><select id="courseAssessmentDifficulty">
-      <option value="mixed" selected>ผสมระดับ 30/50/20</option>
-      <option value="easy">ง่าย — จำ/เข้าใจพื้นฐาน</option>
-      <option value="medium">ปานกลาง — เข้าใจ/ประยุกต์</option>
-      <option value="hard">ยาก — วิเคราะห์/ประยุกต์หลายขั้น</option>
-    </select></label>
+  box.innerHTML=`<div class="assessment-guide assessment-guide-simple">
+    <div><b>เลือกว่าจะสอบอะไร</b><span>กด “ก่อนเรียน”, “หลังเรียน” หรือ “ปลายภาค” แล้วระบบจะเปิดหน้าตั้งค่าแบบทดสอบให้ก่อนสร้าง Prompt</span></div>
   </div>
   <div class="assessment-unit-grid">${unitCards}</div>
   <article class="assessment-final">
     <div>
       <b>📘 ข้อสอบปลายภาค + Blueprint</b>
-      <small>ครอบคลุมทุกหน่วย กระจายจำนวนข้อตามชั่วโมงและน้ำหนักของรายวิชา พร้อมเฉลย</small>
+      <small>ครอบคลุมทุกหน่วย กระจายจำนวนข้อตามชั่วโมงและน้ำหนักของรายวิชา</small>
     </div>
-    <button type="button" data-assessment-final>✨ สร้างข้อสอบปลายภาค</button>
+    <button type="button" data-assessment-choice="final" class="assessment-choice final">📘 ปลายภาค</button>
   </article>`;
 
-  nodes('[data-assessment-unit]').forEach(b=>b.onclick=()=>{
-    const [type,ui]=b.dataset.assessmentUnit.split(":");
-    createAssessmentPrompt(activeCourseIndex,type,Number(ui))
-  });
-  nodes('[data-assessment-custom-quiz]').forEach(b=>b.onclick=()=>{
-    const ui=Number(b.dataset.assessmentCustomQuiz);
-    openResourceConfigurator(activeCourseIndex,ui,"quiz",null)
-  });
-  const fb=box.querySelector('[data-assessment-final]');
-  if(fb)fb.onclick=()=>createAssessmentPrompt(activeCourseIndex,"final",null)
+  nodes('[data-assessment-choice]').forEach(b=>b.onclick=()=>{
+    const raw=b.dataset.assessmentChoice;
+    if(raw==="final")return openAssessmentConfigurator(activeCourseIndex,"final",null,b);
+    const [type,ui]=raw.split(":");
+    openAssessmentConfigurator(activeCourseIndex,type,Number(ui),b)
+  })
 }
 function openCourseAssessments(i){const c=courseDrafts()[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}activeCourseIndex=i;$("courseAssessmentsMeta").textContent=`${c.name} · ${c.grade} · ${c.learning_units.units.length} หน่วย`;$("courseAssessmentsSource").innerHTML=`ระบบใช้ตัวชี้วัดจริงของแต่ละหน่วยอัตโนมัติ เลือกสร้าง “ก่อนเรียน” หรือ “หลังเรียน” ได้ทีละหน่วย และสร้างข้อสอบปลายภาคจากทั้งรายวิชาได้ด้านล่าง`;renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=c.assessments?.saved_at?`<div class="indicator-preview">สร้างงานประเมินแล้ว ${c.assessments.items?.length||0} รายการ ✓</div>`:"";$("courseAssessmentsModal").hidden=false}
 async function saveAssessmentCloud(c,u,item){if(!courseCloudReady||!sb||!user)return;try{const courseId=await resolveCourseCloudId(c);if(!courseId)return;let unitId=null;if(u)unitId=await ensureUnitCloud(c,u,(c.learning_units?.units||[]).indexOf(u));const payload={user_id:user.id,course_id:courseId,unit_id:unitId,assessment_type:item.type,title:item.title,blueprint:item.blueprint||{},content:{prompt:item.prompt,client_id:item.id},answer_key:{mode:"generated_with_prompt"},status:"prompt_ready",updated_at:new Date().toISOString()};const {error}=await sb.from("assessments").insert(payload);if(error)console.warn("assessment cloud unavailable",error)}catch(error){console.warn("assessment sync failed",error)}}
-function createAssessmentPrompt(ci,type,ui=null){const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];if(!c||(!u&&type!=="final"))return;const difficulty=$("courseAssessmentDifficulty")?.value||"mixed";const prompt=assessmentPrompt(c,type,u,difficulty),id=crypto.randomUUID?crypto.randomUUID():String(Date.now()),title=type==="final"?`ข้อสอบปลายภาค · ${c.name}`:`${type==="pretest"?"ก่อนเรียน":"หลังเรียน"} · ${u.name}`;const blueprint=type==="final"?{units:(c.learning_units?.units||[]).map(x=>({unit_id:x.id,name:x.name,hours:Number(x.hours)||0,weight:Number(x.weight)||0,indicator_ids:x.indicator_ids||[]})),total_weight:(c.learning_units?.units||[]).reduce((s,x)=>s+(Number(x.weight)||0),0)}:{unit_id:u.id,indicator_ids:u.indicator_ids||[]};c.assessments=c.assessments||{items:[]};const item={id,type,unit_id:u?.id||null,title,prompt,blueprint,difficulty,created_at:new Date().toISOString()};c.assessments.items.push(item);c.assessments.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=`<div class="indicator-preview">สร้าง ${esc(title)} แล้ว ✓ ระบบบันทึก Prompt และ Blueprint ไว้กับรายวิชา</div>`;saveAssessmentCloud(c,u,item);switchTab("create");setLivePromptBase(prompt);closeCourseAssessments();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt การประเมินแล้ว ✓")}
+function createAssessmentPrompt(ci,type,ui=null,options={}){const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];if(!c||(!u&&type!=="final"))return;const difficulty=options.difficulty||"mixed";const prompt=assessmentPrompt(c,type,u,options),id=crypto.randomUUID?crypto.randomUUID():String(Date.now()),title=type==="final"?`ข้อสอบปลายภาค · ${c.name}`:`${type==="pretest"?"ก่อนเรียน":"หลังเรียน"} · ${u.name}`;const blueprint=type==="final"?{units:(c.learning_units?.units||[]).map(x=>({unit_id:x.id,name:x.name,hours:Number(x.hours)||0,weight:Number(x.weight)||0,indicator_ids:x.indicator_ids||[]})),total_weight:(c.learning_units?.units||[]).reduce((s,x)=>s+(Number(x.weight)||0),0),difficulty,item_count:Number(options.itemCount||30),question_type:options.questionType||"mcq"}:{unit_id:u.id,indicator_ids:u.indicator_ids||[],difficulty,item_count:Number(options.itemCount||10),question_type:options.questionType||"mcq"};c.assessments=c.assessments||{items:[]};const item={id,type,unit_id:u?.id||null,title,prompt,blueprint,difficulty,options,created_at:new Date().toISOString()};c.assessments.items.push(item);c.assessments.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=`<div class="indicator-preview">สร้าง ${esc(title)} แล้ว ✓ ระบบบันทึก Prompt และ Blueprint ไว้กับรายวิชา</div>`;saveAssessmentCloud(c,u,item);switchTab("create");setLivePromptBase(prompt);closeCourseAssessments();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt การประเมินแล้ว ✓")}
 
 function safeFilename(v){return String(v||"klang-plan").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim().slice(0,120)||"klang-plan"}
 function courseDocumentText(c){
