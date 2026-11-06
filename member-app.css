@@ -3478,3 +3478,62 @@ button,
   .active-course-bar{grid-template-columns:auto 1fr}
   .active-course-bar>span{grid-column:1/-1}
 }
+
+
+/* palette presets + custom color picker */
+.palette-choice{
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+}
+.palette-swatches{
+  display:inline-flex;
+  overflow:hidden;
+  border-radius:999px;
+  border:1px solid #dce5ee;
+  flex:0 0 auto;
+}
+.palette-swatches i{display:block;width:18px;height:18px}
+.custom-palette-panel{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr)) auto;
+  gap:10px;
+  align-items:end;
+  margin-top:10px;
+  padding:14px;
+  border:1px solid #d7e3ee;
+  border-radius:15px;
+  background:#f8fbfe;
+}
+.custom-palette-panel[hidden]{display:none !important}
+.custom-palette-panel label{
+  display:grid;
+  gap:7px;
+  font-size:.76rem;
+  color:#49667f;
+  font-weight:850;
+}
+.custom-palette-panel input[type="color"]{
+  width:100%;
+  height:42px;
+  padding:3px;
+  border:1px solid #cfdde9;
+  border-radius:10px;
+  background:#fff;
+  cursor:pointer;
+}
+.custom-palette-panel button{
+  min-height:42px;
+  padding:8px 12px;
+  border:1px solid #ccdbea;
+  border-radius:10px;
+  background:#fff;
+  color:#355a77;
+  font-weight:850;
+}
+@media(max-width:680px){
+  .custom-palette-panel{grid-template-columns:1fr 1fr}
+  .custom-palette-panel button{grid-column:1/-1}
+}
