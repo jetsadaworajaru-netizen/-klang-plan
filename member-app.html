@@ -354,10 +354,10 @@
       </section>
       <div class="course-sync-bar"><span id="courseSyncStatus">Local cache · กำลังตรวจ Cloud…</span></div>
       <div class="course-dashboard-stats">
-        <div><b id="courseTotalCount">0</b><small>รายวิชาทั้งหมด</small></div>
-        <div><b id="courseReadyCount">0</b><small>พร้อมส่งออก</small></div>
-        <div><b id="courseAvgProgress">0%</b><small>ความคืบหน้าเฉลี่ย</small></div>
-        <div><b id="courseNeedActionCount">0</b><small>ต้องทำต่อ</small></div>
+        <button type="button" data-course-stat="all" aria-label="ดูรายวิชาทั้งหมด"><b id="courseTotalCount">0</b><small>รายวิชาทั้งหมด</small></button>
+        <button type="button" data-course-stat="ready" aria-label="ดูรายวิชาที่พร้อมส่งออก"><b id="courseReadyCount">0</b><small>พร้อมส่งออก</small></button>
+        <button type="button" data-course-stat="progress" aria-label="ดูความคืบหน้าของรายวิชา"><b id="courseAvgProgress">0%</b><small>ความคืบหน้าเฉลี่ย</small></button>
+        <button type="button" data-course-stat="todo" aria-label="ดูรายวิชาที่ต้องทำต่อ"><b id="courseNeedActionCount">0</b><small>ต้องทำต่อ</small></button>
       </div>
       <div id="courseList" class="course-grid"></div>
       <section class="card course-roadmap">
