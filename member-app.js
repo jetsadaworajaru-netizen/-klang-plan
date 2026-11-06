@@ -1933,11 +1933,31 @@ function courseQuality(c){
   const passed=checks.filter(x=>x.ok).length,percent=Math.round(passed/checks.length*100);return {checks,passed,total:checks.length,percent,ready:passed===checks.length,missing:checks.filter(x=>!x.ok)}
 }
 function renderCourseDashboard(rows){
-  const total=rows.length,ready=rows.filter(c=>courseQuality(c).ready).length,avg=total?Math.round(rows.reduce((sum,c)=>sum+courseProgress(c),0)/total):0;
+  const total=rows.length,readyRows=rows.filter(c=>courseQuality(c).ready),ready=readyRows.length,avg=total?Math.round(rows.reduce((sum,c)=>sum+courseProgress(c),0)/total):0,todoRows=rows.filter(c=>!courseQuality(c).ready);
   if($("courseTotalCount"))$("courseTotalCount").textContent=total;
   if($("courseReadyCount"))$("courseReadyCount").textContent=ready;
   if($("courseAvgProgress"))$("courseAvgProgress").textContent=avg+"%";
-  if($("courseNeedActionCount"))$("courseNeedActionCount").textContent=Math.max(0,total-ready)
+  if($("courseNeedActionCount"))$("courseNeedActionCount").textContent=Math.max(0,total-ready);
+  nodes("[data-course-stat]").forEach(btn=>btn.onclick=()=>{
+    const type=btn.dataset.courseStat;
+    const list=$("courseList");
+    if(!rows.length){toast("ยังไม่มีรายวิชา");return}
+    if(type==="all"||type==="progress"){
+      list?.scrollIntoView({behavior:"smooth",block:"start"});
+      if(type==="progress")toast("ความคืบหน้าเฉลี่ย "+avg+"% · ดูรายละเอียดแต่ละวิชาได้ด้านล่าง");
+      return
+    }
+    const target=type==="ready"?readyRows[0]:todoRows[0];
+    if(!target){
+      toast(type==="ready"?"ยังไม่มีรายวิชาที่พร้อมส่งออก":"ทุกรายวิชาพร้อมส่งออกแล้ว ✓");
+      return
+    }
+    const card=document.querySelector('[data-course-id="'+CSS.escape(String(target.id||""))+'"]');
+    card?.scrollIntoView({behavior:"smooth",block:"center"});
+    card?.classList.add("course-stat-focus");
+    setTimeout(()=>card?.classList.remove("course-stat-focus"),1400);
+    toast(type==="ready"?"พาไปยังรายวิชาที่พร้อมส่งออก":"พาไปยังรายวิชาที่ควรทำต่อ")
+  })
 }
 function openCourseReadiness(i){
   const c=courseDrafts()[i];if(!c)return;const q=courseQuality(c);
