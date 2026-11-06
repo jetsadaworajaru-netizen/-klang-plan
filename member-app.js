@@ -33,7 +33,7 @@ window.addEventListener("error",e=>{
 window.addEventListener("unhandledrejection",e=>{
   memberRuntimeGuard(e.reason||new Error("promise rejected"),{background:true});
 });
-let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="profile",planTeacherImageData="",planSchoolLogoSource="profile",planSchoolLogoData="",planQrSource="none",planQrData="";
+let sb=null,user=null,profile=null,DATA=[],cloudPlans=[],activeWorkspacePlan=null,editingPlanId=null,activeSavedResourceId=null,resourceAutosaveTimer=null,resourceCloudReady=false,stage="ปฐมวัย",selected=null,librarySelected=null,style="Modern Government",palette="ฟ้า–ม่วง–ทอง",customPalettePrimary="#246BCE",customPaletteSecondary="#6552E8",customPaletteAccent="#F2B735",materialType="worksheet",materialStyle="clean",materialPreviewMode="student",materialEditing=false,materialEditedHtml="",quizViewMode="student",quizEditing=false,quizEditedHtml="",rubricEditing=false,rubricEditedHtml="",gameViewMode="student",gameEditing=false,gameEditedHtml="",autoUnitValue="",autoTopicValue="",profilePhotoSource="",profilePhotoZoom=1,profilePhotoX=0,profilePhotoY=0,profilePhotoDragging=false,profilePhotoDragStart=null,planTeacherImageSource="profile",planTeacherImageData="",planSchoolLogoSource="profile",planSchoolLogoData="",planQrSource="none",planQrData="";
 const styleMeta={
 "Modern Government":["ทางการสมัยใหม่","หัวข้อชัด • กล่องข้อมูลเป็นระเบียบ • ใช้ได้กับเอกสารโรงเรียน","government"],
 "Premium Academic":["วิชาการพรีเมียม","เรียบหรู • เน้นลำดับข้อมูล • เหมาะกับ PA/ผลงานวิชาการ","premium"],
@@ -45,7 +45,11 @@ const styleMeta={
 "Thai Contemporary":["ไทยร่วมสมัย","ลายไทยประยุกต์แบบบาง • สุภาพ • เอกลักษณ์ไทย","thai"]
 };
 const styles=Object.keys(styleMeta);
-const palettes=["ฟ้า–ม่วง–ทอง","กรมท่า–ทอง","มิ้นต์–ฟ้า","ส้ม–ครีม","ชมพู–ฟ้า","เขียว–ทอง"];
+const palettes=[
+"ฟ้า–ม่วง–ทอง","กรมท่า–ทอง","มิ้นต์–ฟ้า","ส้ม–ครีม","ชมพู–ฟ้า","เขียว–ทอง",
+"ฟ้า–ส้ม","ม่วง–ชมพู","น้ำเงิน–มิ้นต์","แดงอิฐ–ครีม","เขียวมะกอก–ครีม","เทา–น้ำเงิน",
+"กำหนดเอง"
+];
 const affiliationMeta={
   obec:{title:"สพฐ. / กระทรวงศึกษาธิการ",short:"กรอบหลักสูตรแกนกลาง + มาตรฐาน/ตัวชี้วัด",tags:["มาตรฐานและตัวชี้วัด","สมรรถนะสำคัญของผู้เรียน","คุณลักษณะอันพึงประสงค์"],prompt:"ให้ยึดหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน มาตรฐาน ตัวชี้วัด สมรรถนะสำคัญของผู้เรียน และคุณลักษณะอันพึงประสงค์ที่สัมพันธ์กับบทเรียน"},
   bma:{title:"กรุงเทพมหานคร (กทม.)",short:"ปรับแผนให้รองรับกรอบสมรรถนะผู้เรียน 7 ด้านของ กทม.",tags:["สมรรถนะผู้เรียน 7 ด้าน","บริบทโรงเรียน กทม.","กิจกรรมเชิงสมรรถนะ"],prompt:"ให้ปรับแผนให้เหมาะกับโรงเรียนสังกัดกรุงเทพมหานคร และเพิ่มหัวข้อ “สมรรถนะผู้เรียน 7 ด้านที่เกี่ยวข้อง” โดยเลือกเฉพาะด้านที่สัมพันธ์กับกิจกรรมจริง ไม่จำเป็นต้องใส่ครบทั้ง 7 ด้านทุกแผน"},
@@ -305,14 +309,62 @@ function styleCard(v){
     <div class="style-preview-copy"><b>${esc(m[0])}</b><small>${esc(m[1])}</small><em>${esc(v)}</em></div>
   </button>`
 }
+function paletteThemeMap(){
+  return {
+    "ฟ้า–ม่วง–ทอง":["#246BCE","#6552E8","#F2B735","#EEF5FF"],
+    "กรมท่า–ทอง":["#173B67","#B4872E","#E1B84C","#F6F2E8"],
+    "มิ้นต์–ฟ้า":["#278C7C","#3F8EDB","#82D6C8","#EFFAF8"],
+    "ส้ม–ครีม":["#E87A27","#D9A441","#F1B45C","#FFF7E9"],
+    "ชมพู–ฟ้า":["#D85F93","#4F8EDB","#F39BC0","#FFF0F7"],
+    "เขียว–ทอง":["#2F7D52","#B78B32","#D6B85D","#F3F8F1"],
+    "ฟ้า–ส้ม":["#2583D8","#F28C28","#6AB7F0","#F5FAFF"],
+    "ม่วง–ชมพู":["#6D4BC3","#D965A4","#A98AE6","#FAF4FC"],
+    "น้ำเงิน–มิ้นต์":["#225FA8","#32A58A","#77D1BE","#F1FAF8"],
+    "แดงอิฐ–ครีม":["#A54A3F","#D6A05E","#E5B886","#FFF8EF"],
+    "เขียวมะกอก–ครีม":["#62733D","#B89A58","#CFBF86","#FAF8EF"],
+    "เทา–น้ำเงิน":["#566573","#356EA8","#91A8BC","#F3F6F8"]
+  }
+}
+function currentPaletteColors(){
+  if(palette==="กำหนดเอง")return [customPalettePrimary,customPaletteSecondary,customPaletteAccent,"#F7F9FC"];
+  return paletteThemeMap()[palette]||paletteThemeMap()["ฟ้า–ม่วง–ทอง"]
+}
+function palettePromptLabel(){
+  return palette==="กำหนดเอง"
+    ?`กำหนดเอง — สีหลัก ${customPalettePrimary} · สีรอง ${customPaletteSecondary} · สีเน้น ${customPaletteAccent}`
+    :palette
+}
+function customPaletteControl(){
+  return `<div class="custom-palette-panel" ${palette==="กำหนดเอง"?"":"hidden"}>
+    <div><label>สีหลัก<input id="customPalettePrimary" type="color" value="${esc(customPalettePrimary)}"></label></div>
+    <div><label>สีรอง<input id="customPaletteSecondary" type="color" value="${esc(customPaletteSecondary)}"></label></div>
+    <div><label>สีเน้น<input id="customPaletteAccent" type="color" value="${esc(customPaletteAccent)}"></label></div>
+    <button type="button" id="resetCustomPaletteBtn">คืนค่าสีตัวอย่าง</button>
+  </div>`
+}
 function renderStyles(){
   $("styleGrid").innerHTML=styles.map(styleCard).join("");
   $("stylesLibrary").innerHTML=styles.map(styleCard).join("");
-  const mkPalette=box=>$(box).innerHTML=palettes.map(v=>`<button type="button" class="choice-btn ${v===palette?"active":""}" data-palette="${esc(v)}"><b>${esc(v)}</b></button>`).join("");
+  const mkPalette=box=>{
+    const el=$(box);if(!el)return;
+    el.innerHTML=palettes.map(v=>{
+      const cols=v==="กำหนดเอง"?[customPalettePrimary,customPaletteSecondary,customPaletteAccent]:currentPaletteForName(v);
+      return `<button type="button" class="choice-btn palette-choice ${v===palette?"active":""}" data-palette="${esc(v)}"><span class="palette-swatches"><i style="background:${cols[0]}"></i><i style="background:${cols[1]}"></i><i style="background:${cols[2]}"></i></span><b>${esc(v)}</b></button>`
+    }).join("")+customPaletteControl()
+  };
   mkPalette("paletteGrid");mkPalette("palettesLibrary");
   nodes("[data-style]").forEach(b=>b.onclick=()=>{style=b.dataset.style;renderStyles();updateSummary()});
-  nodes("[data-palette]").forEach(b=>b.onclick=()=>{palette=b.dataset.palette;renderStyles();updateSummary()})
+  nodes("[data-palette]").forEach(b=>b.onclick=()=>{palette=b.dataset.palette;renderStyles();updateSummary()});
+  const bindCustom=id=>{const el=$(id);if(!el)return;el.oninput=e=>{
+    if(id==="customPalettePrimary")customPalettePrimary=e.target.value;
+    if(id==="customPaletteSecondary")customPaletteSecondary=e.target.value;
+    if(id==="customPaletteAccent")customPaletteAccent=e.target.value;
+    palette="กำหนดเอง";updateSummary();renderDirectPlanPreview()
+  }};
+  ["customPalettePrimary","customPaletteSecondary","customPaletteAccent"].forEach(bindCustom);
+  if($("resetCustomPaletteBtn"))$("resetCustomPaletteBtn").onclick=()=>{customPalettePrimary="#246BCE";customPaletteSecondary="#6552E8";customPaletteAccent="#F2B735";palette="กำหนดเอง";renderStyles();updateSummary()}
 }
+function currentPaletteForName(name){return paletteThemeMap()[name]||[customPalettePrimary,customPaletteSecondary,customPaletteAccent]}
 function renderAffiliation(){
   const key=$("affiliationType")?.value||"obec";
   const meta=affiliationMeta[key]||affiliationMeta.obec;
@@ -467,15 +519,7 @@ function syncTeacherSourceControls(){
 
 let directPreviewRaf=0;
 function directTheme(){
-  const palettes={
-    "ฟ้า–ม่วง–ทอง":["#246BCE","#6552E8","#F2B735","#EEF5FF"],
-    "กรมท่า–ทอง":["#173B67","#B4872E","#E1B84C","#F6F2E8"],
-    "มิ้นต์–ฟ้า":["#278C7C","#3F8EDB","#82D6C8","#EFFAF8"],
-    "ส้ม–ครีม":["#E87A27","#D9A441","#F1B45C","#FFF7E9"],
-    "ชมพู–ฟ้า":["#D85F93","#4F8EDB","#F39BC0","#FFF0F7"],
-    "เขียว–ทอง":["#2F7D52","#B78B32","#D6B85D","#F3F8F1"]
-  };
-  const p=palettes[palette]||palettes["ฟ้า–ม่วง–ทอง"];
+  const p=currentPaletteColors();
   return {primary:p[0],secondary:p[1],accent:p[2],soft:p[3],ink:"#183B56",muted:"#60788A",line:"#D7E3EC"};
 }
 
@@ -1073,7 +1117,7 @@ E. องค์ประกอบทางวิชาการที่ต้�
 F. แนวทางการออกแบบ
 สไตล์หลัก: ${style}
 คำอธิบายสไตล์: ${(styleMeta[style]||[])[1]||""}
-โทนสี: ${palette}
+โทนสี: ${palettePromptLabel()}
 แนวทางเพิ่มเติมจากผู้ใช้: ${customStyle}
 
 ตัวเลือกการตกแต่งที่ครูเลือก (ต้องปฏิบัติตามจริง)
@@ -4730,6 +4774,7 @@ function createStateSnapshot(){
     stage,
     style,
     palette,
+    customPalettePrimary,customPaletteSecondary,customPaletteAccent,
     promptOutputMode,
     selectedIndex:selected?DATA.indexOf(selected):-1,
     planTeacherImageSource,planTeacherImageData,
@@ -4760,6 +4805,9 @@ function restoreCreateState(snap){
   stage=snap.stage||stage;
   style=snap.style||style;
   palette=snap.palette||palette;
+  customPalettePrimary=snap.customPalettePrimary||customPalettePrimary;
+  customPaletteSecondary=snap.customPaletteSecondary||customPaletteSecondary;
+  customPaletteAccent=snap.customPaletteAccent||customPaletteAccent;
   promptOutputMode=snap.promptOutputMode||promptOutputMode;
   planTeacherImageSource=snap.planTeacherImageSource||"profile";
   planTeacherImageData=snap.planTeacherImageData||"";
