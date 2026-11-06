@@ -1864,6 +1864,15 @@ function setActiveCourseByIndex(i,{render=true}={}){
   if(render)renderCourses();
   return c
 }
+function courseIndexById(id){
+  const rows=courseDrafts();
+  return rows.findIndex(c=>String(c?.id||"")===String(id||""))
+}
+function setActiveCourseById(id,{render=true}={}){
+  const i=courseIndexById(id);
+  if(i<0)return null;
+  return setActiveCourseByIndex(i,{render})
+}
 function activeCourseSummary(c){
   if(!c)return "";
   return [c.name||"รายวิชา",formalGradeLabel(c.grade),`ภาคเรียน ${c.semester||"-"}/${c.year||"-"}`].filter(Boolean).join(" · ")
@@ -1932,7 +1941,7 @@ function renderCourses(){
     const isActive=String(c.id||"")===String(activeId||"");
     const badge=c.documents?.saved_at?"ครบทั้งรายวิชา":c.assessments?.saved_at?"การประเมินพร้อม":c.lesson_resources?.saved_at?"แผน/สื่อพร้อม":c.learning_units?.saved_at?"หน่วยพร้อม":c.teaching_schedule?.saved_at?"กำหนดการพร้อม":c.course_structure?.saved_at?"โครงสร้างพร้อม":c.course_description?.saved_at?"มีคำอธิบาย":c.curriculum_analysis?.saved_at?"วิเคราะห์แล้ว":"Draft";
     const status=c.documents?.saved_at?`ขั้นที่ 8 สำเร็จ · Word/PDF พร้อมดาวน์โหลด`:c.assessments?.saved_at?`ขั้นที่ 7 สำเร็จ · Pre/Post/Final + Blueprint พร้อม · ไปสร้างเอกสาร`:c.lesson_resources?.saved_at?`ขั้นที่ 6 สำเร็จ · มีแผน/สื่อที่เชื่อมกับหน่วยแล้ว`:c.learning_units?.saved_at?`ขั้นที่ 5 สำเร็จ · ${c.learning_units.units?.length||0} หน่วยพร้อมสร้างแผนและสื่อ`:c.teaching_schedule?.saved_at?`ขั้นที่ 4 สำเร็จ · ${c.teaching_schedule.rows?.length||0} ช่วงการสอน · พร้อมออกแบบหน่วยการเรียนรู้`:c.course_structure?.saved_at?`ขั้นที่ 3 สำเร็จ · ${c.course_structure.units?.length||0} หน่วย · พร้อมทำกำหนดการสอน`:c.course_description?.saved_at?`ขั้นที่ 2 สำเร็จ · พร้อมจัดโครงสร้างรายวิชา`:c.curriculum_analysis?.saved_at?`ขั้นที่ 1 สำเร็จ · เลือก ${c.curriculum_analysis.selected_ids?.length||0} ตัวชี้วัด · พร้อมสร้างคำอธิบายรายวิชา`:`เริ่มต้น 1/8 ขั้นตอน · วิเคราะห์หลักสูตรจากฐานข้อมูลจริงเป็นขั้นถัดไป`;
-    return `<article class="course-item ${c.documents?.saved_at?"is-complete":""} ${isActive?"is-active-course":""}" data-course-card="${i}">
+    return `<article class="course-item ${c.documents?.saved_at?"is-complete":""} ${isActive?"is-active-course":""}" data-course-card="${i}" data-course-id="${esc(c.id||"")}">
       <div class="course-item-head">
         <div>
           <div class="course-title-row"><h3>${esc(c.name||"รายวิชา")}</h3>${isActive?'<span class="active-course-badge">● กำลังใช้งาน</span>':""}</div>
@@ -1968,23 +1977,44 @@ function renderCourses(){
   }).join(""):'<div class="list-item">ยังไม่มีรายวิชา — กด “สร้างรายวิชา” เพื่อเริ่มต้น</div>';
   box.innerHTML=activeBar+cards;
 
-  nodes('[data-course-activate]').forEach(b=>b.onclick=()=>{const c=setActiveCourseByIndex(Number(b.dataset.courseActivate));if(c)toast("กำลังใช้งาน: "+activeCourseSummary(c))});
-  const bindActive=(selector,handler,datasetKey)=>nodes(selector).forEach(b=>b.onclick=()=>{const i=Number(b.dataset[datasetKey]);setActiveCourseByIndex(i,{render:false});handler(i)});
-  bindActive('[data-course-readiness]',openCourseReadiness,'courseReadiness');
-  nodes('[data-course-delete]').forEach(b=>b.onclick=()=>deleteCourseDraft(Number(b.dataset.courseDelete)));
-  bindActive('[data-course-analysis]',openCurriculumAnalysis,'courseAnalysis');
-  bindActive('[data-course-description]',openCourseDescription,'courseDescription');
-  bindActive('[data-course-structure]',openCourseStructure,'courseStructure');
-  bindActive('[data-course-schedule]',openTeachingSchedule,'courseSchedule');
-  bindActive('[data-course-units]',openLearningUnits,'courseUnits');
-  bindActive('[data-course-lessons]',openCourseLessons,'courseLessons');
-  bindActive('[data-course-assessments]',openCourseAssessments,'courseAssessments');
-  bindActive('[data-course-documents]',openCourseDocuments,'courseDocuments');
-  nodes('[data-course-use]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.courseUse),c=setActiveCourseByIndex(i,{render:false});if(!c)return;prefillCourseToCreate(c,null);renderCourses();toast("กำลังใช้งาน "+c.name+" และนำข้อมูลมาสร้างแผนแล้ว ✓")});
-  nodes('[data-course-semester-btn]').forEach(btn=>btn.onclick=()=>{
-    const rows=courseDrafts(),i=Number(btn.dataset.courseSemesterBtn),c=rows[i];
+  nodes('[data-course-activate]').forEach(b=>b.onclick=()=>{
+    const id=b.closest('[data-course-id]')?.dataset.courseId||"";
+    const c=setActiveCourseById(id);
+    if(c)toast("กำลังใช้งาน: "+activeCourseSummary(c))
+  });
+  const bindActive=(selector,handler)=>nodes(selector).forEach(b=>b.onclick=()=>{
+    const id=b.closest('[data-course-id]')?.dataset.courseId||"";
+    const i=courseIndexById(id);
+    if(i<0){toast("ไม่พบรายวิชานี้ กรุณารีเฟรชหน้า");return}
+    setActiveCourseById(id,{render:false});
+    handler(i)
+  });
+  bindActive('[data-course-readiness]',openCourseReadiness);
+  nodes('[data-course-delete]').forEach(b=>b.onclick=()=>{
+    const id=b.closest('[data-course-id]')?.dataset.courseId||"";
+    const i=courseIndexById(id);if(i>=0)deleteCourseDraft(i)
+  });
+  bindActive('[data-course-analysis]',openCurriculumAnalysis);
+  bindActive('[data-course-description]',openCourseDescription);
+  bindActive('[data-course-structure]',openCourseStructure);
+  bindActive('[data-course-schedule]',openTeachingSchedule);
+  bindActive('[data-course-units]',openLearningUnits);
+  bindActive('[data-course-lessons]',openCourseLessons);
+  bindActive('[data-course-assessments]',openCourseAssessments);
+  bindActive('[data-course-documents]',openCourseDocuments);
+  nodes('[data-course-use]').forEach(b=>b.onclick=()=>{
+    const id=b.closest('[data-course-id]')?.dataset.courseId||"";
+    const i=courseIndexById(id),c=i>=0?setActiveCourseById(id,{render:false}):null;
     if(!c)return;
-    setActiveCourseByIndex(i,{render:false});
+    prefillCourseToCreate(c,null,i,null,null);
+    renderCourses();
+    toast("กำลังใช้งาน "+c.name+" และนำข้อมูลมาสร้างแผนแล้ว ✓")
+  });
+  nodes('[data-course-semester-btn]').forEach(btn=>btn.onclick=()=>{
+    const id=btn.closest('[data-course-id]')?.dataset.courseId||"";
+    const rows=courseDrafts(),i=rows.findIndex(c=>String(c?.id||"")===String(id));
+    const c=rows[i];if(!c)return;
+    setActiveCourseById(id,{render:false});
     c.semester=btn.dataset.semesterValue||"1";
     rows[i]=c;
     writeCourseDrafts(rows);
@@ -1993,7 +2023,7 @@ function renderCourses(){
   });
   nodes('[data-course-card]').forEach(card=>card.onclick=e=>{
     if(e.target.closest("button"))return;
-    const i=Number(card.dataset.courseCard),c=setActiveCourseByIndex(i);
+    const c=setActiveCourseById(card.dataset.courseId||"");
     if(c)toast("กำลังใช้งาน: "+activeCourseSummary(c))
   })
 }
@@ -3285,6 +3315,8 @@ function openLearningUnitQuiz(index){
 }
 function openLearningUnits(i){
   const rows=courseDrafts();
+  const activeId=activeCourseClientId();
+  if(activeId){const resolved=rows.findIndex(x=>String(x?.id||"")===String(activeId));if(resolved>=0)i=resolved}
   let c=rows[i];
   const structureCheck=ensureCurriculumStructureCurrent(rows,i);
   c=structureCheck.course;
@@ -3407,7 +3439,10 @@ function sublessonHoursStatus(u){
 }
 function closeCourseLessons(){$("courseLessonsModal").hidden=true;activeCourseIndex=null}
 function openCourseLessons(i){
-  const rows=courseDrafts();let c=rows[i];const structureCheck=ensureCurriculumStructureCurrent(rows,i);c=structureCheck.course;
+  let rows=courseDrafts();
+  const activeId=activeCourseClientId();
+  if(activeId){const resolved=rows.findIndex(x=>String(x?.id||"")===String(activeId));if(resolved>=0)i=resolved}
+  let c=rows[i];const structureCheck=ensureCurriculumStructureCurrent(rows,i);c=structureCheck.course;
   if(structureCheck.repaired){toast('อัปเกรดโครงสร้างตามหลักสูตรล่าสุดแล้ว กรุณาตรวจลำดับงานต่อจากกำหนดการสอน');openTeachingSchedule(i);return}
   if(!c?.learning_units?.saved_at){toast('กรุณาบันทึกหน่วยการเรียนรู้ก่อน');return}
   const currentVersion=Number(c.course_structure?.version||0);
@@ -3849,7 +3884,7 @@ function renderAssessmentItems(c){
     openAssessmentConfigurator(activeCourseIndex,type,Number(ui),b)
   })
 }
-function openCourseAssessments(i){const c=courseDrafts()[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}activeCourseIndex=i;$("courseAssessmentsMeta").textContent=`${c.name} · ${formalGradeLabel(c.grade)} · ${c.learning_units.units.length} หน่วย`;$("courseAssessmentsSource").innerHTML=`ระบบใช้ตัวชี้วัดจริงของแต่ละหน่วยอัตโนมัติ เลือกสร้าง “ก่อนเรียน” หรือ “หลังเรียน” ได้ทีละหน่วย และสร้างข้อสอบปลายภาคจากทั้งรายวิชาได้ด้านล่าง`;renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=c.assessments?.saved_at?`<div class="indicator-preview">สร้างงานประเมินแล้ว ${c.assessments.items?.length||0} รายการ ✓</div>`:"";$("courseAssessmentsModal").hidden=false}
+function openCourseAssessments(i){const rows=courseDrafts(),activeId=activeCourseClientId();if(activeId){const resolved=rows.findIndex(x=>String(x?.id||"")===String(activeId));if(resolved>=0)i=resolved}const c=rows[i];if(!c?.learning_units?.saved_at){toast("กรุณาบันทึกหน่วยการเรียนรู้ก่อน");return}activeCourseIndex=i;$("courseAssessmentsMeta").textContent=`${c.name} · ${formalGradeLabel(c.grade)} · ${c.learning_units.units.length} หน่วย`;$("courseAssessmentsSource").innerHTML=`ระบบใช้ตัวชี้วัดจริงของแต่ละหน่วยอัตโนมัติ เลือกสร้าง “ก่อนเรียน” หรือ “หลังเรียน” ได้ทีละหน่วย และสร้างข้อสอบปลายภาคจากทั้งรายวิชาได้ด้านล่าง`;renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=c.assessments?.saved_at?`<div class="indicator-preview">สร้างงานประเมินแล้ว ${c.assessments.items?.length||0} รายการ ✓</div>`:"";$("courseAssessmentsModal").hidden=false}
 async function saveAssessmentCloud(c,u,item){if(!courseCloudReady||!sb||!user)return;try{const courseId=await resolveCourseCloudId(c);if(!courseId)return;let unitId=null;if(u)unitId=await ensureUnitCloud(c,u,(c.learning_units?.units||[]).indexOf(u));const payload={user_id:user.id,course_id:courseId,unit_id:unitId,assessment_type:item.type,title:item.title,blueprint:item.blueprint||{},content:{prompt:item.prompt,client_id:item.id},answer_key:{mode:"generated_with_prompt"},status:"prompt_ready",updated_at:new Date().toISOString()};const {error}=await sb.from("assessments").insert(payload);if(error)console.warn("assessment cloud unavailable",error)}catch(error){console.warn("assessment sync failed",error)}}
 function createAssessmentPrompt(ci,type,ui=null,options={}){const rows=courseDrafts(),c=rows[ci],u=ui===null?null:c?.learning_units?.units?.[ui];if(!c||(!u&&type!=="final"))return;const difficulty=options.difficulty||"mixed";const prompt=assessmentPrompt(c,type,u,options),id=crypto.randomUUID?crypto.randomUUID():String(Date.now()),title=type==="final"?`ข้อสอบปลายภาค · ${c.name}`:`${type==="pretest"?"ก่อนเรียน":"หลังเรียน"} · ${u.name}`;const blueprint=type==="final"?{units:(c.learning_units?.units||[]).map(x=>({unit_id:x.id,name:x.name,hours:Number(x.hours)||0,weight:Number(x.weight)||0,indicator_ids:x.indicator_ids||[]})),total_weight:(c.learning_units?.units||[]).reduce((s,x)=>s+(Number(x.weight)||0),0),difficulty,item_count:Number(options.itemCount||30),question_type:options.questionType||"mcq"}:{unit_id:u.id,indicator_ids:u.indicator_ids||[],difficulty,item_count:Number(options.itemCount||10),question_type:options.questionType||"mcq"};c.assessments=c.assessments||{items:[]};const item={id,type,unit_id:u?.id||null,title,prompt,blueprint,difficulty,options,created_at:new Date().toISOString()};c.assessments.items.push(item);c.assessments.saved_at=new Date().toISOString();rows[ci]=c;writeCourseDrafts(rows);renderCourses();renderAssessmentItems(c);$("courseAssessmentsStatus").innerHTML=`<div class="indicator-preview">สร้าง ${esc(title)} แล้ว ✓ ระบบบันทึก Prompt และ Blueprint ไว้กับรายวิชา</div>`;saveAssessmentCloud(c,u,item);switchTab("create");setLivePromptBase(prompt);closeCourseAssessments();setTimeout(()=>$("promptWrap").scrollIntoView({behavior:"smooth"}),60);toast("สร้าง Prompt การประเมินแล้ว ✓")}
 
