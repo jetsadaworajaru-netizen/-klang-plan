@@ -44,6 +44,80 @@ const styleMeta={
 "Minimal Professional":["มินิมอลมืออาชีพ","พื้นที่โปร่ง • เน้นตัวอักษร • พิมพ์เอกสารง่าย","minimal"],
 "Thai Contemporary":["ไทยร่วมสมัย","ลายไทยประยุกต์แบบบาง • สุภาพ • เอกลักษณ์ไทย","thai"]
 };
+const styleDNA={
+"Modern Government":`DESIGN DNA: เอกสารราชการสมัยใหม่
+- Layout: กริด 2 คอลัมน์ตรง เป็นระเบียบ สมมาตร อ่านจากบนลงล่าง
+- Shape: การ์ดสี่เหลี่ยมมุมโค้งน้อย เส้นคั่นชัด ไม่มีรูปทรงแฟนซี
+- Header: แถบหัวเรียบทางการ ชื่อแผนเด่น แต่ไม่เป็นโปสเตอร์
+- Icon: line/flat icon ขนาดเล็ก ใช้เท่าที่จำเป็น
+- Typography: สุภาพ หนักแน่น ลำดับหัวข้อชัด
+- Illustration: จำกัดมาก ไม่ใช้ตัวการ์ตูนใหญ่
+- Shadow: บางมากหรือแทบไม่มี
+- Mood: เอกสารโรงเรียน/ราชการที่ดูทันสมัยและน่าเชื่อถือ`,
+"Premium Academic":`DESIGN DNA: วิชาการพรีเมียม
+- Layout: editorial grid เน้น alignment และลำดับข้อมูลแบบงานวิชาการ
+- Shape: กล่องเส้นบาง กรอบเนี๊ยบ มีพื้นที่ว่างมากขึ้น
+- Header: เรียบหรู มี title block แบบรายงาน/PA
+- Icon: minimal symbol ขนาดเล็ก ไม่ใช้ไอคอนการ์ตูน
+- Typography: ดูพรีเมียม สุขุม เน้นหัวข้อและ subheading
+- Illustration: ใช้น้อยมาก เน้นข้อมูลและความน่าเชื่อถือ
+- Shadow: แทบไม่มี ใช้ contrast จากเส้นและพื้นที่ว่าง
+- Mood: ผลงานวิชาการ/PA/Portfolio คุณภาพสูง`,
+"Clean Infographic":`DESIGN DNA: อินโฟกราฟิกสะอาด
+- Layout: modular section ชัด อ่านเร็ว มี visual grouping เด่น
+- Shape: section card รูปทรงเรขาคณิตเรียบ ใช้ label/badge ช่วยนำสายตา
+- Header: กระชับ ไม่สูงเกินไป
+- Icon: flat infographic icon ที่สัมพันธ์กับเนื้อหา
+- Typography: hierarchy ชัด ใช้ตัวเลข/หัวข้อสั้น ๆ เด่น
+- Illustration: ใช้เป็น pictogram หรือ data visual ไม่ใช่การ์ตูนใหญ่
+- Shadow: เบา
+- Mood: อ่านเร็ว ทันสมัย เหมือนอินโฟกราฟิกข้อมูลมืออาชีพ`,
+"Bright Classroom":`DESIGN DNA: ห้องเรียนสดใส
+- Layout: card-based classroom board ดูเป็นมิตร แต่ยังเป็นเอกสาร
+- Shape: การ์ดโค้งมนระดับกลาง ป้ายหัวข้อดูสดใส
+- Header: มีองค์ประกอบการศึกษาเล็ก ๆ เช่น สมุด ดินสอ กระดาน
+- Icon: colorful flat icon
+- Typography: ชัด เป็นมิตร ไม่เป็นทางการเกินไป
+- Illustration: มีภาพประกอบห้องเรียน/อุปกรณ์การเรียนขนาดกลาง
+- Shadow: soft shadow
+- Mood: ห้องเรียนประถม สดใส เป็นมิตร`,
+"Cute Kids":`DESIGN DNA: น่ารักสำหรับเด็ก
+- Layout: playful card grid ใช้การ์ดโค้งมนมากขึ้น
+- Shape: soft rounded, sticker-like labels, bubble accents
+- Header: เป็นมิตร สนุก แต่ข้อความยังอ่านง่าย
+- Icon: cute kid-friendly icon / simple cartoon
+- Typography: กลมมน อ่านง่าย ห้ามบิดหรือเอียงหัวเรื่องหลัก
+- Illustration: มีเด็ก/สัตว์/อุปกรณ์การเรียนแบบการ์ตูนอย่างชัดเจน
+- Shadow: soft และอบอุ่น
+- Mood: ปฐมวัย/ประถมต้น สนุก อ่อนโยน`,
+"3D Education":`DESIGN DNA: 3D Education
+- Layout: modern tech education grid มี depth ชัด
+- Shape: floating card, layered panels, rounded geometry
+- Header: มี hero object 3D เกี่ยวกับการศึกษา
+- Icon: 3D educational objects แบบ clay/glossy
+- Typography: modern sans-serif หนา ชัด
+- Illustration: ต้องมีวัตถุ 3D เด่นอย่างน้อย 3–5 จุด
+- Shadow: มี depth และ soft ambient shadow ชัดกว่าสไตล์อื่น
+- Mood: เทคโนโลยีการศึกษา ทันสมัย มีมิติ`,
+"Minimal Professional":`DESIGN DNA: มินิมอลมืออาชีพ
+- Layout: พื้นที่โปร่งมากขึ้น ใช้เส้นบางและ whitespace เป็นหลัก
+- Shape: กล่องน้อยที่สุด ใช้เส้น/spacing แทนกรอบ
+- Header: เรียบมาก ไม่มี decoration เยอะ
+- Icon: monochrome line icon น้อยชิ้น
+- Typography: เป็นพระเอกของงาน ชัด เรียบ professional
+- Illustration: แทบไม่มี
+- Shadow: ไม่มีหรือบางมาก
+- Mood: เรียบ สะอาด พิมพ์ง่าย ดูมืออาชีพ`,
+"Thai Contemporary":`DESIGN DNA: ไทยร่วมสมัย
+- Layout: โครงเอกสารร่วมสมัยผสมจังหวะลายไทยแบบ restraint
+- Shape: ใช้เส้นโค้ง/กรอบที่ได้รับแรงบันดาลใจจากศิลปะไทย แต่ไม่โบราณ
+- Header: มี motif ไทยประยุกต์บาง ๆ เป็นกรอบหรือเส้นประดับ
+- Icon: flat icon ผสมสัญลักษณ์ไทยร่วมสมัย
+- Typography: ไทยสมัยใหม่ อ่านง่าย ไม่ใช้ฟอนต์ลายไทยอ่านยาก
+- Illustration: ใช้ motif ไทย/สถาปัตย์/ลายกนกแบบ abstract บางจุด
+- Shadow: เบา
+- Mood: สุภาพ มีอัตลักษณ์ไทย แต่ร่วมสมัยและใช้งานราชการได้`
+};
 const styles=Object.keys(styleMeta);
 const palettes=[
 "ฟ้า–ม่วง–ทอง","กรมท่า–ทอง","มิ้นต์–ฟ้า","ส้ม–ครีม","ชมพู–ฟ้า","เขียว–ทอง",
@@ -1130,6 +1204,15 @@ F. แนวทางการออกแบบ
 คำอธิบายสไตล์: ${(styleMeta[style]||[])[1]||""}
 โทนสี: ${palettePromptLabel()}
 แนวทางเพิ่มเติมจากผู้ใช้: ${customStyle}
+
+กติกาเฉพาะของสไตล์ที่เลือก — ต้องใช้จริงและต้องเห็นความต่างชัดเจน:
+${styleDNA[style]||""}
+
+ข้อบังคับเรื่องความแตกต่างของสไตล์:
+- ห้ามใช้ template เดียวกันแล้วเปลี่ยนเพียงสีหรือไอคอน
+- Layout, card geometry, border treatment, icon language, illustration treatment, spacing, shadow และ mood ต้องเปลี่ยนตาม DESIGN DNA ของสไตล์นี้
+- หากสร้างภาพหลายครั้งด้วยข้อมูลเดียวกันแต่เลือกคนละสไตล์ ต้องสามารถแยกออกได้ทันทีว่าเป็นคนละสไตล์ แม้ใช้โทนสีเดียวกัน
+- โทนสีที่ครูเลือกควบคุม “สี” เท่านั้น ส่วนสไตล์ควบคุม “โครง รูปทรง ไอคอน ภาพประกอบ ระยะห่าง และบรรยากาศ”
 
 ตัวเลือกการตกแต่งที่ครูเลือก (ต้องปฏิบัติตามจริง)
 ${visualOptions}
