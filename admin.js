@@ -191,9 +191,12 @@ function renderDashboard(){
   const active=members.filter(x=>x.status==="active");
   const pending=members.filter(x=>x.status==="pending");
 
-  // รายได้รวมจากยอดชำระที่บันทึกจริงของสมาชิกแต่ละคน
-  const paidRows=members.filter(x=>Number(x.price_paid)>0);
+  const paidRows=members
+    .filter(x=>Number(x.price_paid)>0)
+    .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   const revenue=paidRows.reduce((sum,x)=>sum+Number(x.price_paid||0),0);
+  const avgPaid=paidRows.length?revenue/paidRows.length:0;
+  const activeRate=members.length?Math.round((active.length/members.length)*1000)/10:0;
 
   const now=new Date();
   const bangkokParts=new Intl.DateTimeFormat("en-CA",{
@@ -223,31 +226,54 @@ function renderDashboard(){
   if($("dPending"))$("dPending").textContent=pending.length;
   if($("sidePendingCount"))$("sidePendingCount").textContent=pending.length;
   if($("dSales"))$("dSales").textContent=money(revenue);
-
   if($("dToday"))$("dToday").textContent=newToday;
   if($("dMonth"))$("dMonth").textContent=newMonth;
   if($("dPrompts"))$("dPrompts").textContent=promptCount;
   if($("dPromptUsers"))$("dPromptUsers").textContent=usersWithPrompt;
   if($("dAvgPrompts"))$("dAvgPrompts").textContent=avgPrompts;
+  if($("dPaidCount"))$("dPaidCount").textContent=paidRows.length+" รายการ";
+  if($("dAvgPaid"))$("dAvgPaid").textContent=paidRows.length?money(Math.round(avgPaid)):"—";
+  if($("dActiveRate"))$("dActiveRate").textContent=activeRate+"%";
 
-  $("attentionList").innerHTML=pending.length
-    ? `<div class="pending-row"><div class="row-main"><b>${pending.length} คนรออนุมัติ</b><small>กดไปที่เมนูรออนุมัติ</small></div><button class="mini-btn good" id="attnPending">ดูเลย</button></div>`
-    : '<div class="pending-row"><div class="row-main"><b>✓ ไม่มีคำขอค้าง</b><small>ระบบสมาชิกทำงานปกติ</small></div></div>';
-
+  const todo=[];
+  if(pending.length)todo.push(`<div class="dashboard-action-row warn"><span>⏳</span><div><b>${pending.length} คนรออนุมัติ</b><small>ตรวจสอบและอนุมัติสมาชิก</small></div><button class="mini-btn good" id="attnPending">ดูเลย</button></div>`);
+  const missingPayment=members.filter(x=>!Number(x.price_paid)&&x.status==="active").length;
+  if(missingPayment)todo.push(`<div class="dashboard-action-row"><span>💳</span><div><b>${missingPayment} สมาชิก Active ยังไม่มียอดชำระ</b><small>ตรวจสอบข้อมูลรายได้หากต้องการบันทึกยอด</small></div></div>`);
+  if(!todo.length)todo.push('<div class="dashboard-action-row ok"><span>✅</span><div><b>ไม่มีงานค้างสำคัญ</b><small>ระบบสมาชิกทำงานปกติ</small></div></div>');
+  $("attentionList").innerHTML=todo.join("");
   $("attnPending")?.addEventListener("click",()=>openTab("pending"));
 
-  const c={};
+  const sourceCounts={};
   members.forEach(x=>{
     const k=x.sales_source||x.auth_provider||"ลิงก์ Admin";
-    c[k]=(c[k]||0)+1
+    sourceCounts[k]=(sourceCounts[k]||0)+1
   });
-  $("sourceList").innerHTML=Object.entries(c)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([k,v])=>`<div class="invite-row"><div class="row-main"><b>${esc(k)}</b><small>${v} สมาชิก</small></div><b>${v}</b></div>`)
-    .join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>';
+  const sourceEntries=Object.entries(sourceCounts).sort((a,b)=>b[1]-a[1]);
+  $("sourceList").innerHTML=sourceEntries.map(([k,v])=>{
+    const pct=members.length?Math.round((v/members.length)*1000)/10:0;
+    return `<div class="source-stat-row"><div><b>${esc(k)}</b><small>${v} สมาชิก</small></div><div class="source-meter"><i style="width:${Math.min(100,pct)}%"></i></div><strong>${pct}%</strong></div>`
+  }).join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>';
 
-  if($("dashboardRevenueFormula")){
-    $("dashboardRevenueFormula").textContent=`${paidRows.length} รายการชำระเงิน = ${money(revenue)}`
+  if($("dashboardRevenueFormula"))$("dashboardRevenueFormula").textContent=`${paidRows.length} รายการชำระเงิน = ${money(revenue)}`;
+
+  if($("usageSummaryList")){
+    $("usageSummaryList").innerHTML=[
+      ["✨","Prompt ที่โหลดล่าสุด",promptCount+" รายการ"],
+      ["👥","สมาชิกที่มีประวัติสร้าง Prompt",usersWithPrompt+" คน"],
+      ["📈","Prompt เฉลี่ยต่อสมาชิก",avgPrompts+" ครั้ง"],
+      ["🟢","สมาชิก Active",active.length+" / "+members.length+" คน"]
+    ].map(x=>`<div class="summary-stat-row"><span>${x[0]}</span><b>${esc(x[1])}</b><strong>${esc(x[2])}</strong></div>`).join("")
+  }
+
+  if($("dashboardPaidBadge"))$("dashboardPaidBadge").textContent=paidRows.length+" รายการ";
+  if($("dashboardPaymentList")){
+    $("dashboardPaymentList").innerHTML=paidRows.slice(0,8).map(x=>`
+      <div class="payment-row">
+        <div class="payment-icon">✓</div>
+        <div class="payment-info"><b>${esc(x.full_name||"ไม่ระบุชื่อ")}</b><small>${esc(x.member_id||x.sales_source||"สมาชิก")}${x.campaign_name?" • "+esc(x.campaign_name):""}</small></div>
+        <div class="payment-amount"><b>${money(x.price_paid)}</b><small>${d(x.created_at)}</small></div>
+      </div>
+    `).join("")||'<div class="dashboard-member-empty">ยังไม่มีรายการที่บันทึกยอดชำระ</div>'
   }
 }
 function pendingReq(userId){return requests.find(r=>r.user_id===userId&&r.status==="pending")}
