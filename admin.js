@@ -191,11 +191,22 @@ function renderDashboard(){
   const active=members.filter(x=>x.status==="active");
   const pending=members.filter(x=>x.status==="pending");
 
-  const paidRows=members
-    .filter(x=>Number(x.price_paid)>0)
+  const DEFAULT_MEMBER_PRICE=169;
+  const inviteByCode=new Map((invites||[]).filter(x=>x?.code).map(x=>[String(x.code),x]));
+  const revenueRows=members
+    .map(x=>{
+      const invite=inviteByCode.get(String(x.invite_code||""));
+      const profilePrice=Number(x.price_paid||0);
+      const invitePrice=Number(invite?.price_paid||0);
+      const amount=profilePrice>0?profilePrice:invitePrice>0?invitePrice:(x.status==="active"?DEFAULT_MEMBER_PRICE:0);
+      const estimated=profilePrice<=0&&invitePrice<=0&&amount>0;
+      return {...x,_revenueAmount:amount,_revenueEstimated:estimated}
+    })
+    .filter(x=>x._revenueAmount>0)
     .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-  const revenue=paidRows.reduce((sum,x)=>sum+Number(x.price_paid||0),0);
-  const avgPaid=paidRows.length?revenue/paidRows.length:0;
+  const revenue=revenueRows.reduce((sum,x)=>sum+Number(x._revenueAmount||0),0);
+  const avgPaid=revenueRows.length?revenue/revenueRows.length:0;
+  const estimatedCount=revenueRows.filter(x=>x._revenueEstimated).length;
   const activeRate=members.length?Math.round((active.length/members.length)*1000)/10:0;
 
   const now=new Date();
@@ -231,8 +242,8 @@ function renderDashboard(){
   if($("dPrompts"))$("dPrompts").textContent=promptCount;
   if($("dPromptUsers"))$("dPromptUsers").textContent=usersWithPrompt;
   if($("dAvgPrompts"))$("dAvgPrompts").textContent=avgPrompts;
-  if($("dPaidCount"))$("dPaidCount").textContent=paidRows.length+" รายการ";
-  if($("dAvgPaid"))$("dAvgPaid").textContent=paidRows.length?money(Math.round(avgPaid)):"—";
+  if($("dPaidCount"))$("dPaidCount").textContent=revenueRows.length+" รายการ";
+  if($("dAvgPaid"))$("dAvgPaid").textContent=revenueRows.length?money(Math.round(avgPaid)):"—";
   if($("dActiveRate"))$("dActiveRate").textContent=activeRate+"%";
 
   const todo=[];
@@ -254,7 +265,7 @@ function renderDashboard(){
     return `<div class="source-stat-row"><div><b>${esc(k)}</b><small>${v} สมาชิก</small></div><div class="source-meter"><i style="width:${Math.min(100,pct)}%"></i></div><strong>${pct}%</strong></div>`
   }).join("")||'<div class="invite-row">ยังไม่มีข้อมูล</div>';
 
-  if($("dashboardRevenueFormula"))$("dashboardRevenueFormula").textContent=`${paidRows.length} รายการชำระเงิน = ${money(revenue)}`;
+  if($("dashboardRevenueFormula"))$("dashboardRevenueFormula").textContent=`${revenueRows.length} สมาชิก = ${money(revenue)}${estimatedCount?` • ประมาณ ${estimatedCount} รายจากราคา 169 บาท`:""}`;
 
   if($("usageSummaryList")){
     $("usageSummaryList").innerHTML=[
@@ -265,13 +276,13 @@ function renderDashboard(){
     ].map(x=>`<div class="summary-stat-row"><span>${x[0]}</span><b>${esc(x[1])}</b><strong>${esc(x[2])}</strong></div>`).join("")
   }
 
-  if($("dashboardPaidBadge"))$("dashboardPaidBadge").textContent=paidRows.length+" รายการ";
+  if($("dashboardPaidBadge"))$("dashboardPaidBadge").textContent=revenueRows.length+" รายการ";
   if($("dashboardPaymentList")){
-    $("dashboardPaymentList").innerHTML=paidRows.slice(0,8).map(x=>`
+    $("dashboardPaymentList").innerHTML=revenueRows.slice(0,8).map(x=>`
       <div class="payment-row">
         <div class="payment-icon">✓</div>
         <div class="payment-info"><b>${esc(x.full_name||"ไม่ระบุชื่อ")}</b><small>${esc(x.member_id||x.sales_source||"สมาชิก")}${x.campaign_name?" • "+esc(x.campaign_name):""}</small></div>
-        <div class="payment-amount"><b>${money(x.price_paid)}</b><small>${d(x.created_at)}</small></div>
+        <div class="payment-amount"><b>${money(x._revenueAmount)}</b><small>${x._revenueEstimated?"ประมาณจากราคา 169 บาท":"บันทึกจริง"} • ${d(x.created_at)}</small></div>
       </div>
     `).join("")||'<div class="dashboard-member-empty">ยังไม่มีรายการที่บันทึกยอดชำระ</div>'
   }
