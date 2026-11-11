@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin.css?v=2">
+  <link rel="stylesheet" href="/admin.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=951"></script>
 </head>
@@ -120,6 +120,11 @@
           <div class="revenue-summary-card">
             <div><span>💰 รายได้โปรเจค</span><b id="dashboardRevenueFormula">กำลังคำนวณ...</b></div>
             <small>คำนวณจากยอดชำระที่บันทึกจริงของสมาชิกแต่ละรายการ</small>
+            <div class="revenue-detail-grid">
+              <div><b id="dPaidCount">—</b><small>รายการที่บันทึกยอดชำระ</small></div>
+              <div><b id="dAvgPaid">—</b><small>ยอดเฉลี่ย/รายการ</small></div>
+              <div><b id="dActiveRate">—</b><small>Active rate</small></div>
+            </div>
           </div>
 
           <div class="mini-stat-grid">
@@ -129,10 +134,20 @@
             <article><b id="dAvgPrompts">—</b><span>Prompt เฉลี่ย/สมาชิก</span></article>
           </div>
 
-          <div class="two-col">
+          <div class="dashboard-insight-grid">
             <div class="content-card"><h2>สิ่งที่ต้องจัดการ</h2><div id="attentionList"></div></div>
+            <div class="content-card"><h2>สรุปการใช้งาน</h2><div id="usageSummaryList" class="dashboard-summary-list"></div></div>
             <div class="content-card"><h2>ช่องทางสมาชิก</h2><div id="sourceList"></div></div>
           </div>
+
+          <div class="content-card dashboard-payment-card">
+            <div class="dashboard-member-head">
+              <div><h2>💳 รายการชำระเงินล่าสุด</h2><p>แสดงจากสมาชิกที่มีการบันทึกยอดชำระจริงในระบบ</p></div>
+              <span id="dashboardPaidBadge" class="member-count-badge">0 รายการ</span>
+            </div>
+            <div id="dashboardPaymentList" class="dashboard-payment-list"><div class="dashboard-member-empty">กำลังโหลดข้อมูล...</div></div>
+          </div>
+
           <div class="content-card dashboard-member-card">
             <div class="dashboard-member-head">
               <div><h2>👥 รายชื่อสมาชิกทั้งหมด <span id="dashboardMemberCount" class="member-count-badge">0 คน</span></h2><p>แสดงรายชื่อทั้งหมดทันที เรียงจากสมัครล่าสุด</p></div>
@@ -222,6 +237,6 @@
 </main>
 
 <div id="toast" class="toast"></div>
-<script src="/admin.js?v=955"></script>
+<script src="/admin.js?v=956"></script>
 </body>
 </html>
